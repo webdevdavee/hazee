@@ -2,6 +2,7 @@ import Auctions from "@/components/builders/Auctions";
 import Collections from "@/components/builders/Collections";
 import Hero from "@/components/builders/Hero";
 import Marquee from "@/components/builders/Marquee";
+import Newsletter from "@/components/builders/Newsletter";
 
 const page = () => {
   return (
@@ -10,6 +11,7 @@ const page = () => {
       <Marquee />
       <Auctions />
       <Collections />
+      <Newsletter />
     </section>
   );
 };
