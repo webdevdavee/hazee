@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #181818;
+  overflow-x: hidden;
+}
+
+.container {
+  margin: 1.5rem;
+  overflow: hidden;
+}
