@@ -72,3 +72,62 @@ export const sampleNfts: sampleNft[] = [
     ends: "2h 55m 32s",
   },
 ];
+
+export const collections = [
+  {
+    name: "Hazee Art Wave",
+    by: "Hazee",
+    volume: "4542 ETH",
+    floor: "0.06 ETH",
+    src: "/images/collection-img (1).jpeg",
+  },
+  {
+    name: "Hazee Art Wave",
+    by: "Hazee",
+    volume: "2342 ETH",
+    floor: "0.06 ETH",
+    src: "/images/collection-img (2).jpeg",
+  },
+  {
+    name: "Hazee Art Wave",
+    by: "Hazee",
+    volume: "1342 ETH",
+    floor: "0.06 ETH",
+    src: "/images/collection-img (3).jpeg",
+  },
+  {
+    name: "Hazee Art Wave",
+    by: "Hazee",
+    volume: "6342 ETH",
+    floor: "0.06 ETH",
+    src: "/images/collection-img (4).jpeg",
+  },
+  {
+    name: "Hazee Art Wave",
+    by: "Hazee",
+    volume: "7342 ETH",
+    floor: "0.06 ETH",
+    src: "/images/collection-img (5).jpeg",
+  },
+  {
+    name: "Hazee Art Wave",
+    by: "Hazee",
+    volume: "8342 ETH",
+    floor: "0.06 ETH",
+    src: "/images/collection-img (6).jpeg",
+  },
+  {
+    name: "Hazee Art Wave",
+    by: "Hazee",
+    volume: "9342 ETH",
+    floor: "0.1 ETH",
+    src: "/images/collection-img (7).gif",
+  },
+  {
+    name: "Hazee Art Wave",
+    by: "Hazee",
+    volume: "1442 ETH",
+    floor: "0.16 ETH",
+    src: "/images/collection-img (8).jpeg",
+  },
+];

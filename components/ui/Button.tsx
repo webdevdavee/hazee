@@ -2,7 +2,7 @@
 
 type Props = {
   text: string;
-  style: string;
+  style?: string;
 };
 
 const Button: React.FC<Props> = ({ text, style }) => {

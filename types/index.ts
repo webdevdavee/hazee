@@ -6,3 +6,11 @@ type sampleNft = {
   bid?: string;
   ends?: string;
 };
+
+type Collection = {
+  name: string;
+  by: string;
+  volume: string;
+  floor: string;
+  src: string;
+};

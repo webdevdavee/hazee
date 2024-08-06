@@ -7,7 +7,9 @@ const Navbar = () => {
     <section className="container">
       <nav className="flex items-center justify-between">
         <div className="flex gap-10 items-center">
-          <h1 className="text-white text-2xl">Hazee.</h1>
+          <Link href="/" className="text-white text-2xl">
+            Hazee.
+          </Link>
           <Searchbar />
         </div>
         <ul className="flex gap-5 items-center">

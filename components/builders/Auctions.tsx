@@ -50,6 +50,12 @@ const Auctions = () => {
             <NftCard key={nft.id} nft={nft} type="auction" />
           ))}
         </div>
+        <div className="w-full flex items-center justify-center mt-8">
+          <Button
+            text="Load more"
+            style="border border-secondary rounded-full hover:bg-secondary hover:transition"
+          />
+        </div>
       </div>
     </section>
   );
