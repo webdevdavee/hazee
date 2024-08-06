@@ -23,3 +23,10 @@ type topCreator = {
   sold: number;
   created: number;
 };
+
+type DropdownItem = {
+  id: string | number;
+  label: string;
+  link?: string;
+  icon?: React.ReactNode;
+};
