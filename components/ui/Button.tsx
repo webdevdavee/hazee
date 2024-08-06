@@ -7,10 +7,7 @@ type Props = {
 
 const Button: React.FC<Props> = ({ text, style }) => {
   return (
-    <button
-      type="button"
-      className={`p-[0.6rem] ${style} text-white rounded-full`}
-    >
+    <button type="button" className={`p-[0.6rem] ${style} rounded-full`}>
       {text}
     </button>
   );
