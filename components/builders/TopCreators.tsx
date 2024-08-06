@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { IoIosArrowDropright, IoIosArrowDropleft } from "react-icons/io";
 import { motion, AnimatePresence } from "framer-motion";
-import { collections } from "@/constants";
-import CollectionsCard from "../cards/CollectionsCard";
+import { topCreators } from "@/constants";
+import TopCreatorsCard from "../cards/TopCreatorsCard";
 
-const Collections = () => {
+const TopCreators = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const itemsPerSlide = 4;
-  const totalSlides = Math.ceil(collections.length / itemsPerSlide);
+  const totalSlides = Math.ceil(topCreators.length / itemsPerSlide);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % totalSlides);
@@ -20,7 +20,7 @@ const Collections = () => {
   };
 
   const startIndex = currentSlide * itemsPerSlide;
-  const visibleCollections = collections.slice(
+  const visibleCreators = topCreators.slice(
     startIndex,
     startIndex + itemsPerSlide
   );
@@ -28,7 +28,7 @@ const Collections = () => {
   return (
     <section className="container w-full overflow-hidden">
       <div className="flex items-center justify-between gap-8">
-        <h1>Remarkable collections</h1>
+        <h1>Top creators this week by sales</h1>
         <div className="flex items-center gap-3">
           <IoIosArrowDropleft
             size={35}
@@ -53,8 +53,8 @@ const Collections = () => {
           exit={{ opacity: 0, x: -50 }}
           transition={{ duration: 0.3 }}
         >
-          {visibleCollections.map((collection) => (
-            <CollectionsCard key={collection.name} collection={collection} />
+          {visibleCreators.map((topCreator) => (
+            <TopCreatorsCard key={topCreator.name} topCreator={topCreator} />
           ))}
         </motion.div>
       </AnimatePresence>
@@ -62,4 +62,4 @@ const Collections = () => {
   );
 };
 
-export default Collections;
+export default TopCreators;

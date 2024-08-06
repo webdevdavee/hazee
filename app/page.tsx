@@ -3,6 +3,7 @@ import Collections from "@/components/builders/Collections";
 import Hero from "@/components/builders/Hero";
 import Marquee from "@/components/builders/Marquee";
 import Newsletter from "@/components/builders/Newsletter";
+import TopCreators from "@/components/builders/TopCreators";
 
 const page = () => {
   return (
@@ -11,6 +12,7 @@ const page = () => {
       <Marquee />
       <Auctions />
       <Collections />
+      <TopCreators />
       <Newsletter />
     </section>
   );

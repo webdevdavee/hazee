@@ -14,3 +14,12 @@ type Collection = {
   floor: string;
   src: string;
 };
+
+type topCreator = {
+  username: string;
+  name: string;
+  src: string;
+  owns: number;
+  sold: number;
+  created: number;
+};
