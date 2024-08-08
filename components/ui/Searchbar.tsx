@@ -2,10 +2,15 @@
 
 import { searchSchema, TSearchSchema } from "@/libs/zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { FaSearch } from "react-icons/fa";
 
-const Searchbar = () => {
+type Props = {
+  placeholder: string;
+};
+
+const Searchbar: React.FC<Props> = ({ placeholder }) => {
   const { register, handleSubmit, reset } = useForm<TSearchSchema>({
     resolver: zodResolver(searchSchema),
   });
@@ -20,7 +25,7 @@ const Searchbar = () => {
         <input
           {...register("query")}
           className="placeholder:font-medium bg-transparent placeholder:text-sm text-white focus:outline-none"
-          placeholder="search..."
+          placeholder={placeholder}
         />
         <FaSearch color="gray" />
       </div>

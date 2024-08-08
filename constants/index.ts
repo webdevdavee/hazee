@@ -139,7 +139,7 @@ export const collections = [
   },
 ];
 
-export const topCreators = [
+export const creators = [
   {
     username: "Figoti",
     name: "Figoti Mano",

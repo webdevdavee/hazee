@@ -15,7 +15,7 @@ type Collection = {
   src: string;
 };
 
-type topCreator = {
+type Creator = {
   username: string;
   name: string;
   src: string;

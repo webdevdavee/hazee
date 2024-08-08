@@ -45,3 +45,15 @@ h5 {
   background-color: #334fef;
   border-radius: 8px;
 }
+
+table {
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 0.7rem 1rem;
+}

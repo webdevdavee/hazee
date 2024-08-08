@@ -28,7 +28,7 @@ const Navbar = () => {
             <Link href="/" className="text-white text-2xl">
               Hazee.
             </Link>
-            <Searchbar />
+            <Searchbar placeholder="search..." />
           </div>
           <ul className="flex gap-5 items-center">
             <div

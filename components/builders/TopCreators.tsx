@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { IoIosArrowDropright, IoIosArrowDropleft } from "react-icons/io";
 import { motion, AnimatePresence } from "framer-motion";
-import { topCreators } from "@/constants";
-import TopCreatorsCard from "../cards/TopCreatorsCard";
+import { creators } from "@/constants";
+import CreatorsCard from "../cards/CreatorsCard";
 
 const TopCreators = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const itemsPerSlide = 4;
-  const totalSlides = Math.ceil(topCreators.length / itemsPerSlide);
+  const totalSlides = Math.ceil(creators.length / itemsPerSlide);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % totalSlides);
@@ -20,7 +20,7 @@ const TopCreators = () => {
   };
 
   const startIndex = currentSlide * itemsPerSlide;
-  const visibleCreators = topCreators.slice(
+  const visibleCreators = creators.slice(
     startIndex,
     startIndex + itemsPerSlide
   );
@@ -53,8 +53,8 @@ const TopCreators = () => {
           exit={{ opacity: 0, x: -50 }}
           transition={{ duration: 0.3 }}
         >
-          {visibleCreators.map((topCreator) => (
-            <TopCreatorsCard key={topCreator.name} topCreator={topCreator} />
+          {visibleCreators.map((creators) => (
+            <CreatorsCard key={creators.name} creator={creators} />
           ))}
         </motion.div>
       </AnimatePresence>

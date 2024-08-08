@@ -26,7 +26,7 @@ const Newsletter = () => {
           className="flex flex-col items-end gap-3"
         >
           <div className="flex items-center gap-3">
-            <div className="bg-secondary opacity-50 p-4 rounded-lg">
+            <div className="bg-secondary opacity-50 p-3 rounded-lg">
               <input
                 {...register("query")}
                 className="placeholder:font-medium bg-transparent text-white focus:outline-none"
