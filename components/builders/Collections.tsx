@@ -26,7 +26,7 @@ const Collections = () => {
   );
 
   return (
-    <section className="container w-full overflow-hidden">
+    <section className="w-full overflow-hidden">
       <div className="flex items-center justify-between gap-8">
         <h1>Remarkable collections</h1>
         <div className="flex items-center gap-3">

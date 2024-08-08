@@ -25,8 +25,9 @@ type topCreator = {
 };
 
 type DropdownItem = {
-  id: string | number;
+  id: number | string;
   label: string;
   link?: string;
   icon?: React.ReactNode;
+  isButton?: boolean;
 };

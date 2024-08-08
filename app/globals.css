@@ -32,7 +32,16 @@ h5 {
   font-size: 0.83rem;
 }
 
-.container {
-  margin: 1.5rem;
+.wrapper {
+  padding: 2rem;
   overflow: hidden;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #334fef;
+  border-radius: 8px;
 }

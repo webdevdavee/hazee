@@ -1,3 +1,10 @@
+export const categories = [
+  { id: 1, label: "All" },
+  { id: 2, label: "Art" },
+  { id: 3, label: "Gaming" },
+  { id: 4, label: "Photography" },
+];
+
 export const marqueeImages = [
   "/images/marquee (1).jpeg",
   "/images/marquee (2).jpeg",

@@ -12,7 +12,7 @@ const Auctions = () => {
   const auctionDropdown = useDropdown([{ id: 1, label: "New", link: "/" }]);
 
   return (
-    <section className="container w-full">
+    <section className="w-full">
       <div>
         <div className="flex items-center gap-8">
           <h1>Auctions</h1>
@@ -48,7 +48,7 @@ const Auctions = () => {
             />
           </ul>
         </div>
-        <div className="w-full grid grid-cols-4 justify-center gap-6 mt-6 p-3">
+        <div className="w-full grid grid-cols-4 justify-center gap-6 mt-6">
           {sampleNfts.slice(0, 4).map((nft) => (
             <NftCard key={nft.id} nft={nft} type="auction" />
           ))}

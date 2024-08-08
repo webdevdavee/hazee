@@ -15,7 +15,7 @@ const Newsletter = () => {
   };
 
   return (
-    <section className="container w-full">
+    <section className="w-full">
       <div className="bg-accent p-16 rounded-lg flex items-center justify-between">
         <h1 className="text-secondary leading-tight font-semibold">
           Stay informed <br />

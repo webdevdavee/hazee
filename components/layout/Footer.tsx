@@ -5,11 +5,12 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="container border-t border-t-gray-400 p-6">
+    <footer className="border-t border-t-gray-400 p-6">
       <p className="text-sm text-center text-slate-300">
-        &copy; {currentYear} Hazee. All rights reserved. Design credits:{" "}
+        &copy; {currentYear} Hazee. All rights reserved. Design inspiration
+        credits:{" "}
         <Link
-          href="https://dribbble.com/shots/18847976-Kalao-Web-Design-for-NFT-Marketplace"
+          href="https://dribbble.com/outcrowd"
           target="blank"
           className="text-primary underline"
         >

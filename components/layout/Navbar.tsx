@@ -10,9 +10,9 @@ import useDropdown from "@/hooks/useDropdown";
 
 const Navbar = () => {
   const exploreDropdown = useDropdown([
-    { id: 1, label: "NFTs", link: "/" },
-    { id: 2, label: "Collections", link: "/" },
-    { id: 3, label: "Creators", link: "/" },
+    { id: 1, label: "NFTs", link: "/explore/nfts" },
+    { id: 2, label: "Collections", link: "/explore/collections" },
+    { id: 3, label: "Creators", link: "/explore/creators" },
   ]);
 
   const createDropdown = useDropdown([
@@ -23,7 +23,7 @@ const Navbar = () => {
   return (
     <section className="sticky top-0 z-50">
       <div className="backdrop-blur-md bg-base/70">
-        <nav className="mx-6 flex items-center justify-between py-4">
+        <nav className="mx-8 flex items-center justify-between py-4">
           <div className="flex gap-10 items-center">
             <Link href="/" className="text-white text-2xl">
               Hazee.
@@ -62,7 +62,9 @@ const Navbar = () => {
               </div>
             </div>
             <Button text="Connect wallet" style="bg-primary font-medium" />
-            <RiShoppingBag4Line size={30} />
+            <button type="button">
+              <RiShoppingBag4Line size={30} />
+            </button>
           </ul>
         </nav>
       </div>

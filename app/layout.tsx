@@ -23,7 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={dm_sans.className}>
         <Navbar />
-        {children}
+        <section className="wrapper">{children}</section>
         <Footer />
       </body>
     </html>
