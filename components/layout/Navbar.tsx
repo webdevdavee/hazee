@@ -16,8 +16,8 @@ const Navbar = () => {
   ]);
 
   const createDropdown = useDropdown([
-    { id: 1, label: "NFT", link: "/" },
-    { id: 2, label: "Collections", link: "/" },
+    { id: 1, label: "NFT", link: "/studio/nft" },
+    { id: 2, label: "Collection", link: "/studio/collection" },
   ]);
 
   return (

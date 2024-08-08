@@ -49,7 +49,7 @@ const PriceRangeDialog: React.FC<PriceRangeDialogProps> = ({
                 <input
                   {...register("minPrice")}
                   type="text"
-                  inputMode="numeric"
+                  inputMode="decimal"
                   placeholder="min-price"
                   className="placeholder:font-medium bg-transparent placeholder:text-sm text-white focus:outline-none"
                 />
