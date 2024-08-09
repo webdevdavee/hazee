@@ -22,7 +22,7 @@ const Navbar = () => {
 
   return (
     <section className="sticky top-0 z-50">
-      <div className="backdrop-blur-md bg-base/70">
+      <div className="backdrop-blur-md bg-base/70 border-b border-b-secondary">
         <nav className="mx-8 flex items-center justify-between py-4">
           <div className="flex gap-10 items-center">
             <Link href="/" className="text-white text-2xl">

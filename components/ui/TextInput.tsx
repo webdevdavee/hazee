@@ -27,15 +27,17 @@ const TextInput: React.FC<Props> = ({
         {label}
         <p>{required ? "*" : "(Optional)"}</p>
       </label>
-      <div className="border-[1px] border-secondary py-2 px-4 rounded-md">
-        <input
-          {...inputRegister}
-          className={`w-full placeholder:font-medium bg-transparent placeholder:text-sm text-white focus:outline-none ${style}`}
-          type={inputType}
-          id={htmlFor}
-          placeholder={placeholder}
-          inputMode={inputMode}
-        />
+      <div>
+        <div className="border-[1px] border-secondary py-2 px-4 rounded-md">
+          <input
+            {...inputRegister}
+            className={`w-full placeholder:font-medium bg-transparent placeholder:text-sm text-white focus:outline-none ${style}`}
+            type={inputType}
+            id={htmlFor}
+            placeholder={placeholder}
+            inputMode={inputMode}
+          />
+        </div>
         {error}
       </div>
     </section>

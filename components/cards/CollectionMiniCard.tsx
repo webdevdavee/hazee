@@ -14,7 +14,7 @@ const CollectionMiniCard: React.FC<Props> = ({ collection }) => {
     >
       <div>
         <Image
-          src={collection.src}
+          src={collection.src[0]}
           width={70}
           height={90}
           quality={100}

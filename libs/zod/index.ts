@@ -27,3 +27,11 @@ export const traitSchema = z.object({
 });
 
 export type TraitSchema = z.infer<typeof traitSchema>;
+
+export const creatCollectionSchema = z.object({
+  name: z.string().min(3, "Use 3 characters or more"),
+  symbol: z.string().min(2, "Use 2 characters or more"),
+  description: z.string().min(3, "Use 3 characters or more").optional(),
+});
+
+export type TCreatCollectionSchema = z.infer<typeof creatCollectionSchema>;

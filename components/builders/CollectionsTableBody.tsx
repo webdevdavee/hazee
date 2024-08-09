@@ -14,7 +14,7 @@ const CollectionsTableBody: React.FC<Props> = ({ collections }) => {
           <td>
             <Link href="#" className="flex items-center gap-3 w-fit">
               <Image
-                src={collection.src}
+                src={collection.src[0]}
                 width={55}
                 height={55}
                 alt="collection"

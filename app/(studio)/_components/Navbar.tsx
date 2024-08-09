@@ -8,7 +8,7 @@ const Navbar = () => {
   const router = useRouter();
 
   return (
-    <section className="sticky top-0 z-40">
+    <section className="sticky top-0 z-40 border-b border-b-secondary bg-base">
       <nav className="mx-8 flex items-center justify-between py-4">
         <button type="button" onClick={() => router.back()}>
           <IoArrowBackCircle size={35} className="cursor-pointer" />

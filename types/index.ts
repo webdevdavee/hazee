@@ -12,7 +12,7 @@ type Collection = {
   by: string;
   volume: string;
   floor: string;
-  src: string;
+  src: string[];
 };
 
 type Creator = {

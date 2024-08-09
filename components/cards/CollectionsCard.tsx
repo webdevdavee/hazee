@@ -18,15 +18,19 @@ const CollectionsCard: React.FC<Props> = ({ collection }) => {
       <Link href="/" className="block">
         <section className="bg-secondary p-1 relative">
           <div className="relative rounded-xl overflow-hidden">
-            <div className="w-full aspect-square relative">
-              <Image
-                src={collection.src}
-                fill
-                quality={100}
-                priority
-                alt="collection"
-                className="object-cover"
-              />
+            <div className="grid grid-cols-2 gap-2">
+              {collection.src.map((src) => (
+                <div key={src} className="w-full aspect-square relative">
+                  <Image
+                    src={src}
+                    fill
+                    quality={100}
+                    priority
+                    alt="collection"
+                    className="object-cover rounded-md"
+                  />
+                </div>
+              ))}
             </div>
 
             <div className="flex flex-col gap-3 bg-secondary p-3">

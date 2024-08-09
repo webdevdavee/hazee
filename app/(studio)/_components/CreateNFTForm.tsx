@@ -12,6 +12,7 @@ import { useOverlayStore } from "@/libs/zustand/overlayStore";
 import AddTraitForm from "./AddTraitForm";
 import { MdOutlineEdit } from "react-icons/md";
 import { IoClose } from "react-icons/io5";
+import Link from "next/link";
 
 const CreateNFTForm = () => {
   const {
@@ -69,7 +70,16 @@ const CreateNFTForm = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-[50%]">
-      <div className="flex flex-col gap-4">
+      <Link href="/studio/collection" className="w-full">
+        <p className="font-medium mb-4">Collection</p>
+        <div className="flex items-center gap-4 bg-secondary p-6 rounded-lg">
+          <button type="button" className="bg-secondaryhover p-4 rounded-md">
+            <FaPlus />
+          </button>
+          <p className="font-medium">Create a new collection</p>
+        </div>
+      </Link>
+      <div className="flex flex-col gap-4 mt-4">
         <TextInput
           inputRegister={register("name")}
           label="Name"
