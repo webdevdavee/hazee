@@ -1,28 +1,25 @@
 import { useEffect } from "react";
 
-export const useClickOutside = (
+const useClickOutside = (
   ref: React.RefObject<HTMLDivElement>,
-  onClickOutside: (value: React.SetStateAction<boolean>) => void
+  onClickOutside: () => void
 ) => {
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        onClickOutside(false);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        event.stopPropagation();
+        onClickOutside();
       }
     };
 
-    const preventBubbling = (e: MouseEvent) => {
-      e.stopPropagation();
-    };
-
-    document.addEventListener("mousedown", handler);
-    ref.current?.addEventListener("mousedown", preventBubbling);
+    document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
-      document.removeEventListener("mousedown", handler);
-      ref.current?.removeEventListener("mousedown", preventBubbling);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [ref, onClickOutside]);
+  }, [onClickOutside]);
+
+  return ref;
 };
 
 export default useClickOutside;

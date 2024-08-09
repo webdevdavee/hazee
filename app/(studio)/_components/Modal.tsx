@@ -17,15 +17,13 @@ const Modal: React.FC<Props> = ({ title, children, setIsModalOpen }) => {
 
   const handleCloseModal = () => {
     hideOverlay();
+    setIsModalOpen(false);
   };
 
-  useClickOutside(modalRef, () => {
-    handleCloseModal();
-  });
+  useClickOutside(modalRef, handleCloseModal);
 
   return (
     <div
-      ref={modalRef}
       className={clsx(
         "fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300",
         {
@@ -34,7 +32,10 @@ const Modal: React.FC<Props> = ({ title, children, setIsModalOpen }) => {
         }
       )}
     >
-      <div className="bg-secondary p-8 rounded-lg shadow-lg w-full max-w-md">
+      <div
+        ref={modalRef}
+        className="bg-base p-8 rounded-lg shadow-lg w-full max-w-md"
+      >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">{title}</h2>
           <button type="button" onClick={handleCloseModal}>

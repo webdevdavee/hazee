@@ -2,13 +2,16 @@
 
 import TextArea from "@/components/ui/TextArea";
 import TextInput from "@/components/ui/TextInput";
-import { createNFTSchema, TCreateNFTSchema } from "@/libs/zod";
+import { createNFTSchema, TCreateNFTSchema, TraitSchema } from "@/libs/zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { FaPlus } from "react-icons/fa6";
 import Modal from "./Modal";
 import { useOverlayStore } from "@/libs/zustand/overlayStore";
+import AddTraitForm from "./AddTraitForm";
+import { MdOutlineEdit } from "react-icons/md";
+import { IoClose } from "react-icons/io5";
 
 const CreateNFTForm = () => {
   const {
@@ -24,12 +27,44 @@ const CreateNFTForm = () => {
     reset();
   };
 
+  const [traits, setTraits] = React.useState<Trait[]>([]);
+  const [traitToEdit, setTraitToEdit] = React.useState<Trait>();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const showOverlay = useOverlayStore((state) => state.showOverlay);
+  const hideOverlay = useOverlayStore((state) => state.hideOverlay);
+  const [isEditingTrait, setIsEditingTrait] = React.useState(false);
 
   const handleOpenModal = () => {
+    setTraitToEdit(undefined);
+    setIsEditingTrait(false);
     setIsModalOpen(true);
     showOverlay();
+  };
+
+  const handleAddTrait = (data: Trait) => {
+    setTraits((prev) => [...prev, data]);
+    setIsModalOpen(false);
+    hideOverlay();
+  };
+
+  const prepareTraitToEdit = (trait: Trait) => {
+    handleOpenModal();
+    setIsEditingTrait(true);
+    setTraitToEdit(trait);
+  };
+
+  const handleEditTrait = (data: TraitSchema) => {
+    setTraits((prev) =>
+      prev.map((trait) =>
+        trait.id === traitToEdit?.id ? { ...trait, ...data } : trait
+      )
+    );
+    setIsModalOpen(false);
+    hideOverlay();
+  };
+
+  const removeTrait = (id: number) => {
+    setTraits((prev) => prev.filter((trait) => trait.id !== id));
   };
 
   return (
@@ -78,7 +113,41 @@ const CreateNFTForm = () => {
             inside your collection page and are also listed out inside your item
             page.
           </p>
-          <div className="mt-2">
+          <div
+            className="my-5 flex flex-col gap-3"
+            style={{ display: traits.length > 0 ? "flex" : "none" }}
+          >
+            {traits
+              .map((trait, index) => (
+                <div
+                  key={`${trait}-${index}`}
+                  className="w-full bg-secondary rounded-md p-3 flex items-center justify-between"
+                >
+                  <p className="font-medium">
+                    {trait.type}: {trait.name}
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => prepareTraitToEdit(trait)}
+                    >
+                      <MdOutlineEdit
+                        size={20}
+                        className="cursor-pointer hover:text-gray-400 hover:transition-all"
+                      />
+                    </button>
+                    <button type="button" onClick={() => removeTrait(trait.id)}>
+                      <IoClose
+                        size={20}
+                        className="cursor-pointer hover:text-gray-400 hover:transition-all"
+                      />
+                    </button>
+                  </div>
+                </div>
+              ))
+              .reverse()}
+          </div>
+          <div className="mt-3">
             <button
               type="button"
               className="p-3 rounded-md flex items-center gap-3 duration-300 hover:bg-secondary hover:transition-all"
@@ -87,12 +156,21 @@ const CreateNFTForm = () => {
               <FaPlus />
               <p>Add trait</p>
             </button>
-            {isModalOpen && (
-              <Modal title="Add trait" setIsModalOpen={setIsModalOpen}>
-                <p>This is the content of the modal.</p>
-              </Modal>
-            )}
           </div>
+          {isModalOpen && (
+            <Modal
+              title={!isEditingTrait ? "Add Trait" : "Edit Trait"}
+              setIsModalOpen={setIsModalOpen}
+            >
+              <AddTraitForm
+                onAddTrait={handleAddTrait}
+                onEditTrait={handleEditTrait}
+                initialValue={traitToEdit}
+                isEditingTrait={isEditingTrait}
+                traits={traits}
+              />
+            </Modal>
+          )}
         </div>
       </div>
     </form>

@@ -31,3 +31,5 @@ type DropdownItem = {
   icon?: React.ReactNode;
   isButton?: boolean;
 };
+
+type Trait = { id: number; type: string; name: string };

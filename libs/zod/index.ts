@@ -20,3 +20,10 @@ export const createNFTSchema = z.object({
 });
 
 export type TCreateNFTSchema = z.infer<typeof createNFTSchema>;
+
+export const traitSchema = z.object({
+  type: z.string().min(3, "Use 3 characters or more"),
+  name: z.string().min(3, "Use 3 characters or more"),
+});
+
+export type TraitSchema = z.infer<typeof traitSchema>;
