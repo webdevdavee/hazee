@@ -13,7 +13,7 @@ const CollectionsCard: React.FC<Props> = ({ collection }) => {
       whileHover={{ y: -10 }}
       initial={{ y: 0 }}
       transition={{ duration: 0.3 }}
-      className="rounded-2xl overflow-hidden"
+      className="w-full rounded-2xl overflow-hidden"
     >
       <Link href="/" className="block">
         <section className="bg-secondary p-1 relative">
@@ -34,12 +34,12 @@ const CollectionsCard: React.FC<Props> = ({ collection }) => {
             </div>
 
             <div className="flex flex-col gap-3 bg-secondary p-3">
-              <div className="flex justify-between gap-6">
+              <div className="flex flex-col justify-between gap-1">
                 <div className="flex flex-col">
                   <p className="text-sm text-gray-400">@Hazee</p>
                   <p className="font-medium">{collection.name}</p>
                 </div>
-                <div>
+                <div className="flex items-center justify-between">
                   <p className="text-gray-400 font-medium">
                     Floor:{" "}
                     <span className="text-white">{collection.floor}</span>

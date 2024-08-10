@@ -35,3 +35,9 @@ export const creatCollectionSchema = z.object({
 });
 
 export type TCreatCollectionSchema = z.infer<typeof creatCollectionSchema>;
+
+export const bidPriceSchema = z.object({
+  bid: z.string(),
+});
+
+export type TBidPriceSchema = z.infer<typeof bidPriceSchema>;

@@ -5,6 +5,8 @@ type sampleNft = {
   price: string;
   bid?: string;
   ends?: string;
+  owner: string;
+  collection: string;
 };
 
 type Collection = {

@@ -16,7 +16,7 @@ const NftCard: React.FC<Props> = ({ type, nft }) => {
 
       {/* Card content */}
       <div className="relative rounded-3xl overflow-hidden">
-        <Link href="#" className="relative">
+        <Link href={`/nft/${nft.id}`} className="relative">
           <Image
             src={nft.src}
             width={300}

@@ -5,7 +5,7 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-t-gray-400 p-6">
+    <footer className="border-t border-t-secondary p-6">
       <p className="text-sm text-center text-slate-300">
         &copy; {currentYear} Hazee. All rights reserved. Design inspiration
         credits:{" "}
