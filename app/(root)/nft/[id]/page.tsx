@@ -1,5 +1,6 @@
 import NFTDetails from "@/components/builders/NFTDetails";
 import { sampleNfts } from "@/constants";
+import { Metadata } from "next";
 
 type Params = {
   params: {
@@ -7,15 +8,14 @@ type Params = {
   };
 };
 
-// export async function generateMetadata({
-//   params: { id },
-// }: Params): Promise<Metadata> {
-//   const job = await getJobById(id);
-//   return {
-//     title: `${job.title} - Talentio`,
-//     description: job.description,
-//   };
-// }
+export async function generateMetadata({
+  params: { id },
+}: Params): Promise<Metadata> {
+  const nft = sampleNfts.find((nft) => nft.id == id);
+  return {
+    title: `${nft?.name} - Hazee`,
+  };
+}
 
 const page = ({ params: { id } }: Params) => {
   const nft = sampleNfts.find((nft) => nft.id == id);
@@ -28,9 +28,6 @@ const page = ({ params: { id } }: Params) => {
 
 export default page;
 
-// export async function generateStaticParams() {
-//   const fetchedJobs = await getJobs();
-//   let jobs = [];
-//   jobs = fetchedJobs?.jobsNoLimit ?? [];
-//   return jobs.map((job: Job) => ({ id: job._id }));
-// }
+export async function generateStaticParams() {
+  return sampleNfts.map((nft) => nft.id);
+}

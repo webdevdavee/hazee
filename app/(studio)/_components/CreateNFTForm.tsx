@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { FaPlus } from "react-icons/fa6";
-import Modal from "./Modal";
+import Modal from "../../../components/layout/Modal";
 import { useOverlayStore } from "@/libs/zustand/overlayStore";
 import AddTraitForm from "./AddTraitForm";
 import { MdOutlineEdit } from "react-icons/md";
@@ -100,7 +100,9 @@ const CreateNFTForm = () => {
           inputMode="numeric"
           required
           error={
-            errors.name && <p className="text-red-500">{errors.name.message}</p>
+            errors.supply && (
+              <p className="text-red-500">{errors.supply.message}</p>
+            )
           }
         />
         <TextArea

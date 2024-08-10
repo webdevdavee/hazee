@@ -1,27 +1,33 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import Button from "../ui/Button";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { bidPriceSchema, TBidPriceSchema } from "@/libs/zod";
 import { FaPlus } from "react-icons/fa6";
+import Modal from "@/components/layout/Modal";
+import { useOverlayStore } from "@/libs/zustand/overlayStore";
+import React from "react";
+import MakeOffer from "./MakeOffer";
 
-const NFTPurchaseCard = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<TBidPriceSchema>({
-    resolver: zodResolver(bidPriceSchema),
-  });
+type Props = {
+  nft: sampleNft;
+};
 
-  const onSubmit = async (data: TBidPriceSchema) => {
-    reset();
+const NFTPurchaseCard: React.FC<Props> = ({ nft }) => {
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const showOverlay = useOverlayStore((state) => state.showOverlay);
+  const hideOverlay = useOverlayStore((state) => state.hideOverlay);
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+    showOverlay();
   };
 
   return (
     <section className="border border-secondary rounded-lg p-4">
+      {isModalOpen && (
+        <Modal title="Make an offer" setIsModalOpen={setIsModalOpen}>
+          <MakeOffer nft={nft} />
+        </Modal>
+      )}
       <div className="flex flex-col gap-2 mb-4">
         <p className="text-lg font-medium">Sale ends in:</p>
         <div className="flex items-center gap-5">
@@ -45,13 +51,14 @@ const NFTPurchaseCard = () => {
       </div>
       <div className="bg-secondary bg-opacity-30 rounded-md flex flex-col p-4">
         <p className="text-[gray] text-lg font-medium">Price</p>
-        <p className="font-medium text-3xl">0.88 ETH</p>
+        <p className="font-medium text-3xl">{nft.price}</p>
         <p className="text-[gray] text-lg font-medium">$2,315</p>
       </div>
       <div className="mt-5 flex gap-4">
         <Button
           text="Place a bid"
           style="bg-white text-base font-medium w-full rounded-md"
+          onclick={handleOpenModal}
         />
         <div className="flex items-center gap-2 w-full">
           <Button
