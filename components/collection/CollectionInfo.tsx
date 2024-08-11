@@ -16,7 +16,7 @@ const CollectionInfo: React.FC<Props> = ({ collection }) => {
           className="text-[gray]"
         />
       </div>
-      <div className="w-[25%] rounded-2xl border border-secondary p-4 border-opacity-50">
+      <div className="w-[25%] h-fit rounded-2xl border border-secondary p-4 border-opacity-50">
         <div className="flex flex-col gap-4 border-b border-b-secondary pb-4">
           <div className="flex items-center justify-between">
             <p>Floor</p>

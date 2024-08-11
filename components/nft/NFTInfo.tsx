@@ -6,6 +6,7 @@ import NFTPurchaseCard from "../cards/NFTPurchaseCard";
 import useCopyToClipboard from "@/hooks/useCopyToClipboard";
 import React from "react";
 import { usePathname } from "next/navigation";
+import { collections } from "@/constants";
 
 type Props = {
   nft: sampleNft;
@@ -15,6 +16,7 @@ const NFTInfo: React.FC<Props> = ({ nft }) => {
   const { copyToClipboard, copyStatus } = useCopyToClipboard();
   const [fullURL, setFullURL] = React.useState<string>("");
   const pathname = usePathname();
+  const [collection, setCollection] = React.useState<Collection>();
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
@@ -25,12 +27,22 @@ const NFTInfo: React.FC<Props> = ({ nft }) => {
     }
   }, [pathname]);
 
+  React.useEffect(() => {
+    const getNFTCollection = () => {
+      const collection = collections.find(
+        (collection) => collection.name === nft.collection
+      );
+      setCollection(collection);
+    };
+    getNFTCollection();
+  }, [nft.collection]);
+
   return (
     <section className="w-[60%]">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-5">
           <Link
-            href="#"
+            href={`/collection/${collection?.id}`}
             className="w-fit font-medium text-[gray] text-lg underline underline-offset-4"
           >
             {nft.collection}

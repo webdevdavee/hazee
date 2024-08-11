@@ -9,7 +9,7 @@ type Props = {
 const CollectionMiniCard: React.FC<Props> = ({ collection }) => {
   return (
     <Link
-      href={`collection/${collection.id}`}
+      href={`/collection/${collection.id}`}
       className="flex items-center gap-3 justify-between p-2 rounded-sm hover:bg-secondary"
     >
       <div>

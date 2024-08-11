@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import Button from "../ui/Button";
 import { FaLink } from "react-icons/fa6";
@@ -23,7 +21,7 @@ const CollectionCTA = () => {
   return (
     <>
       <section className="mt-4 flex items-center gap-4">
-        <Button text="Place floor bid" style="bg-primary rounded-md" />
+        <Button text="Place bid for collection" style="bg-primary rounded-md" />
         <button
           type="button"
           className="w-fit bg-secondary p-3 rounded-md text-sm"

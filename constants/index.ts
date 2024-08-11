@@ -205,35 +205,43 @@ export const collections = [
 
 export const creators = [
   {
+    id: 1,
     username: "Figoti",
     name: "Figoti Mano",
     src: "/images/nft (5).jpeg",
     owns: 29,
     sold: 31,
     created: 45,
+    cover: "/images/creator-cover (1).gif",
   },
   {
+    id: 2,
     username: "Jake",
     name: "Jake Funes",
     src: "/images/nft (6).jpeg",
     owns: 6,
     sold: 29,
     created: 50,
+    cover: "/images/creator-cover (1).jpeg",
   },
   {
+    id: 3,
     username: "Ebuka",
     name: "Ebuka Okafor",
     src: "/images/nft (7).jpeg",
     owns: 12,
     sold: 52,
     created: 77,
+    cover: "/images/creator-cover (2).gif",
   },
   {
+    id: 4,
     username: "Michael",
     name: "Michael Init",
     src: "/images/nft (8).jpeg",
     owns: 19,
     sold: 44,
     created: 68,
+    cover: "/images/creator-cover (3).gif",
   },
 ];

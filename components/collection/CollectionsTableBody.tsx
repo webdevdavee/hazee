@@ -12,7 +12,10 @@ const CollectionsTableBody: React.FC<Props> = ({ collections }) => {
         <tr key={collection.name}>
           <td className="text-sm p-3">{index + 1}</td>
           <td>
-            <Link href="#" className="flex items-center gap-3 w-fit">
+            <Link
+              href={`/collection/${collection.id}`}
+              className="flex items-center gap-3 w-fit"
+            >
               <Image
                 src={collection.src[0]}
                 width={55}

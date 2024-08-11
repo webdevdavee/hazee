@@ -19,12 +19,14 @@ type Collection = {
 };
 
 type Creator = {
+  id: number;
   username: string;
   name: string;
   src: string;
   owns: number;
   sold: number;
   created: number;
+  cover: string;
 };
 
 type DropdownItem = {

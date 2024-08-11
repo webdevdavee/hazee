@@ -1,8 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import React from "react";
 import CollectionInfo from "./CollectionInfo";
 import CollectionCTA from "./CollectionCTA";
-import CollectionItems from "./CollectionItems";
+import CollectionItemsTabs from "./CollectionItemsTabs";
 
 type Props = {
   collection: Collection | undefined;
@@ -29,13 +31,13 @@ const CollectionDetails: React.FC<Props> = ({ collection }) => {
             height={150}
             quality={100}
             alt={collection?.name as string}
-            className="object-cover"
+            className="object-cover h-[9.5rem]"
           />
         </div>
       </div>
       <CollectionInfo collection={collection} />
       <CollectionCTA />
-      <CollectionItems />
+      <CollectionItemsTabs />
     </section>
   );
 };

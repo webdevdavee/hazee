@@ -14,7 +14,6 @@ type Props = {
 const NFTPurchaseCard: React.FC<Props> = ({ nft }) => {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const showOverlay = useOverlayStore((state) => state.showOverlay);
-  const hideOverlay = useOverlayStore((state) => state.hideOverlay);
 
   const handleOpenModal = () => {
     setIsModalOpen(true);

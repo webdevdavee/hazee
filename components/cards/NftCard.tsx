@@ -2,6 +2,7 @@ import Image from "next/image";
 import { LuHeart } from "react-icons/lu";
 import Link from "next/link";
 import { BsCartPlus } from "react-icons/bs";
+import { FaPlus } from "react-icons/fa";
 
 type Props = {
   type: string;
@@ -79,11 +80,12 @@ const NftCard: React.FC<Props> = ({ type, nft }) => {
                 >
                   Buy now
                 </Link>
-                <BsCartPlus
-                  color="white"
-                  size={40}
-                  className="cursor-pointer p-1"
-                />
+                <button
+                  type="button"
+                  className="bg-white p-[0.85rem] rounded-lg"
+                >
+                  <FaPlus color="#181818" />
+                </button>
               </div>
             </div>
           </div>

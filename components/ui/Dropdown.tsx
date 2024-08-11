@@ -26,7 +26,7 @@ const Dropdown: React.FC<Props> = ({ items, isOpen, selectItem }) => {
               <button
                 key={item.id}
                 onClick={() => selectItem?.(item)}
-                className="flex items-center w-fit px-4 py-2 text-sm font-medium hover:rounded-md hover:transition hover:bg-secondary text-left"
+                className="flex items-center w-full px-4 py-2 text-sm font-medium hover:rounded-md hover:transition hover:bg-secondary text-left"
                 role="menuitem"
               >
                 {item.icon && <span className="mr-2">{item.icon}</span>}
