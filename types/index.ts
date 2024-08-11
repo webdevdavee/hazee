@@ -36,3 +36,9 @@ type DropdownItem = {
 };
 
 type Trait = { id: number; type: string; name: string };
+
+type TruncateTextProps = {
+  text: string;
+  maxChars: number;
+  className?: string;
+};
