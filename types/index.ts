@@ -10,6 +10,7 @@ type sampleNft = {
 };
 
 type Collection = {
+  id: number;
   name: string;
   by: string;
   volume: string;

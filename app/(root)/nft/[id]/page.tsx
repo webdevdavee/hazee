@@ -1,4 +1,4 @@
-import NFTDetails from "@/components/builders/NFTDetails";
+import NFTDetails from "@/components/nft/NFTDetails";
 import { sampleNfts } from "@/constants";
 import { Metadata } from "next";
 
@@ -20,9 +20,9 @@ export async function generateMetadata({
 const page = ({ params: { id } }: Params) => {
   const nft = sampleNfts.find((nft) => nft.id == id);
   return (
-    <section>
+    <>
       <NFTDetails nft={nft} />
-    </section>
+    </>
   );
 };
 

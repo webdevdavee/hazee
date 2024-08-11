@@ -98,6 +98,7 @@ export const sampleNfts: sampleNft[] = [
 
 export const collections = [
   {
+    id: 1,
     name: "Galactic Echoes",
     by: "Hazee",
     volume: "4542 ETH",
@@ -110,6 +111,7 @@ export const collections = [
     ],
   },
   {
+    id: 2,
     name: "Neon Dreamscapes",
     by: "Hazee",
     volume: "2342 ETH",
@@ -122,6 +124,7 @@ export const collections = [
     ],
   },
   {
+    id: 3,
     name: "Ethereal Artifacts",
     by: "Hazee",
     volume: "1342 ETH",
@@ -134,6 +137,7 @@ export const collections = [
     ],
   },
   {
+    id: 4,
     name: "Hazee Art Wave",
     by: "Hazee",
     volume: "6342 ETH",
@@ -146,6 +150,7 @@ export const collections = [
     ],
   },
   {
+    id: 5,
     name: "Pixelated Paradigms",
     by: "Hazee",
     volume: "7342 ETH",
@@ -158,6 +163,7 @@ export const collections = [
     ],
   },
   {
+    id: 6,
     name: "Cyber Mythos",
     by: "Hazee",
     volume: "8342 ETH",
@@ -170,6 +176,7 @@ export const collections = [
     ],
   },
   {
+    id: 7,
     name: "Mystic Realms",
     by: "Hazee",
     volume: "9342 ETH",
@@ -182,6 +189,7 @@ export const collections = [
     ],
   },
   {
+    id: 8,
     name: "Quantum Odyssey",
     by: "Hazee",
     volume: "1442 ETH",

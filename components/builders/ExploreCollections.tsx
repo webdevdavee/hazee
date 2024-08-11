@@ -1,7 +1,7 @@
 "use client";
 
 import Searchbar from "../ui/Searchbar";
-import CollectionsTable from "./CollectionsTable";
+import CollectionsTable from "../collection/CollectionsTable";
 
 const ExploreCollections = () => {
   return (

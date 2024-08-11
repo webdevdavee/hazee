@@ -21,7 +21,7 @@ const Navbar = () => {
   ]);
 
   return (
-    <section className="sticky top-0 z-50">
+    <section className="sticky top-0 z-[45]">
       <div className="backdrop-blur-md bg-base/70 border-b border-b-secondary">
         <nav className="mx-8 flex items-center justify-between py-4">
           <div className="flex gap-10 items-center">

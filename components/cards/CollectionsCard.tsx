@@ -15,7 +15,7 @@ const CollectionsCard: React.FC<Props> = ({ collection }) => {
       transition={{ duration: 0.3 }}
       className="w-full rounded-2xl overflow-hidden"
     >
-      <Link href="/" className="block">
+      <Link href={`collection/${collection.id}`} className="block">
         <section className="bg-secondary p-1 relative">
           <div className="relative rounded-xl overflow-hidden">
             <div className="grid grid-cols-2 gap-2">
