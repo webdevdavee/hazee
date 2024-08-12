@@ -87,9 +87,9 @@ contract NFTMarketplace is ReentrancyGuard {
         uint256 royaltyFee = 0;
 
         if (address(nftContract).code.length > 0) {
-            try NFTCollection(listing.nftContract).royaltyPercentage() returns (
-                uint256 royaltyPercentage
-            ) {
+            try
+                NFTCollection(payable(listing.nftContract)).royaltyPercentage()
+            returns (uint256 royaltyPercentage) {
                 royaltyFee = (listing.price * royaltyPercentage) / 10000;
             } catch {
                 // If the call fails, assume it's not an NFTCollection contract and skip royalties
