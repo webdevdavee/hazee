@@ -6,18 +6,18 @@ export const categories = [
 ];
 
 export const marqueeImages = [
-  "/images/marquee (1).jpeg",
-  "/images/marquee (2).jpeg",
-  "/images/marquee (3).jpeg",
-  "/images/marquee (4).jpeg",
-  "/images/marquee (5).jpeg",
+  "/images/marquee (1).webp",
+  "/images/marquee (2).webp",
+  "/images/marquee (3).webp",
+  "/images/marquee (4).webp",
+  "/images/marquee (5).webp",
 ];
 
 export const sampleNfts: sampleNft[] = [
   {
     id: 1,
     name: "CryptoGlimmer #217",
-    src: "/images/nft (1).jpeg",
+    src: "/images/nft (1).webp",
     price: "0.5 ETH",
     bid: "2.0 ETH",
     ends: "2h 55m 32s",
@@ -27,7 +27,7 @@ export const sampleNfts: sampleNft[] = [
   {
     id: 2,
     name: "DigitalEclipse #045",
-    src: "/images/nft (2).jpeg",
+    src: "/images/nft (2).webp",
     price: "0.1 ETH",
     bid: "1.3 MATIC",
     ends: "2h 55m 32s",
@@ -37,7 +37,7 @@ export const sampleNfts: sampleNft[] = [
   {
     id: 3,
     name: "NeonOdyssey #388",
-    src: "/images/nft (3).jpeg",
+    src: "/images/nft (3).webp",
     price: "3.2 ETH",
     bid: "3.0 AVAX",
     ends: "2h 55m 32s",
@@ -47,7 +47,7 @@ export const sampleNfts: sampleNft[] = [
   {
     id: 4,
     name: "PixelVoyage #029",
-    src: "/images/nft (4).jpeg",
+    src: "/images/nft (4).webp",
     price: "0.7 ETH",
     bid: "1.6 ETH",
     ends: "2h 55m 32s",
@@ -57,7 +57,7 @@ export const sampleNfts: sampleNft[] = [
   {
     id: 5,
     name: "GalacticDreamer #174",
-    src: "/images/nft (5).jpeg",
+    src: "/images/nft (5).webp",
     price: "1.2 ETH",
     bid: "2.5 ETH",
     ends: "2h 55m 32s",
@@ -67,7 +67,7 @@ export const sampleNfts: sampleNft[] = [
   {
     id: 6,
     name: "EtherealWanderer #909",
-    src: "/images/nft (6).jpeg",
+    src: "/images/nft (6).webp",
     price: "2.0 ETH",
     bid: "4.2 ETH",
     ends: "2h 55m 32s",
@@ -77,7 +77,7 @@ export const sampleNfts: sampleNft[] = [
   {
     id: 7,
     name: "CyberPhoenixRising #561",
-    src: "/images/nft (7).jpeg",
+    src: "/images/nft (7).webp",
     price: "1.1 ETH",
     bid: "5.4 ETH",
     ends: "2h 55m 32s",
@@ -87,7 +87,7 @@ export const sampleNfts: sampleNft[] = [
   {
     id: 8,
     name: "MysticRealmExplorer #202",
-    src: "/images/nft (8).jpeg",
+    src: "/images/nft (8).webp",
     price: "3.1 ETH",
     bid: "2.3 ETH",
     ends: "2h 55m 32s",
@@ -104,10 +104,10 @@ export const collections = [
     volume: "4542 ETH",
     floor: "0.06 ETH",
     src: [
-      "/images/collection-img (1).jpeg",
+      "/images/collection-img (1).webp",
       "/images/collection-cover (1).gif",
-      "/images/collection-cover (1).jpeg",
-      "/images/collection-cover (2).jpeg",
+      "/images/collection-cover (1).webp",
+      "/images/collection-cover (2).webp",
     ],
   },
   {
@@ -117,10 +117,10 @@ export const collections = [
     volume: "2342 ETH",
     floor: "0.06 ETH",
     src: [
-      "/images/collection-img (2).jpeg",
-      "/images/collection-cover (3).jpeg",
-      "/images/collection-cover (4).jpeg",
-      "/images/collection-cover (5).jpeg",
+      "/images/collection-img (2).webp",
+      "/images/collection-cover (3).webp",
+      "/images/collection-cover (4).webp",
+      "/images/collection-cover (5).webp",
     ],
   },
   {
@@ -130,10 +130,10 @@ export const collections = [
     volume: "1342 ETH",
     floor: "0.06 ETH",
     src: [
-      "/images/collection-img (3).jpeg",
-      "/images/collection-cover (6).jpeg",
-      "/images/collection-cover (7).jpeg",
-      "/images/collection-cover (8).jpeg",
+      "/images/collection-img (3).webp",
+      "/images/collection-cover (6).webp",
+      "/images/collection-cover (7).webp",
+      "/images/collection-cover (8).webp",
     ],
   },
   {
@@ -143,10 +143,10 @@ export const collections = [
     volume: "6342 ETH",
     floor: "0.06 ETH",
     src: [
-      "/images/collection-img (4).jpeg",
-      "/images/collection-cover (9).jpeg",
-      "/images/collection-cover (10).jpeg",
-      "/images/collection-cover (11).jpeg",
+      "/images/collection-img (4).webp",
+      "/images/collection-cover (9).webp",
+      "/images/collection-cover (10).webp",
+      "/images/collection-cover (11).webp",
     ],
   },
   {
@@ -156,10 +156,10 @@ export const collections = [
     volume: "7342 ETH",
     floor: "0.06 ETH",
     src: [
-      "/images/collection-img (5).jpeg",
-      "/images/collection-cover (12).jpeg",
-      "/images/collection-cover (13).jpeg",
-      "/images/collection-cover (14).jpeg",
+      "/images/collection-img (5).webp",
+      "/images/collection-cover (12).webp",
+      "/images/collection-cover (13).webp",
+      "/images/collection-cover (14).webp",
     ],
   },
   {
@@ -169,10 +169,10 @@ export const collections = [
     volume: "8342 ETH",
     floor: "0.06 ETH",
     src: [
-      "/images/collection-img (6).jpeg",
-      "/images/collection-cover (15).jpeg",
-      "/images/collection-cover (16).jpeg",
-      "/images/collection-cover (17).jpeg",
+      "/images/collection-img (6).webp",
+      "/images/collection-cover (15).webp",
+      "/images/collection-cover (16).webp",
+      "/images/collection-cover (17).webp",
     ],
   },
   {
@@ -182,10 +182,10 @@ export const collections = [
     volume: "9342 ETH",
     floor: "0.1 ETH",
     src: [
-      "/images/collection-img (7).gif",
-      "/images/collection-cover (18).jpeg",
-      "/images/collection-cover (19).jpeg",
-      "/images/collection-cover (20).jpeg",
+      "/images/collection-img (7).webp",
+      "/images/collection-cover (18).webp",
+      "/images/collection-cover (19).webp",
+      "/images/collection-cover (20).webp",
     ],
   },
   {
@@ -195,10 +195,10 @@ export const collections = [
     volume: "1442 ETH",
     floor: "0.16 ETH",
     src: [
-      "/images/collection-img (8).jpeg",
-      "/images/collection-cover (21).jpeg",
-      "/images/collection-cover (22).jpeg",
-      "/images/collection-cover (23).jpeg",
+      "/images/collection-img (8).webp",
+      "/images/collection-cover (21).webp",
+      "/images/collection-cover (22).webp",
+      "/images/collection-cover (23).webp",
     ],
   },
 ];
@@ -208,27 +208,27 @@ export const creators = [
     id: 1,
     username: "Figoti",
     name: "Figoti Mano",
-    src: "/images/nft (5).jpeg",
+    src: "/images/nft (5).webp",
     owns: 29,
     sold: 31,
     created: 45,
-    cover: "/images/creator-cover (1).gif",
+    cover: "/images/creator-cover (1).webp",
   },
   {
     id: 2,
     username: "Jake",
     name: "Jake Funes",
-    src: "/images/nft (6).jpeg",
+    src: "/images/nft (6).webp",
     owns: 6,
     sold: 29,
     created: 50,
-    cover: "/images/creator-cover (1).jpeg",
+    cover: "/images/creator-cover (1).webp",
   },
   {
     id: 3,
     username: "Ebuka",
     name: "Ebuka Okafor",
-    src: "/images/nft (7).jpeg",
+    src: "/images/nft (7).webp",
     owns: 12,
     sold: 52,
     created: 77,
@@ -238,7 +238,7 @@ export const creators = [
     id: 4,
     username: "Michael",
     name: "Michael Init",
-    src: "/images/nft (8).jpeg",
+    src: "/images/nft (8).webp",
     owns: 19,
     sold: 44,
     created: 68,
