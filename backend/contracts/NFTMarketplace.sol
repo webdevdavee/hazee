@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./NFTCollection.sol";
+import "./NFTAuction.sol";
 
 contract NFTMarketplace is ReentrancyGuard {
     struct Listing {
@@ -19,6 +20,8 @@ contract NFTMarketplace is ReentrancyGuard {
 
     uint256 public platformFeePercentage = 250; // 2.5%
     address public feeRecipient;
+
+    NFTAuction public auctionContract;
 
     event NFTListed(
         uint256 listingId,
@@ -37,8 +40,9 @@ contract NFTMarketplace is ReentrancyGuard {
     );
     event ListingCancelled(uint256 listingId);
 
-    constructor(address _feeRecipient) {
+    constructor(address _feeRecipient, address _auctionAddress) {
         feeRecipient = _feeRecipient;
+        auctionContract = NFTAuction(_auctionAddress);
     }
 
     function listNFT(
@@ -55,6 +59,10 @@ contract NFTMarketplace is ReentrancyGuard {
         require(
             nftContract.isApprovedForAll(msg.sender, address(this)),
             "Contract not approved"
+        );
+        require(
+            !auctionContract.isNFTOnAuction(_nftContract, _tokenId),
+            "NFT is currently on auction"
         );
 
         listingCounter++;
@@ -79,6 +87,13 @@ contract NFTMarketplace is ReentrancyGuard {
         Listing storage listing = listings[_listingId];
         require(listing.isActive, "Listing is not active");
         require(msg.value >= listing.price, "Insufficient payment");
+        require(
+            !auctionContract.isNFTOnAuction(
+                listing.nftContract,
+                listing.tokenId
+            ),
+            "NFT is currently on auction"
+        );
 
         listing.isActive = false;
         IERC721 nftContract = IERC721(listing.nftContract);
@@ -152,5 +167,21 @@ contract NFTMarketplace is ReentrancyGuard {
             listing.tokenId,
             _newPrice
         );
+    }
+
+    function isNFTListed(
+        address _nftContract,
+        uint256 _tokenId
+    ) external view returns (bool) {
+        for (uint256 i = 1; i <= listingCounter; i++) {
+            if (
+                listings[i].nftContract == _nftContract &&
+                listings[i].tokenId == _tokenId &&
+                listings[i].isActive
+            ) {
+                return true;
+            }
+        }
+        return false;
     }
 }
