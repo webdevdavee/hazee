@@ -13,7 +13,7 @@ contract NFTCollection is Ownable, ReentrancyGuard {
     uint256 public mintedSupply;
     uint256 public royaltyPercentage;
     uint256 public floorPrice;
-    uint256 public numberOfOwners;
+    uint256 public owners;
     address public collectionCreator;
 
     struct CollectionOffer {
@@ -44,6 +44,7 @@ contract NFTCollection is Ownable, ReentrancyGuard {
         uint256 amount
     );
     event FloorPriceUpdated(uint256 newFloorPrice);
+    event RoyaltyPercentageUpdated(uint256 newRoyaltyPercentage);
 
     constructor(
         string memory _name,
@@ -53,8 +54,8 @@ contract NFTCollection is Ownable, ReentrancyGuard {
         uint256 _floorPrice
     ) Ownable(msg.sender) {
         require(
-            _royaltyPercentage <= 10000,
-            "Royalty percentage must be between 0 and 100%"
+            _royaltyPercentage <= 4000,
+            "Royalty percentage must be 40% or less"
         );
         name = _name;
         description = _description;
@@ -63,12 +64,11 @@ contract NFTCollection is Ownable, ReentrancyGuard {
         floorPrice = _floorPrice;
         collectionCreator = msg.sender;
 
-        NFT newNFTContract = new NFT(_name, "NFT");
+        NFT newNFTContract = new NFT(_name, "NFT", address(this));
         nftContract = address(newNFTContract);
     }
 
     function mintNFT(
-        address to,
         string memory tokenURI,
         string memory nftName,
         string memory nftDescription,
@@ -79,7 +79,7 @@ contract NFTCollection is Ownable, ReentrancyGuard {
         NFT nft = NFT(nftContract);
         mintedSupply++;
         uint256 tokenId = nft.mint(
-            to,
+            msg.sender,
             tokenURI,
             nftName,
             nftDescription,
@@ -89,12 +89,12 @@ contract NFTCollection is Ownable, ReentrancyGuard {
         mintedTokens.push(tokenId);
         tokenIdToIndex[tokenId] = mintedTokens.length - 1;
 
-        if (!_isOwner[to]) {
-            _isOwner[to] = true;
-            numberOfOwners++;
+        if (!_isOwner[msg.sender]) {
+            _isOwner[msg.sender] = true;
+            owners++;
         }
 
-        emit NFTMinted(tokenId, to);
+        emit NFTMinted(tokenId, msg.sender);
         return tokenId;
     }
 
@@ -105,6 +105,17 @@ contract NFTCollection is Ownable, ReentrancyGuard {
     function updateFloorPrice(uint256 _floorPrice) public onlyOwner {
         floorPrice = _floorPrice;
         emit FloorPriceUpdated(_floorPrice);
+    }
+
+    function updateRoyaltyPercentage(
+        uint256 _royaltyPercentage
+    ) public onlyOwner {
+        require(
+            _royaltyPercentage <= 4000,
+            "Royalty percentage must be 40% or less"
+        );
+        royaltyPercentage = _royaltyPercentage;
+        emit RoyaltyPercentageUpdated(_royaltyPercentage);
     }
 
     function placeCollectionOffer(
@@ -163,7 +174,7 @@ contract NFTCollection is Ownable, ReentrancyGuard {
         uint256 royaltyAmount = (offer.amount * royaltyPercentage) / 10000;
         uint256 sellerProceeds = offer.amount - royaltyAmount;
 
-        payable(owner()).transfer(royaltyAmount);
+        payable(collectionCreator).transfer(royaltyAmount);
         payable(msg.sender).transfer(sellerProceeds);
 
         for (uint256 i = 0; i < tokenIds.length; i++) {
@@ -193,12 +204,12 @@ contract NFTCollection is Ownable, ReentrancyGuard {
             }
             if (!stillOwner) {
                 _isOwner[from] = false;
-                numberOfOwners--;
+                owners--;
             }
         }
         if (to != address(0) && !_isOwner[to]) {
             _isOwner[to] = true;
-            numberOfOwners++;
+            owners++;
         }
     }
 

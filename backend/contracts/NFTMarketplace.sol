@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./NFTCollection.sol";
 import "./NFTAuction.sol";
+import "./NFT.sol";
 
 contract NFTMarketplace is ReentrancyGuard {
     struct Listing {
@@ -13,6 +14,7 @@ contract NFTMarketplace is ReentrancyGuard {
         uint256 tokenId;
         uint256 price;
         bool isActive;
+        NFT.NFTStatus saleType;
     }
 
     struct CollectionInfo {
@@ -25,7 +27,7 @@ contract NFTMarketplace is ReentrancyGuard {
         uint256 mintedSupply;
         uint256 royaltyPercentage;
         uint256 floorPrice;
-        uint256 numberOfOwners;
+        uint256 owners;
         bool isActive;
     }
 
@@ -45,7 +47,8 @@ contract NFTMarketplace is ReentrancyGuard {
         address seller,
         address nftContract,
         uint256 tokenId,
-        uint256 price
+        uint256 price,
+        NFT.NFTStatus saleType
     );
     event NFTSold(
         uint256 listingId,
@@ -69,12 +72,58 @@ contract NFTMarketplace is ReentrancyGuard {
         auctionContract = NFTAuction(_auctionAddress);
     }
 
+    function createCollection(
+        string memory _name,
+        string memory _description,
+        uint256 _maxSupply,
+        uint256 _royaltyPercentage,
+        uint256 _floorPrice
+    ) external nonReentrant returns (uint256) {
+        require(
+            _royaltyPercentage <= 4000,
+            "Royalty percentage must be 40% or less"
+        );
+
+        NFTCollection newCollection = new NFTCollection(
+            _name,
+            _description,
+            _maxSupply,
+            _royaltyPercentage,
+            _floorPrice
+        );
+
+        collectionCounter++;
+        collections[collectionCounter] = CollectionInfo({
+            collectionAddress: address(newCollection),
+            creator: msg.sender,
+            name: _name,
+            description: _description,
+            nftContract: newCollection.nftContract(),
+            maxSupply: _maxSupply,
+            mintedSupply: 0,
+            royaltyPercentage: _royaltyPercentage,
+            floorPrice: _floorPrice,
+            owners: 0,
+            isActive: true
+        });
+
+        emit CollectionAdded(
+            collectionCounter,
+            address(newCollection),
+            msg.sender,
+            _name
+        );
+
+        return collectionCounter;
+    }
+
+    // Necessity: adding pre-existing collections
     function addCollection(address _collectionAddress) external {
         NFTCollection collection = NFTCollection(payable(_collectionAddress));
         collectionCounter++;
         collections[collectionCounter] = CollectionInfo({
             collectionAddress: _collectionAddress,
-            creator: collection.getCollectionCreator(),
+            creator: collection.collectionCreator(),
             name: collection.name(),
             description: collection.description(),
             nftContract: collection.nftContract(),
@@ -82,14 +131,14 @@ contract NFTMarketplace is ReentrancyGuard {
             mintedSupply: collection.mintedSupply(),
             royaltyPercentage: collection.royaltyPercentage(),
             floorPrice: collection.floorPrice(),
-            numberOfOwners: collection.numberOfOwners(),
+            owners: collection.owners(),
             isActive: true
         });
 
         emit CollectionAdded(
             collectionCounter,
             _collectionAddress,
-            collection.getCollectionCreator(),
+            collection.collectionCreator(),
             collection.name()
         );
     }
@@ -149,13 +198,15 @@ contract NFTMarketplace is ReentrancyGuard {
 
         collectionInfo.mintedSupply = collection.mintedSupply();
         collectionInfo.floorPrice = collection.floorPrice();
-        collectionInfo.numberOfOwners = collection.numberOfOwners();
+        collectionInfo.owners = collection.owners();
+        collectionInfo.royaltyPercentage = collection.royaltyPercentage();
     }
 
     function listNFT(
         address _nftContract,
         uint256 _tokenId,
-        uint256 _price
+        uint256 _price,
+        NFT.NFTStatus _saleType
     ) external nonReentrant {
         require(_price > 0, "Price must be greater than zero");
         IERC721 nftContract = IERC721(_nftContract);
@@ -178,15 +229,19 @@ contract NFTMarketplace is ReentrancyGuard {
             nftContract: _nftContract,
             tokenId: _tokenId,
             price: _price,
-            isActive: true
+            isActive: true,
+            saleType: _saleType
         });
+
+        NFT(_nftContract).setNFTStatus(_tokenId, _saleType);
 
         emit NFTListed(
             listingCounter,
             msg.sender,
             _nftContract,
             _tokenId,
-            _price
+            _price,
+            _saleType
         );
     }
 
@@ -194,6 +249,11 @@ contract NFTMarketplace is ReentrancyGuard {
         Listing storage listing = listings[_listingId];
         require(listing.isActive, "Listing is not active");
         require(msg.value >= listing.price, "Insufficient payment");
+        require(
+            listing.saleType == NFT.NFTStatus.SALE ||
+                listing.saleType == NFT.NFTStatus.BOTH,
+            "NFT is not available for direct purchase"
+        );
         require(
             !auctionContract.isNFTOnAuction(
                 listing.nftContract,
@@ -208,21 +268,20 @@ contract NFTMarketplace is ReentrancyGuard {
         uint256 platformFee = (listing.price * platformFeePercentage) / 10000;
         uint256 royaltyFee = 0;
 
-        if (address(nftContract).code.length > 0) {
-            try
-                NFTCollection(payable(listing.nftContract)).royaltyPercentage()
-            returns (uint256 royaltyPercentage) {
-                royaltyFee = (listing.price * royaltyPercentage) / 10000;
-            } catch {
-                // If the call fails, assume it's not an NFTCollection contract and skip royalties
-            }
-        }
+        NFT nft = NFT(listing.nftContract);
+        (, , , , address creator) = nft.getMetadata(listing.tokenId);
+        uint256 collectionId = uint256(
+            uint160(nft.getCollection(listing.tokenId))
+        );
+        CollectionInfo storage collectionInfo = collections[collectionId];
+
+        royaltyFee = (listing.price * collectionInfo.royaltyPercentage) / 10000;
 
         uint256 sellerProceeds = listing.price - platformFee - royaltyFee;
 
         payable(feeRecipient).transfer(platformFee);
         if (royaltyFee > 0) {
-            payable(nftContract.ownerOf(listing.tokenId)).transfer(royaltyFee);
+            payable(creator).transfer(royaltyFee);
         }
         payable(listing.seller).transfer(sellerProceeds);
 
@@ -231,6 +290,14 @@ contract NFTMarketplace is ReentrancyGuard {
             msg.sender,
             listing.tokenId
         );
+
+        nft.addActivity(
+            listing.tokenId,
+            "Sold",
+            listing.price,
+            block.timestamp
+        );
+        nft.setNFTStatus(listing.tokenId, NFT.NFTStatus.NONE);
 
         emit NFTSold(
             _listingId,
@@ -254,6 +321,10 @@ contract NFTMarketplace is ReentrancyGuard {
         require(listing.isActive, "Listing is not active");
 
         listing.isActive = false;
+        NFT(listing.nftContract).setNFTStatus(
+            listing.tokenId,
+            NFT.NFTStatus.NONE
+        );
         emit ListingCancelled(_listingId);
     }
 
@@ -272,7 +343,8 @@ contract NFTMarketplace is ReentrancyGuard {
             msg.sender,
             listing.nftContract,
             listing.tokenId,
-            _newPrice
+            _newPrice,
+            listing.saleType
         );
     }
 

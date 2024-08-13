@@ -20,6 +20,7 @@ contract NFT is ERC721URIStorage, Ownable {
         string description;
         string externalUrl;
         uint256 creationDate;
+        address creator;
         mapping(string => string) attributes;
     }
 
@@ -32,11 +33,13 @@ contract NFT is ERC721URIStorage, Ownable {
     mapping(uint256 => Metadata) private _tokenMetadata;
     mapping(uint256 => NFTStatus) public nftStatus;
     mapping(uint256 => Activity[]) public nftActivities;
+    mapping(uint256 => address) public collection;
 
     constructor(
         string memory name,
-        string memory symbol
-    ) ERC721(name, symbol) Ownable(msg.sender) {}
+        string memory symbol,
+        address collectionAddress
+    ) ERC721(name, symbol) Ownable(collectionAddress) {}
 
     function exists(uint256 tokenId) public view returns (bool) {
         return _ownerOf(tokenId) != address(0);
@@ -59,8 +62,10 @@ contract NFT is ERC721URIStorage, Ownable {
         metadata.description = description;
         metadata.externalUrl = externalUrl;
         metadata.creationDate = block.timestamp;
+        metadata.creator = to;
 
         nftStatus[newTokenId] = NFTStatus.NONE;
+        collection[newTokenId] = msg.sender;
         addActivity(newTokenId, "Minted", 0, block.timestamp);
 
         return newTokenId;
@@ -84,7 +89,8 @@ contract NFT is ERC721URIStorage, Ownable {
             string memory name,
             string memory description,
             string memory externalUrl,
-            uint256 creationDate
+            uint256 creationDate,
+            address creator
         )
     {
         require(exists(tokenId), "NFT: Metadata query for nonexistent token");
@@ -93,7 +99,8 @@ contract NFT is ERC721URIStorage, Ownable {
             metadata.name,
             metadata.description,
             metadata.externalUrl,
-            metadata.creationDate
+            metadata.creationDate,
+            metadata.creator
         );
     }
 
@@ -133,5 +140,10 @@ contract NFT is ERC721URIStorage, Ownable {
     ) public view returns (Activity[] memory) {
         require(exists(tokenId), "NFT: Activities query for nonexistent token");
         return nftActivities[tokenId];
+    }
+
+    function getCollection(uint256 tokenId) public view returns (address) {
+        require(exists(tokenId), "NFT: Collection query for nonexistent token");
+        return collection[tokenId];
     }
 }
