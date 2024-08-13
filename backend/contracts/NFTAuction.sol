@@ -1,14 +1,15 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./NFTCollection.sol";
 import "./NFTMarketplace.sol";
 
-contract NFTAuction is ReentrancyGuard {
-    using SafeMath for uint256;
+contract NFTAuction is ReentrancyGuard, Ownable {
+    using Math for uint256;
 
     struct Auction {
         address seller;
@@ -45,7 +46,7 @@ contract NFTAuction is ReentrancyGuard {
     event AuctionEnded(uint256 auctionId, address winner, uint256 amount);
     event AuctionCancelled(uint256 auctionId);
 
-    constructor(address _marketplaceAddress) {
+    constructor(address _marketplaceAddress) Ownable(msg.sender) {
         marketplaceContract = NFTMarketplace(_marketplaceAddress);
     }
 
@@ -80,7 +81,7 @@ contract NFTAuction is ReentrancyGuard {
         );
 
         auctionCount++;
-        uint256 endTime = block.timestamp.add(_duration);
+        uint256 endTime = block.timestamp + _duration;
 
         auctions[auctionCount] = Auction({
             seller: msg.sender,
@@ -152,7 +153,7 @@ contract NFTAuction is ReentrancyGuard {
             );
 
             uint256 fee = calculateFee(auction.highestBid);
-            uint256 sellerProceeds = auction.highestBid.sub(fee);
+            uint256 sellerProceeds = auction.highestBid - fee;
 
             payable(auction.seller).transfer(sellerProceeds);
             payable(owner()).transfer(fee);
@@ -235,7 +236,7 @@ contract NFTAuction is ReentrancyGuard {
     }
 
     function calculateFee(uint256 _amount) internal pure returns (uint256) {
-        return _amount.mul(250).div(10000);
+        return Math.mulDiv(_amount, 250, 10000);
     }
 
     function onERC721Received(
