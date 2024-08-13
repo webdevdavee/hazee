@@ -5,8 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./NFTCollection.sol";
-import "./NFTMarketplace.sol";
+import "./NFT.sol";
 
 contract NFTAuction is ReentrancyGuard, Ownable {
     using Math for uint256;
@@ -28,8 +27,6 @@ contract NFTAuction is ReentrancyGuard, Ownable {
     mapping(address => mapping(uint256 => uint256)) public nftToAuctionId;
     uint256 public auctionCount;
 
-    NFTMarketplace public marketplaceContract;
-
     uint256 public constant MINIMUM_AUCTION_DURATION = 1 days;
     uint256 public constant MAXIMUM_AUCTION_DURATION = 30 days;
 
@@ -46,9 +43,7 @@ contract NFTAuction is ReentrancyGuard, Ownable {
     event AuctionEnded(uint256 auctionId, address winner, uint256 amount);
     event AuctionCancelled(uint256 auctionId);
 
-    constructor(address _marketplaceAddress) Ownable(msg.sender) {
-        marketplaceContract = NFTMarketplace(_marketplaceAddress);
-    }
+    constructor() Ownable(msg.sender) {}
 
     function createAuction(
         address _nftContract,
@@ -73,11 +68,6 @@ contract NFTAuction is ReentrancyGuard, Ownable {
         require(
             nft.isApprovedForAll(msg.sender, address(this)),
             "Contract not approved"
-        );
-
-        require(
-            !marketplaceContract.isNFTListed(_nftContract, _tokenId),
-            "NFT is already listed in the marketplace"
         );
 
         auctionCount++;
@@ -107,6 +97,8 @@ contract NFTAuction is ReentrancyGuard, Ownable {
             _reservePrice,
             endTime
         );
+
+        NFT(_nftContract).setNFTStatus(_tokenId, NFT.NFTStatus.AUCTION);
     }
 
     function placeBid(uint256 _auctionId) external payable nonReentrant {
@@ -163,6 +155,13 @@ contract NFTAuction is ReentrancyGuard, Ownable {
                 auction.highestBidder,
                 auction.highestBid
             );
+
+            NFT(auction.nftContract).addActivity(
+                auction.tokenId,
+                "Sold in Auction",
+                auction.highestBid,
+                block.timestamp
+            );
         } else {
             if (auction.highestBidder != address(0)) {
                 payable(auction.highestBidder).transfer(auction.highestBid);
@@ -171,6 +170,10 @@ contract NFTAuction is ReentrancyGuard, Ownable {
         }
 
         nftToAuctionId[auction.nftContract][auction.tokenId] = 0;
+        NFT(auction.nftContract).setNFTStatus(
+            auction.tokenId,
+            NFT.NFTStatus.NONE
+        );
     }
 
     function cancelAuction(uint256 _auctionId) external nonReentrant {
@@ -190,6 +193,10 @@ contract NFTAuction is ReentrancyGuard, Ownable {
         auction.active = false;
 
         nftToAuctionId[auction.nftContract][auction.tokenId] = 0;
+        NFT(auction.nftContract).setNFTStatus(
+            auction.tokenId,
+            NFT.NFTStatus.NONE
+        );
 
         emit AuctionCancelled(_auctionId);
     }

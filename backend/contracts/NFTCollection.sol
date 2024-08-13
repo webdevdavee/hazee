@@ -13,40 +13,32 @@ contract NFTCollection is Ownable, ReentrancyGuard {
     uint256 public mintedSupply;
     uint256 public royaltyPercentage;
     uint256 public floorPrice;
-
-    struct Bid {
-        address bidder;
-        uint256 amount;
-        uint256 timestamp;
-    }
+    uint256 public numberOfOwners;
+    address public collectionCreator;
 
     struct CollectionOffer {
         address offerer;
         uint256 amount;
+        uint256 nftCount;
         uint256 timestamp;
         bool isActive;
     }
 
-    mapping(uint256 => Bid) public highestBids;
-    mapping(address => mapping(uint256 => uint256)) public pendingReturns;
     mapping(address => CollectionOffer) public collectionOffers;
+    mapping(address => bool) private _isOwner;
 
     uint256[] public mintedTokens;
     mapping(uint256 => uint256) public tokenIdToIndex;
 
     event NFTMinted(uint256 tokenId, address owner);
-    event BidPlaced(uint256 tokenId, address bidder, uint256 amount);
-    event BidWithdrawn(uint256 tokenId, address bidder, uint256 amount);
-    event BidAccepted(
-        uint256 tokenId,
-        address seller,
-        address buyer,
-        uint256 amount
+    event CollectionOfferPlaced(
+        address offerer,
+        uint256 amount,
+        uint256 nftCount
     );
-    event CollectionOfferPlaced(address offerer, uint256 amount);
     event CollectionOfferWithdrawn(address offerer, uint256 amount);
     event CollectionOfferAccepted(
-        uint256 tokenId,
+        uint256[] tokenIds,
         address seller,
         address buyer,
         uint256 amount
@@ -69,6 +61,7 @@ contract NFTCollection is Ownable, ReentrancyGuard {
         maxSupply = _maxSupply;
         royaltyPercentage = _royaltyPercentage;
         floorPrice = _floorPrice;
+        collectionCreator = msg.sender;
 
         NFT newNFTContract = new NFT(_name, "NFT");
         nftContract = address(newNFTContract);
@@ -96,6 +89,11 @@ contract NFTCollection is Ownable, ReentrancyGuard {
         mintedTokens.push(tokenId);
         tokenIdToIndex[tokenId] = mintedTokens.length - 1;
 
+        if (!_isOwner[to]) {
+            _isOwner[to] = true;
+            numberOfOwners++;
+        }
+
         emit NFTMinted(tokenId, to);
         return tokenId;
     }
@@ -109,88 +107,29 @@ contract NFTCollection is Ownable, ReentrancyGuard {
         emit FloorPriceUpdated(_floorPrice);
     }
 
-    function placeBid(uint256 tokenId) public payable nonReentrant {
-        require(msg.value > floorPrice, "Bid must be higher than floor price");
-        require(tokenId <= mintedSupply, "Token does not exist");
-
-        Bid storage highestBid = highestBids[tokenId];
+    function placeCollectionOffer(
+        uint256 nftCount
+    ) public payable nonReentrant {
         require(
-            msg.value > highestBid.amount,
-            "Bid must be higher than current highest bid"
+            msg.value >= floorPrice * nftCount,
+            "Offer must be at least floor price * nftCount"
         );
-
-        if (highestBid.amount != 0) {
-            pendingReturns[highestBid.bidder][tokenId] += highestBid.amount;
-        }
-
-        highestBids[tokenId] = Bid(msg.sender, msg.value, block.timestamp);
-
-        emit BidPlaced(tokenId, msg.sender, msg.value);
-    }
-
-    function withdrawBid(uint256 tokenId) public nonReentrant {
-        uint256 amount = pendingReturns[msg.sender][tokenId];
-        require(amount > 0, "No funds to withdraw");
-
-        pendingReturns[msg.sender][tokenId] = 0;
-
-        (bool success, ) = msg.sender.call{value: amount}("");
-        require(success, "Transfer failed");
-
-        emit BidWithdrawn(tokenId, msg.sender, amount);
-    }
-
-    function acceptBid(uint256 tokenId) public nonReentrant {
-        require(tokenId <= mintedSupply, "Token does not exist");
-        NFT nft = NFT(nftContract);
-        require(
-            msg.sender == nft.ownerOf(tokenId),
-            "Only the token owner can accept bids"
-        );
-
-        Bid memory highestBid = highestBids[tokenId];
-        require(highestBid.amount > 0, "No active bid to accept");
-
-        uint256 royaltyAmount = (highestBid.amount * royaltyPercentage) / 10000;
-        uint256 sellerProceeds = highestBid.amount - royaltyAmount;
-
-        (bool royaltySuccess, ) = owner().call{value: royaltyAmount}("");
-        require(royaltySuccess, "Royalty transfer failed");
-
-        (bool sellerSuccess, ) = msg.sender.call{value: sellerProceeds}("");
-        require(sellerSuccess, "Seller proceeds transfer failed");
-
-        nft.safeTransferFrom(msg.sender, highestBid.bidder, tokenId);
-
-        emit BidAccepted(
-            tokenId,
-            msg.sender,
-            highestBid.bidder,
-            highestBid.amount
-        );
-
-        delete highestBids[tokenId];
-    }
-
-    function placeCollectionOffer() public payable nonReentrant {
-        require(
-            msg.value > floorPrice,
-            "Offer must be higher than floor price"
-        );
+        require(nftCount > 0 && nftCount <= mintedSupply, "Invalid NFT count");
 
         CollectionOffer storage existingOffer = collectionOffers[msg.sender];
         if (existingOffer.isActive) {
-            pendingReturns[msg.sender][0] += existingOffer.amount;
+            payable(msg.sender).transfer(existingOffer.amount);
         }
 
         collectionOffers[msg.sender] = CollectionOffer(
             msg.sender,
             msg.value,
+            nftCount,
             block.timestamp,
             true
         );
 
-        emit CollectionOfferPlaced(msg.sender, msg.value);
+        emit CollectionOfferPlaced(msg.sender, msg.value, nftCount);
     }
 
     function withdrawCollectionOffer() public nonReentrant {
@@ -200,39 +139,40 @@ contract NFTCollection is Ownable, ReentrancyGuard {
         uint256 amount = offer.amount;
         offer.isActive = false;
 
-        (bool success, ) = msg.sender.call{value: amount}("");
-        require(success, "Transfer failed");
+        payable(msg.sender).transfer(amount);
 
         emit CollectionOfferWithdrawn(msg.sender, amount);
     }
 
     function acceptCollectionOffer(
-        uint256 tokenId,
+        uint256[] memory tokenIds,
         address offerer
     ) public nonReentrant {
-        require(tokenId <= mintedSupply, "Token does not exist");
-        NFT nft = NFT(nftContract);
-        require(
-            msg.sender == nft.ownerOf(tokenId),
-            "Only the token owner can accept offers"
-        );
-
         CollectionOffer memory offer = collectionOffers[offerer];
         require(offer.isActive, "No active collection offer from this address");
+        require(tokenIds.length == offer.nftCount, "Invalid number of tokens");
+
+        NFT nft = NFT(nftContract);
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            require(
+                nft.ownerOf(tokenIds[i]) == msg.sender,
+                "You don't own all the specified tokens"
+            );
+        }
 
         uint256 royaltyAmount = (offer.amount * royaltyPercentage) / 10000;
         uint256 sellerProceeds = offer.amount - royaltyAmount;
 
-        (bool royaltySuccess, ) = owner().call{value: royaltyAmount}("");
-        require(royaltySuccess, "Royalty transfer failed");
+        payable(owner()).transfer(royaltyAmount);
+        payable(msg.sender).transfer(sellerProceeds);
 
-        (bool sellerSuccess, ) = msg.sender.call{value: sellerProceeds}("");
-        require(sellerSuccess, "Seller proceeds transfer failed");
-
-        nft.safeTransferFrom(msg.sender, offerer, tokenId);
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            nft.safeTransferFrom(msg.sender, offerer, tokenIds[i]);
+            _updateOwnership(msg.sender, offerer);
+        }
 
         emit CollectionOfferAccepted(
-            tokenId,
+            tokenIds,
             msg.sender,
             offerer,
             offer.amount
@@ -241,18 +181,25 @@ contract NFTCollection is Ownable, ReentrancyGuard {
         delete collectionOffers[offerer];
     }
 
-    function getHighestBid(
-        uint256 tokenId
-    ) public view returns (address, uint256, uint256) {
-        Bid memory bid = highestBids[tokenId];
-        return (bid.bidder, bid.amount, bid.timestamp);
-    }
-
-    function getCollectionOffer(
-        address offerer
-    ) public view returns (address, uint256, uint256, bool) {
-        CollectionOffer memory offer = collectionOffers[offerer];
-        return (offer.offerer, offer.amount, offer.timestamp, offer.isActive);
+    function _updateOwnership(address from, address to) internal {
+        if (from != address(0) && _isOwner[from]) {
+            bool stillOwner = false;
+            NFT nft = NFT(nftContract);
+            for (uint256 i = 0; i < mintedTokens.length; i++) {
+                if (nft.ownerOf(mintedTokens[i]) == from) {
+                    stillOwner = true;
+                    break;
+                }
+            }
+            if (!stillOwner) {
+                _isOwner[from] = false;
+                numberOfOwners--;
+            }
+        }
+        if (to != address(0) && !_isOwner[to]) {
+            _isOwner[to] = true;
+            numberOfOwners++;
+        }
     }
 
     receive() external payable {}

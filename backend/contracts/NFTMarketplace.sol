@@ -15,6 +15,20 @@ contract NFTMarketplace is ReentrancyGuard {
         bool isActive;
     }
 
+    struct CollectionInfo {
+        address collectionAddress;
+        address creator;
+        string name;
+        string description;
+        address nftContract;
+        uint256 maxSupply;
+        uint256 mintedSupply;
+        uint256 royaltyPercentage;
+        uint256 floorPrice;
+        uint256 numberOfOwners;
+        bool isActive;
+    }
+
     mapping(uint256 => Listing) public listings;
     uint256 public listingCounter;
 
@@ -22,6 +36,9 @@ contract NFTMarketplace is ReentrancyGuard {
     address public feeRecipient;
 
     NFTAuction public auctionContract;
+
+    mapping(uint256 => CollectionInfo) public collections;
+    uint256 public collectionCounter;
 
     event NFTListed(
         uint256 listingId,
@@ -39,10 +56,100 @@ contract NFTMarketplace is ReentrancyGuard {
         uint256 price
     );
     event ListingCancelled(uint256 listingId);
+    event CollectionAdded(
+        uint256 collectionId,
+        address collectionAddress,
+        address creator,
+        string name
+    );
+    event CollectionDeactivated(uint256 collectionId);
 
     constructor(address _feeRecipient, address _auctionAddress) {
         feeRecipient = _feeRecipient;
         auctionContract = NFTAuction(_auctionAddress);
+    }
+
+    function addCollection(address _collectionAddress) external {
+        NFTCollection collection = NFTCollection(payable(_collectionAddress));
+        collectionCounter++;
+        collections[collectionCounter] = CollectionInfo({
+            collectionAddress: _collectionAddress,
+            creator: collection.getCollectionCreator(),
+            name: collection.name(),
+            description: collection.description(),
+            nftContract: collection.nftContract(),
+            maxSupply: collection.maxSupply(),
+            mintedSupply: collection.mintedSupply(),
+            royaltyPercentage: collection.royaltyPercentage(),
+            floorPrice: collection.floorPrice(),
+            numberOfOwners: collection.numberOfOwners(),
+            isActive: true
+        });
+
+        emit CollectionAdded(
+            collectionCounter,
+            _collectionAddress,
+            collection.getCollectionCreator(),
+            collection.name()
+        );
+    }
+
+    function deactivateCollection(uint256 _collectionId) external {
+        require(
+            collections[_collectionId].isActive,
+            "Collection is not active"
+        );
+        require(
+            msg.sender == collections[_collectionId].creator,
+            "Only creator can deactivate"
+        );
+
+        collections[_collectionId].isActive = false;
+        emit CollectionDeactivated(_collectionId);
+    }
+
+    function getCollections(
+        uint256 _offset,
+        uint256 _limit
+    ) external view returns (CollectionInfo[] memory) {
+        require(_offset < collectionCounter, "Offset out of bounds");
+        uint256 end = _offset + _limit;
+        if (end > collectionCounter) {
+            end = collectionCounter;
+        }
+        uint256 length = end - _offset;
+        CollectionInfo[] memory result = new CollectionInfo[](length);
+        for (uint256 i = 0; i < length; i++) {
+            result[i] = collections[_offset + i + 1];
+        }
+        return result;
+    }
+
+    function getCollectionInfo(
+        uint256 _collectionId
+    ) external view returns (CollectionInfo memory) {
+        require(
+            _collectionId > 0 && _collectionId <= collectionCounter,
+            "Invalid collection ID"
+        );
+        return collections[_collectionId];
+    }
+
+    function updateCollectionInfo(uint256 _collectionId) external {
+        require(
+            _collectionId > 0 && _collectionId <= collectionCounter,
+            "Invalid collection ID"
+        );
+        CollectionInfo storage collectionInfo = collections[_collectionId];
+        require(collectionInfo.isActive, "Collection is not active");
+
+        NFTCollection collection = NFTCollection(
+            payable(collectionInfo.collectionAddress)
+        );
+
+        collectionInfo.mintedSupply = collection.mintedSupply();
+        collectionInfo.floorPrice = collection.floorPrice();
+        collectionInfo.numberOfOwners = collection.numberOfOwners();
     }
 
     function listNFT(
