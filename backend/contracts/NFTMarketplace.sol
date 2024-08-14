@@ -269,7 +269,7 @@ contract NFTMarketplace is ReentrancyGuard {
         uint256 royaltyFee = 0;
 
         NFT nft = NFT(listing.nftContract);
-        (, , , , address creator) = nft.getMetadata(listing.tokenId);
+        (, , , address creator, ) = nft.getMetadata(listing.tokenId);
         uint256 collectionId = uint256(
             uint160(nft.getCollection(listing.tokenId))
         );

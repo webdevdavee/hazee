@@ -15,13 +15,17 @@ contract NFT is ERC721URIStorage, Ownable {
         BOTH
     }
 
+    struct Attribute {
+        string key;
+        string value;
+    }
+
     struct Metadata {
         string name;
         string description;
-        string externalUrl;
         uint256 creationDate;
         address creator;
-        mapping(string => string) attributes;
+        Attribute[] attributes;
     }
 
     struct Activity {
@@ -50,34 +54,26 @@ contract NFT is ERC721URIStorage, Ownable {
         string memory tokenURI,
         string memory name,
         string memory description,
-        string memory externalUrl
+        Attribute[] memory attributes
     ) public onlyOwner returns (uint256) {
         _tokenIds++;
         uint256 newTokenId = _tokenIds;
         _safeMint(to, newTokenId);
         _setTokenURI(newTokenId, tokenURI);
 
-        Metadata storage metadata = _tokenMetadata[newTokenId];
-        metadata.name = name;
-        metadata.description = description;
-        metadata.externalUrl = externalUrl;
-        metadata.creationDate = block.timestamp;
-        metadata.creator = to;
+        _tokenMetadata[newTokenId] = Metadata({
+            name: name,
+            description: description,
+            creationDate: block.timestamp,
+            creator: to,
+            attributes: attributes
+        });
 
         nftStatus[newTokenId] = NFTStatus.NONE;
         collection[newTokenId] = msg.sender;
         addActivity(newTokenId, "Minted", 0, block.timestamp);
 
         return newTokenId;
-    }
-
-    function addAttribute(
-        uint256 tokenId,
-        string memory key,
-        string memory value
-    ) public onlyOwner {
-        require(exists(tokenId), "NFT: Attribute set for nonexistent token");
-        _tokenMetadata[tokenId].attributes[key] = value;
     }
 
     function getMetadata(
@@ -88,9 +84,9 @@ contract NFT is ERC721URIStorage, Ownable {
         returns (
             string memory name,
             string memory description,
-            string memory externalUrl,
             uint256 creationDate,
-            address creator
+            address creator,
+            Attribute[] memory attributes
         )
     {
         require(exists(tokenId), "NFT: Metadata query for nonexistent token");
@@ -98,9 +94,9 @@ contract NFT is ERC721URIStorage, Ownable {
         return (
             metadata.name,
             metadata.description,
-            metadata.externalUrl,
             metadata.creationDate,
-            metadata.creator
+            metadata.creator,
+            metadata.attributes
         );
     }
 
@@ -109,7 +105,16 @@ contract NFT is ERC721URIStorage, Ownable {
         string memory key
     ) public view returns (string memory) {
         require(exists(tokenId), "NFT: Attribute query for nonexistent token");
-        return _tokenMetadata[tokenId].attributes[key];
+        Metadata storage metadata = _tokenMetadata[tokenId];
+        for (uint i = 0; i < metadata.attributes.length; i++) {
+            if (
+                keccak256(bytes(metadata.attributes[i].key)) ==
+                keccak256(bytes(key))
+            ) {
+                return metadata.attributes[i].value;
+            }
+        }
+        return "";
     }
 
     function setNFTStatus(uint256 tokenId, NFTStatus status) external {

@@ -72,7 +72,7 @@ contract NFTCollection is Ownable, ReentrancyGuard {
         string memory tokenURI,
         string memory nftName,
         string memory nftDescription,
-        string memory externalUrl
+        NFT.Attribute[] memory attributes
     ) public onlyOwner returns (uint256) {
         require(mintedSupply < maxSupply, "Maximum supply reached");
 
@@ -83,7 +83,7 @@ contract NFTCollection is Ownable, ReentrancyGuard {
             tokenURI,
             nftName,
             nftDescription,
-            externalUrl
+            attributes
         );
 
         mintedTokens.push(tokenId);

@@ -55,14 +55,16 @@ const AddTraitForm: React.FC<Props> = ({
           }
         />
         <TextInput
-          inputRegister={register("name")}
-          label="Name"
-          htmlFor="name"
+          inputRegister={register("value")}
+          label="Value"
+          htmlFor="value"
           inputType="text"
           placeholder="E.g. Medium"
           required
           error={
-            errors.name && <p className="text-red-500">{errors.name.message}</p>
+            errors.value && (
+              <p className="text-red-500">{errors.value.message}</p>
+            )
           }
         />
       </div>

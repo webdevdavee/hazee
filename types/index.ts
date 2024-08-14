@@ -37,7 +37,7 @@ type DropdownItem = {
   isButton?: boolean;
 };
 
-type Trait = { id: number; type: string; name: string };
+type Trait = { id: number; type: string; value: string };
 
 type TruncateTextProps = {
   text: string;

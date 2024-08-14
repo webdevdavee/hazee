@@ -136,7 +136,7 @@ const CreateNFTForm = () => {
                   className="w-full bg-secondary rounded-md p-3 flex items-center justify-between"
                 >
                   <p className="font-medium">
-                    {trait.type}: {trait.name}
+                    {trait.type}: {trait.value}
                   </p>
                   <div className="flex items-center gap-3">
                     <button
