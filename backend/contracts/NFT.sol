@@ -4,9 +4,11 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./NFTCreators.sol";
 
 contract NFT is ERC721URIStorage, Ownable {
     uint256 private _tokenIds;
+    NFTCreators public creatorsContract;
 
     enum NFTStatus {
         NONE,
@@ -42,8 +44,11 @@ contract NFT is ERC721URIStorage, Ownable {
     constructor(
         string memory name,
         string memory symbol,
-        address collectionAddress
-    ) ERC721(name, symbol) Ownable(collectionAddress) {}
+        address collectionAddress,
+        address _creatorsAddress
+    ) ERC721(name, symbol) Ownable(collectionAddress) {
+        creatorsContract = NFTCreators(_creatorsAddress);
+    }
 
     function exists(uint256 tokenId) public view returns (bool) {
         return _ownerOf(tokenId) != address(0);
@@ -56,6 +61,11 @@ contract NFT is ERC721URIStorage, Ownable {
         string memory description,
         Attribute[] memory attributes
     ) public onlyOwner returns (uint256) {
+        require(
+            creatorsContract.creatorIdByAddress(to) != 0,
+            "Creator not registered"
+        );
+
         _tokenIds++;
         uint256 newTokenId = _tokenIds;
         _safeMint(to, newTokenId);
@@ -72,6 +82,8 @@ contract NFT is ERC721URIStorage, Ownable {
         nftStatus[newTokenId] = NFTStatus.NONE;
         collection[newTokenId] = msg.sender;
         addActivity(newTokenId, "Minted", 0, block.timestamp);
+
+        creatorsContract.addCreatedNFT(to, newTokenId);
 
         return newTokenId;
     }
@@ -138,6 +150,7 @@ contract NFT is ERC721URIStorage, Ownable {
             "NFT: Only owner or contract owner can add activity"
         );
         nftActivities[tokenId].push(Activity(action, value, timestamp));
+        creatorsContract.recordActivity(ownerOf(tokenId), action, tokenId);
     }
 
     function getActivities(
@@ -150,5 +163,36 @@ contract NFT is ERC721URIStorage, Ownable {
     function getCollection(uint256 tokenId) public view returns (address) {
         require(exists(tokenId), "NFT: Collection query for nonexistent token");
         return collection[tokenId];
+    }
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override(ERC721, IERC721) {
+        super.transferFrom(from, to, tokenId);
+        creatorsContract.recordActivity(from, "NFT Transferred", tokenId);
+        creatorsContract.recordActivity(to, "NFT Received", tokenId);
+    }
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override(ERC721, IERC721) {
+        super.safeTransferFrom(from, to, tokenId);
+        creatorsContract.recordActivity(from, "NFT Transferred", tokenId);
+        creatorsContract.recordActivity(to, "NFT Received", tokenId);
+    }
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public override(ERC721, IERC721) {
+        super.safeTransferFrom(from, to, tokenId, data);
+        creatorsContract.recordActivity(from, "NFT Transferred", tokenId);
+        creatorsContract.recordActivity(to, "NFT Received", tokenId);
     }
 }

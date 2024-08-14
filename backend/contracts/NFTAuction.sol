@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./NFT.sol";
+import "./NFTCreators.sol";
 
 contract NFTAuction is ReentrancyGuard, Ownable {
     using Math for uint256;
@@ -30,6 +31,8 @@ contract NFTAuction is ReentrancyGuard, Ownable {
     uint256 public constant MINIMUM_AUCTION_DURATION = 1 days;
     uint256 public constant MAXIMUM_AUCTION_DURATION = 30 days;
 
+    NFTCreators public creatorsContract;
+
     event AuctionCreated(
         uint256 auctionId,
         address seller,
@@ -43,7 +46,9 @@ contract NFTAuction is ReentrancyGuard, Ownable {
     event AuctionEnded(uint256 auctionId, address winner, uint256 amount);
     event AuctionCancelled(uint256 auctionId);
 
-    constructor() Ownable(msg.sender) {}
+    constructor(address _creatorsAddress) Ownable(msg.sender) {
+        creatorsContract = NFTCreators(_creatorsAddress);
+    }
 
     function createAuction(
         address _nftContract,
@@ -88,6 +93,12 @@ contract NFTAuction is ReentrancyGuard, Ownable {
 
         nftToAuctionId[_nftContract][_tokenId] = auctionCount;
 
+        creatorsContract.recordActivity(
+            msg.sender,
+            "Auction Created",
+            _tokenId
+        );
+
         emit AuctionCreated(
             auctionCount,
             msg.sender,
@@ -122,6 +133,13 @@ contract NFTAuction is ReentrancyGuard, Ownable {
         auction.highestBidder = msg.sender;
         auction.highestBid = msg.value;
 
+        creatorsContract.updateBid(msg.sender, _auctionId, msg.value);
+        creatorsContract.recordActivity(
+            msg.sender,
+            "Bid Placed",
+            auction.tokenId
+        );
+
         emit BidPlaced(_auctionId, msg.sender, msg.value);
     }
 
@@ -150,6 +168,18 @@ contract NFTAuction is ReentrancyGuard, Ownable {
             payable(auction.seller).transfer(sellerProceeds);
             payable(owner()).transfer(fee);
 
+            creatorsContract.updateItemsSold(auction.seller);
+            creatorsContract.recordActivity(
+                auction.highestBidder,
+                "Auction Won",
+                auction.tokenId
+            );
+            creatorsContract.recordActivity(
+                auction.seller,
+                "Auction Completed",
+                auction.tokenId
+            );
+
             emit AuctionEnded(
                 _auctionId,
                 auction.highestBidder,
@@ -166,6 +196,11 @@ contract NFTAuction is ReentrancyGuard, Ownable {
             if (auction.highestBidder != address(0)) {
                 payable(auction.highestBidder).transfer(auction.highestBid);
             }
+            creatorsContract.recordActivity(
+                auction.seller,
+                "Auction Ended (Reserve Not Met)",
+                auction.tokenId
+            );
             emit AuctionCancelled(_auctionId);
         }
 
@@ -196,6 +231,12 @@ contract NFTAuction is ReentrancyGuard, Ownable {
         NFT(auction.nftContract).setNFTStatus(
             auction.tokenId,
             NFT.NFTStatus.NONE
+        );
+
+        creatorsContract.recordActivity(
+            msg.sender,
+            "Auction Cancelled",
+            auction.tokenId
         );
 
         emit AuctionCancelled(_auctionId);

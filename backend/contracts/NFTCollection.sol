@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "./NFT.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./NFTCreators.sol";
 
 contract NFTCollection is Ownable, ReentrancyGuard {
     string public name;
@@ -15,12 +16,19 @@ contract NFTCollection is Ownable, ReentrancyGuard {
     uint256 public floorPrice;
     uint256 public owners;
     address public collectionCreator;
+    uint256 public collectionId;
+
+    uint256 public constant MIN_OFFER_DURATION = 12 hours;
+    uint256 public constant MAX_OFFER_DURATION = 1 weeks;
+
+    NFTCreators public creatorsContract;
 
     struct CollectionOffer {
         address offerer;
         uint256 amount;
         uint256 nftCount;
         uint256 timestamp;
+        uint256 expirationTime;
         bool isActive;
     }
 
@@ -34,7 +42,8 @@ contract NFTCollection is Ownable, ReentrancyGuard {
     event CollectionOfferPlaced(
         address offerer,
         uint256 amount,
-        uint256 nftCount
+        uint256 nftCount,
+        uint256 expirationTime
     );
     event CollectionOfferWithdrawn(address offerer, uint256 amount);
     event CollectionOfferAccepted(
@@ -51,7 +60,9 @@ contract NFTCollection is Ownable, ReentrancyGuard {
         string memory _description,
         uint256 _maxSupply,
         uint256 _royaltyPercentage,
-        uint256 _floorPrice
+        uint256 _floorPrice,
+        address _creatorsAddress,
+        uint256 _collectionId
     ) Ownable(msg.sender) {
         require(
             _royaltyPercentage <= 4000,
@@ -63,8 +74,15 @@ contract NFTCollection is Ownable, ReentrancyGuard {
         royaltyPercentage = _royaltyPercentage;
         floorPrice = _floorPrice;
         collectionCreator = msg.sender;
+        creatorsContract = NFTCreators(_creatorsAddress);
+        collectionId = _collectionId;
 
-        NFT newNFTContract = new NFT(_name, "NFT", address(this));
+        NFT newNFTContract = new NFT(
+            _name,
+            "NFT",
+            address(this),
+            _creatorsAddress
+        );
         nftContract = address(newNFTContract);
     }
 
@@ -94,6 +112,8 @@ contract NFTCollection is Ownable, ReentrancyGuard {
             owners++;
         }
 
+        creatorsContract.recordActivity(msg.sender, "NFT Minted", tokenId);
+
         emit NFTMinted(tokenId, msg.sender);
         return tokenId;
     }
@@ -119,28 +139,49 @@ contract NFTCollection is Ownable, ReentrancyGuard {
     }
 
     function placeCollectionOffer(
-        uint256 nftCount
+        uint256 nftCount,
+        uint256 duration
     ) public payable nonReentrant {
         require(
             msg.value >= floorPrice * nftCount,
             "Offer must be at least floor price * nftCount"
         );
         require(nftCount > 0 && nftCount <= mintedSupply, "Invalid NFT count");
+        require(
+            duration >= MIN_OFFER_DURATION && duration <= MAX_OFFER_DURATION,
+            "Invalid offer duration"
+        );
 
         CollectionOffer storage existingOffer = collectionOffers[msg.sender];
         if (existingOffer.isActive) {
             payable(msg.sender).transfer(existingOffer.amount);
         }
 
+        uint256 expirationTime = block.timestamp + duration;
+
         collectionOffers[msg.sender] = CollectionOffer(
             msg.sender,
             msg.value,
             nftCount,
             block.timestamp,
+            expirationTime,
             true
         );
 
-        emit CollectionOfferPlaced(msg.sender, msg.value, nftCount);
+        creatorsContract.updateCollectionOffer(
+            msg.sender,
+            collectionId,
+            msg.value,
+            nftCount,
+            expirationTime
+        );
+
+        emit CollectionOfferPlaced(
+            msg.sender,
+            msg.value,
+            nftCount,
+            expirationTime
+        );
     }
 
     function withdrawCollectionOffer() public nonReentrant {
@@ -152,6 +193,13 @@ contract NFTCollection is Ownable, ReentrancyGuard {
 
         payable(msg.sender).transfer(amount);
 
+        creatorsContract.removeCollectionOffer(msg.sender, collectionId);
+        creatorsContract.recordActivity(
+            msg.sender,
+            "Collection Offer Withdrawn",
+            0
+        );
+
         emit CollectionOfferWithdrawn(msg.sender, amount);
     }
 
@@ -161,6 +209,7 @@ contract NFTCollection is Ownable, ReentrancyGuard {
     ) public nonReentrant {
         CollectionOffer memory offer = collectionOffers[offerer];
         require(offer.isActive, "No active collection offer from this address");
+        require(block.timestamp <= offer.expirationTime, "Offer has expired");
         require(tokenIds.length == offer.nftCount, "Invalid number of tokens");
 
         NFT nft = NFT(nftContract);
@@ -181,6 +230,19 @@ contract NFTCollection is Ownable, ReentrancyGuard {
             nft.safeTransferFrom(msg.sender, offerer, tokenIds[i]);
             _updateOwnership(msg.sender, offerer);
         }
+
+        creatorsContract.removeCollectionOffer(offerer, collectionId);
+
+        creatorsContract.recordActivity(
+            msg.sender,
+            "Collection Offer Accepted",
+            0
+        );
+        creatorsContract.recordActivity(
+            offerer,
+            "Collection Offer Fulfilled",
+            0
+        );
 
         emit CollectionOfferAccepted(
             tokenIds,

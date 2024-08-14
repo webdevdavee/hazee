@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./NFTCollection.sol";
 import "./NFTAuction.sol";
 import "./NFT.sol";
+import "./NFTCreators.sol";
 
 contract NFTMarketplace is ReentrancyGuard {
     struct Listing {
@@ -38,6 +39,7 @@ contract NFTMarketplace is ReentrancyGuard {
     address public feeRecipient;
 
     NFTAuction public auctionContract;
+    NFTCreators public creatorsContract;
 
     mapping(uint256 => CollectionInfo) public collections;
     uint256 public collectionCounter;
@@ -67,9 +69,14 @@ contract NFTMarketplace is ReentrancyGuard {
     );
     event CollectionDeactivated(uint256 collectionId);
 
-    constructor(address _feeRecipient, address _auctionAddress) {
+    constructor(
+        address _feeRecipient,
+        address _auctionAddress,
+        address _creatorsAddress
+    ) {
         feeRecipient = _feeRecipient;
         auctionContract = NFTAuction(_auctionAddress);
+        creatorsContract = NFTCreators(_creatorsAddress);
     }
 
     function createCollection(
@@ -84,15 +91,22 @@ contract NFTMarketplace is ReentrancyGuard {
             "Royalty percentage must be 40% or less"
         );
 
+        collectionCounter++;
+        uint256 creatorId = creatorsContract.getCreatorId(msg.sender);
+        if (creatorId == 0) {
+            creatorId = creatorsContract.registerCreator(msg.sender);
+        }
+
         NFTCollection newCollection = new NFTCollection(
             _name,
             _description,
             _maxSupply,
             _royaltyPercentage,
-            _floorPrice
+            _floorPrice,
+            address(creatorsContract),
+            collectionCounter
         );
 
-        collectionCounter++;
         collections[collectionCounter] = CollectionInfo({
             collectionAddress: address(newCollection),
             creator: msg.sender,
@@ -107,6 +121,8 @@ contract NFTMarketplace is ReentrancyGuard {
             isActive: true
         });
 
+        creatorsContract.addCreatedCollection(msg.sender, collectionCounter);
+
         emit CollectionAdded(
             collectionCounter,
             address(newCollection),
@@ -117,7 +133,6 @@ contract NFTMarketplace is ReentrancyGuard {
         return collectionCounter;
     }
 
-    // Necessity: adding pre-existing collections
     function addCollection(address _collectionAddress) external {
         NFTCollection collection = NFTCollection(payable(_collectionAddress));
         collectionCounter++;
@@ -134,6 +149,11 @@ contract NFTMarketplace is ReentrancyGuard {
             owners: collection.owners(),
             isActive: true
         });
+
+        creatorsContract.addCreatedCollection(
+            collection.collectionCreator(),
+            collectionCounter
+        );
 
         emit CollectionAdded(
             collectionCounter,
@@ -235,6 +255,8 @@ contract NFTMarketplace is ReentrancyGuard {
 
         NFT(_nftContract).setNFTStatus(_tokenId, _saleType);
 
+        creatorsContract.recordActivity(msg.sender, "NFT Listed", _tokenId);
+
         emit NFTListed(
             listingCounter,
             msg.sender,
@@ -299,6 +321,18 @@ contract NFTMarketplace is ReentrancyGuard {
         );
         nft.setNFTStatus(listing.tokenId, NFT.NFTStatus.NONE);
 
+        creatorsContract.updateItemsSold(listing.seller);
+        creatorsContract.recordActivity(
+            msg.sender,
+            "NFT Purchased",
+            listing.tokenId
+        );
+        creatorsContract.recordActivity(
+            listing.seller,
+            "NFT Sold",
+            listing.tokenId
+        );
+
         emit NFTSold(
             _listingId,
             msg.sender,
@@ -325,6 +359,11 @@ contract NFTMarketplace is ReentrancyGuard {
             listing.tokenId,
             NFT.NFTStatus.NONE
         );
+        creatorsContract.recordActivity(
+            msg.sender,
+            "Listing Cancelled",
+            listing.tokenId
+        );
         emit ListingCancelled(_listingId);
     }
 
@@ -338,6 +377,11 @@ contract NFTMarketplace is ReentrancyGuard {
         require(_newPrice > 0, "Price must be greater than zero");
 
         listing.price = _newPrice;
+        creatorsContract.recordActivity(
+            msg.sender,
+            "Listing Price Updated",
+            listing.tokenId
+        );
         emit NFTListed(
             _listingId,
             msg.sender,
@@ -362,5 +406,203 @@ contract NFTMarketplace is ReentrancyGuard {
             }
         }
         return false;
+    }
+
+    function addToFavorites(uint256 _tokenId) external {
+        creatorsContract.addToFavourites(msg.sender, _tokenId);
+    }
+
+    function addToCart(uint256 _tokenId) external {
+        creatorsContract.addToCart(msg.sender, _tokenId);
+    }
+
+    function getCreatorInfo(
+        address _creator
+    ) external view returns (NFTCreators.Creator memory) {
+        return creatorsContract.getCreatorInfo(_creator);
+    }
+
+    function getCreatorActivities(
+        address _creator
+    ) external view returns (NFTCreators.Activity[] memory) {
+        return creatorsContract.getCreatorActivities(_creator);
+    }
+
+    function mintNFT(
+        uint256 _collectionId,
+        string memory tokenURI,
+        string memory nftName,
+        string memory nftDescription,
+        NFT.Attribute[] memory attributes
+    ) external returns (uint256) {
+        CollectionInfo storage collection = collections[_collectionId];
+        require(collection.isActive, "Collection is not active");
+        require(msg.sender == collection.creator, "Only creator can mint NFTs");
+
+        NFTCollection nftCollection = NFTCollection(
+            payable(collection.collectionAddress)
+        );
+        uint256 tokenId = nftCollection.mintNFT(
+            tokenURI,
+            nftName,
+            nftDescription,
+            attributes
+        );
+
+        collection.mintedSupply++;
+        return tokenId;
+    }
+
+    function updateFloorPrice(
+        uint256 _collectionId,
+        uint256 _newFloorPrice
+    ) external {
+        CollectionInfo storage collection = collections[_collectionId];
+        require(collection.isActive, "Collection is not active");
+        require(
+            msg.sender == collection.creator,
+            "Only creator can update floor price"
+        );
+
+        NFTCollection nftCollection = NFTCollection(
+            payable(collection.collectionAddress)
+        );
+        nftCollection.updateFloorPrice(_newFloorPrice);
+        collection.floorPrice = _newFloorPrice;
+    }
+
+    function updateRoyaltyPercentage(
+        uint256 _collectionId,
+        uint256 _newRoyaltyPercentage
+    ) external {
+        CollectionInfo storage collection = collections[_collectionId];
+        require(collection.isActive, "Collection is not active");
+        require(
+            msg.sender == collection.creator,
+            "Only creator can update royalty percentage"
+        );
+
+        NFTCollection nftCollection = NFTCollection(
+            payable(collection.collectionAddress)
+        );
+        nftCollection.updateRoyaltyPercentage(_newRoyaltyPercentage);
+        collection.royaltyPercentage = _newRoyaltyPercentage;
+    }
+
+    function createAuction(
+        address _nftContract,
+        uint256 _tokenId,
+        uint256 _startingPrice,
+        uint256 _reservePrice,
+        uint256 _duration
+    ) external {
+        require(
+            IERC721(_nftContract).ownerOf(_tokenId) == msg.sender,
+            "You don't own this NFT"
+        );
+        require(
+            IERC721(_nftContract).isApprovedForAll(msg.sender, address(this)),
+            "Contract not approved"
+        );
+
+        IERC721(_nftContract).transferFrom(msg.sender, address(this), _tokenId);
+        IERC721(_nftContract).approve(address(auctionContract), _tokenId);
+
+        auctionContract.createAuction(
+            _nftContract,
+            _tokenId,
+            _startingPrice,
+            _reservePrice,
+            _duration
+        );
+    }
+
+    function placeBid(uint256 _auctionId) external payable {
+        auctionContract.placeBid{value: msg.value}(_auctionId);
+    }
+
+    function endAuction(uint256 _auctionId) external {
+        auctionContract.endAuction(_auctionId);
+    }
+
+    function cancelAuction(uint256 _auctionId) external {
+        auctionContract.cancelAuction(_auctionId);
+    }
+
+    function registerCreator() external returns (uint256) {
+        return creatorsContract.registerCreator(msg.sender);
+    }
+
+    function placeCollectionOffer(
+        uint256 _collectionId,
+        uint256 _nftCount,
+        uint256 _duration
+    ) external payable {
+        CollectionInfo storage collection = collections[_collectionId];
+        require(collection.isActive, "Collection is not active");
+
+        NFTCollection nftCollection = NFTCollection(
+            payable(collection.collectionAddress)
+        );
+        nftCollection.placeCollectionOffer{value: msg.value}(
+            _nftCount,
+            _duration
+        );
+    }
+
+    function withdrawCollectionOffer(uint256 _collectionId) external {
+        CollectionInfo storage collection = collections[_collectionId];
+        require(collection.isActive, "Collection is not active");
+
+        NFTCollection nftCollection = NFTCollection(
+            payable(collection.collectionAddress)
+        );
+        nftCollection.withdrawCollectionOffer();
+
+        creatorsContract.recordActivity(
+            msg.sender,
+            "Collection Offer Withdrawn",
+            _collectionId
+        );
+    }
+
+    function acceptCollectionOffer(
+        uint256 _collectionId,
+        uint256[] memory _tokenIds,
+        address _offerer
+    ) external {
+        CollectionInfo storage collection = collections[_collectionId];
+        require(collection.isActive, "Collection is not active");
+
+        NFTCollection nftCollection = NFTCollection(
+            payable(collection.collectionAddress)
+        );
+        nftCollection.acceptCollectionOffer(_tokenIds, _offerer);
+
+        creatorsContract.recordActivity(
+            msg.sender,
+            "Collection Offer Accepted",
+            _collectionId
+        );
+        creatorsContract.recordActivity(
+            _offerer,
+            "Collection Offer Fulfilled",
+            _collectionId
+        );
+    }
+
+    // Function to get creator ID
+    function getCreatorId(address _creator) external view returns (uint256) {
+        return creatorsContract.creatorIdByAddress(_creator);
+    }
+
+    // Function to update wallet balance
+    function updateWalletBalance(address _user, uint256 _newBalance) external {
+        require(
+            msg.sender == address(this) ||
+                msg.sender == address(auctionContract),
+            "Unauthorized"
+        );
+        creatorsContract.updateWalletBalance(_user, _newBalance);
     }
 }
