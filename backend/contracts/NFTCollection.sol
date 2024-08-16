@@ -77,12 +77,7 @@ contract NFTCollection is Ownable, ReentrancyGuard {
         creatorsContract = NFTCreators(_creatorsAddress);
         collectionId = _collectionId;
 
-        NFT newNFTContract = new NFT(
-            _name,
-            "NFT",
-            address(this),
-            _creatorsAddress
-        );
+        NFT newNFTContract = new NFT(_name, "NFT", _creatorsAddress);
         nftContract = address(newNFTContract);
     }
 

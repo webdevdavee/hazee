@@ -44,9 +44,8 @@ contract NFT is ERC721URIStorage, Ownable {
     constructor(
         string memory name,
         string memory symbol,
-        address collectionAddress,
         address _creatorsAddress
-    ) ERC721(name, symbol) Ownable(collectionAddress) {
+    ) ERC721(name, symbol) Ownable(msg.sender) {
         creatorsContract = NFTCreators(_creatorsAddress);
     }
 

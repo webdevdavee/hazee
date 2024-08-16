@@ -5,8 +5,6 @@ import {
   NFT__factory,
   NFTCreators,
   NFTCreators__factory,
-  NFTCollection,
-  NFTCollection__factory,
 } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
@@ -15,8 +13,6 @@ describe("NFT", function () {
   let nft: NFT;
   let nftCreatorsFactory: NFTCreators__factory;
   let nftCreators: NFTCreators;
-  let nftCollectionFactory: NFTCollection__factory;
-  let nftCollection: NFTCollection;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;
@@ -24,42 +20,32 @@ describe("NFT", function () {
   beforeEach(async function () {
     [owner, addr1, addr2] = await ethers.getSigners();
 
+    // NFT Contract
     nftCreatorsFactory = (await ethers.getContractFactory(
       "NFTCreators"
     )) as unknown as NFTCreators__factory;
+
     nftCreators = await nftCreatorsFactory.deploy();
 
-    nftCollectionFactory = (await ethers.getContractFactory(
-      "NFTCollection"
-    )) as unknown as NFTCollection__factory;
-    nftCollection = await nftCollectionFactory.deploy(
-      "TestCollection",
-      "The test collection",
-      1000,
-      3000,
-      ethers.parseEther("0.8"),
-      await nftCreators.getAddress(),
-      "1"
-    );
-
+    // NFT Contract
     nftFactory = (await ethers.getContractFactory(
       "NFT"
     )) as unknown as NFT__factory;
+
     nft = await nftFactory.deploy(
       "TestNFT",
       "TNFT",
-      await nftCollection.getAddress(),
       await nftCreators.getAddress()
     );
 
     // Register creators
-    await nftCreators.registerCreator(await owner.getAddress());
-    await nftCreators.registerCreator(await addr1.getAddress());
+    await nftCreators.registerCreator(owner);
+    await nftCreators.registerCreator(addr1);
   });
 
   describe("Deployment", function () {
     it("Should set the right owner", async function () {
-      expect(await nft.owner()).to.equal(await nftCollection.getAddress());
+      expect(await nft.owner()).to.equal(owner);
     });
 
     it("Should have the correct name and symbol", async function () {
@@ -70,17 +56,22 @@ describe("NFT", function () {
 
   describe("Minting", function () {
     it("Should mint a new token", async function () {
-      expect(
-        nft.mint(await nft.getAddress(), "uri1", "NFT1", "Description1", [])
-      );
+      // Call mint function from the owner's account
+      await expect(
+        nft
+          .connect(owner)
+          .mint(addr1.address, "uri1", "NFT1", "Description1", [])
+      ).to.not.be.reverted;
 
-      expect(await nft.ownerOf(1)).to.equal(await addr1.getAddress());
+      expect(await nft.ownerOf(1)).to.equal(addr1.address);
       expect(await nft.tokenURI(1)).to.equal("uri1");
     });
 
     it("Should fail if minter is not registered", async function () {
       await expect(
-        nft.mint(addr2.address, "uri2", "NFT2", "Description2", [])
+        nft
+          .connect(owner)
+          .mint(addr2.address, "uri2", "NFT2", "Description2", [])
       ).to.be.revertedWith("Creator not registered");
     });
   });
@@ -116,10 +107,10 @@ describe("NFT", function () {
     });
 
     it("Should set and get NFT status correctly", async function () {
-      await nft.connect(addr1).setNFTStatus(1, 1); // Set to SALE
+      await nft.connect(owner).setNFTStatus(1, 1); // Set to SALE
       expect(await nft.nftStatus(1)).to.equal(1);
 
-      await nft.connect(addr1).setNFTStatus(1, 2); // Set to AUCTION
+      await nft.connect(owner).setNFTStatus(1, 2); // Set to AUCTION
       expect(await nft.nftStatus(1)).to.equal(2);
     });
 
@@ -133,22 +124,30 @@ describe("NFT", function () {
   describe("Activities", function () {
     beforeEach(async function () {
       await nft.mint(addr1.address, "uri1", "NFT1", "Description1", []);
+      await nft.addActivity(
+        1,
+        "Listed",
+        ethers.parseEther("1"),
+        await ethers.provider.getBlock("latest").then((b) => b!.timestamp)
+      );
     });
 
-    it("Should add and retrieve activities", async function () {
-      await nft
-        .connect(addr1)
-        .addActivity(
-          1,
-          "Listed",
-          ethers.parseEther("1"),
-          await ethers.provider.getBlock("latest").then((b) => b!.timestamp)
-        );
+    it("Should add activities", async function () {
+      await nft.addActivity(
+        1,
+        "Listed",
+        ethers.parseEther("1"),
+        await ethers.provider.getBlock("latest").then((b) => b!.timestamp)
+      );
+    });
 
-      const activities = await nft.getActivities(1);
-      expect(activities.length).to.equal(1);
-      expect(activities[0].action).to.equal("Listed");
-      expect(activities[0].value).to.equal(ethers.parseEther("1"));
+    it("should retrieve activities", async function () {
+      const activities = await nft.connect(owner).getActivities(1);
+      expect(activities.length).to.equal(2);
+      expect(activities[0].action).to.equal("Minted");
+      expect(activities[0].value).to.equal(0);
+      expect(activities[1].action).to.equal("Listed");
+      expect(activities[1].value).to.equal(ethers.parseEther("1"));
     });
 
     it("Should fail if non-owner tries to add activity", async function () {
