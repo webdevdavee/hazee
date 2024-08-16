@@ -185,6 +185,7 @@ contract NFTCollection is Ownable, ReentrancyGuard {
 
         uint256 amount = offer.amount;
         offer.isActive = false;
+        offer.amount = 0;
 
         payable(msg.sender).transfer(amount);
 
