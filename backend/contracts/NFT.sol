@@ -27,7 +27,6 @@ contract NFT is ERC721URIStorage, Ownable {
         string description;
         uint256 creationDate;
         address creator;
-        Attribute[] attributes;
     }
 
     struct Activity {
@@ -40,6 +39,7 @@ contract NFT is ERC721URIStorage, Ownable {
     mapping(uint256 => NFTStatus) public nftStatus;
     mapping(uint256 => Activity[]) public nftActivities;
     mapping(uint256 => address) public collection;
+    mapping(uint256 => Attribute[]) private _tokenAttributes;
 
     constructor(
         string memory name,
@@ -75,9 +75,12 @@ contract NFT is ERC721URIStorage, Ownable {
             name: name,
             description: description,
             creationDate: block.timestamp,
-            creator: to,
-            attributes: attributes
+            creator: to
         });
+
+        for (uint i = 0; i < attributes.length; i++) {
+            _tokenAttributes[newTokenId].push(attributes[i]);
+        }
 
         nftStatus[newTokenId] = NFTStatus.NONE;
         collection[newTokenId] = msg.sender;
@@ -108,7 +111,7 @@ contract NFT is ERC721URIStorage, Ownable {
             metadata.description,
             metadata.creationDate,
             metadata.creator,
-            metadata.attributes
+            _tokenAttributes[tokenId]
         );
     }
 
@@ -117,13 +120,10 @@ contract NFT is ERC721URIStorage, Ownable {
         string memory key
     ) public view returns (string memory) {
         require(exists(tokenId), "NFT: Attribute query for nonexistent token");
-        Metadata storage metadata = _tokenMetadata[tokenId];
-        for (uint i = 0; i < metadata.attributes.length; i++) {
-            if (
-                keccak256(bytes(metadata.attributes[i].key)) ==
-                keccak256(bytes(key))
-            ) {
-                return metadata.attributes[i].value;
+        Attribute[] storage attributes = _tokenAttributes[tokenId];
+        for (uint i = 0; i < attributes.length; i++) {
+            if (keccak256(bytes(attributes[i].key)) == keccak256(bytes(key))) {
+                return attributes[i].value;
             }
         }
         return "";
@@ -163,36 +163,5 @@ contract NFT is ERC721URIStorage, Ownable {
     function getCollection(uint256 tokenId) public view returns (address) {
         require(exists(tokenId), "NFT: Collection query for nonexistent token");
         return collection[tokenId];
-    }
-
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override(ERC721, IERC721) {
-        super.transferFrom(from, to, tokenId);
-        creatorsContract.recordActivity(from, "NFT Transferred", tokenId);
-        creatorsContract.recordActivity(to, "NFT Received", tokenId);
-    }
-
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override(ERC721, IERC721) {
-        super.safeTransferFrom(from, to, tokenId);
-        creatorsContract.recordActivity(from, "NFT Transferred", tokenId);
-        creatorsContract.recordActivity(to, "NFT Received", tokenId);
-    }
-
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) public override(ERC721, IERC721) {
-        super.safeTransferFrom(from, to, tokenId, data);
-        creatorsContract.recordActivity(from, "NFT Transferred", tokenId);
-        creatorsContract.recordActivity(to, "NFT Received", tokenId);
     }
 }
