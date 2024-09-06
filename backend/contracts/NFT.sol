@@ -5,10 +5,12 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./NFTCreators.sol";
+import "./NFTAuction.sol";
 
 contract NFT is ERC721URIStorage, Ownable {
     uint256 private _tokenIds;
     NFTCreators public creatorsContract;
+    address public auctionContract;
 
     enum NFTStatus {
         NONE,
@@ -44,9 +46,11 @@ contract NFT is ERC721URIStorage, Ownable {
     constructor(
         string memory name,
         string memory symbol,
-        address _creatorsAddress
+        address _creatorsAddress,
+        address _nftAuctionAddress
     ) ERC721(name, symbol) Ownable(msg.sender) {
         creatorsContract = NFTCreators(_creatorsAddress);
+        auctionContract = _nftAuctionAddress;
     }
 
     function exists(uint256 tokenId) public view returns (bool) {
@@ -131,8 +135,10 @@ contract NFT is ERC721URIStorage, Ownable {
     function setNFTStatus(uint256 tokenId, NFTStatus status) external {
         require(exists(tokenId), "NFT: Status set for nonexistent token");
         require(
-            msg.sender == ownerOf(tokenId) || msg.sender == owner(),
-            "NFT: Only owner or contract owner can set status"
+            msg.sender == ownerOf(tokenId) ||
+                msg.sender == owner() ||
+                msg.sender == auctionContract,
+            "NFT: Only owner, contract owner, or auction contract can set status"
         );
         nftStatus[tokenId] = status;
     }
@@ -145,7 +151,9 @@ contract NFT is ERC721URIStorage, Ownable {
     ) public {
         require(exists(tokenId), "NFT: Activity added for nonexistent token");
         require(
-            msg.sender == ownerOf(tokenId) || msg.sender == owner(),
+            msg.sender == ownerOf(tokenId) ||
+                msg.sender == owner() ||
+                msg.sender == auctionContract,
             "NFT: Only owner or contract owner can add activity"
         );
         nftActivities[tokenId].push(Activity(action, value, timestamp));

@@ -62,6 +62,7 @@ contract NFTCollection is Ownable, ReentrancyGuard {
         uint256 _royaltyPercentage,
         uint256 _floorPrice,
         address _creatorsAddress,
+        address _nftAuctionAddress,
         uint256 _collectionId
     ) Ownable(msg.sender) {
         require(
@@ -77,7 +78,12 @@ contract NFTCollection is Ownable, ReentrancyGuard {
         creatorsContract = NFTCreators(_creatorsAddress);
         collectionId = _collectionId;
 
-        NFT newNFTContract = new NFT(_name, "NFT", _creatorsAddress);
+        NFT newNFTContract = new NFT(
+            _name,
+            "NFT",
+            _creatorsAddress,
+            _nftAuctionAddress
+        );
         nftContract = address(newNFTContract);
     }
 

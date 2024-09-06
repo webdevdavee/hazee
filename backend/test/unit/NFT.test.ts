@@ -3,6 +3,8 @@ import { ethers } from "hardhat";
 import {
   NFT,
   NFT__factory,
+  NFTAuction,
+  NFTAuction__factory,
   NFTCreators,
   NFTCreators__factory,
 } from "../../typechain-types";
@@ -16,9 +18,10 @@ describe("NFT", function () {
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;
+  let nftAuction: SignerWithAddress;
 
   beforeEach(async function () {
-    [owner, addr1, addr2] = await ethers.getSigners();
+    [owner, addr1, addr2, nftAuction] = await ethers.getSigners();
 
     // NFT Contract
     nftCreatorsFactory = (await ethers.getContractFactory(
@@ -35,7 +38,8 @@ describe("NFT", function () {
     nft = await nftFactory.deploy(
       "TestNFT",
       "TNFT",
-      await nftCreators.getAddress()
+      await nftCreators.getAddress(),
+      nftAuction.address
     );
 
     // Register creators
@@ -106,17 +110,25 @@ describe("NFT", function () {
       await nft.mint(addr1.address, "uri1", "NFT1", "Description1", []);
     });
 
-    it("Should set and get NFT status correctly", async function () {
-      await nft.connect(owner).setNFTStatus(1, 1); // Set to SALE
+    it("Should set NFT status correctly when called by owner", async function () {
+      await expect(nft.connect(owner).setNFTStatus(1, 1)).to.not.be.reverted;
       expect(await nft.nftStatus(1)).to.equal(1);
+    });
 
-      await nft.connect(owner).setNFTStatus(1, 2); // Set to AUCTION
+    it("Should set NFT status correctly when called by NFT owner", async function () {
+      await expect(nft.connect(addr1).setNFTStatus(1, 2)).to.not.be.reverted;
       expect(await nft.nftStatus(1)).to.equal(2);
     });
 
-    it("Should fail if non-owner tries to set status", async function () {
+    it("Should set NFT status correctly when called by auction contract", async function () {
+      await expect(nft.connect(nftAuction).setNFTStatus(1, 3)).to.not.be
+        .reverted;
+      expect(await nft.nftStatus(1)).to.equal(3);
+    });
+
+    it("Should fail if non-authorized address tries to set status", async function () {
       await expect(nft.connect(addr2).setNFTStatus(1, 1)).to.be.revertedWith(
-        "NFT: Only owner or contract owner can set status"
+        "NFT: Only owner, contract owner, or auction contract can set status"
       );
     });
   });

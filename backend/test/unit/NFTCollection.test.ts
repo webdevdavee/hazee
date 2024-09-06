@@ -2,6 +2,8 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import {
   NFT,
+  NFTAuction,
+  NFTAuction__factory,
   NFTCollection,
   NFTCollection__factory,
   NFTCreators,
@@ -10,6 +12,8 @@ import {
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("NFTCollection", function () {
+  let nftAuctionFactory: NFTAuction__factory;
+  let nftAuction: NFTAuction;
   let nftCollectionFactory: NFTCollection__factory;
   let nftCollection: NFTCollection;
   let nftCreatorsFactory: NFTCreators__factory;
@@ -22,7 +26,7 @@ describe("NFTCollection", function () {
   beforeEach(async function () {
     [owner, addr1, addr2] = await ethers.getSigners();
 
-    // NFT Contract
+    // NFTCreators Contract
     nftCreatorsFactory = (await ethers.getContractFactory(
       "NFTCreators"
     )) as unknown as NFTCreators__factory;
@@ -34,6 +38,12 @@ describe("NFTCollection", function () {
       "NFTCollection"
     )) as unknown as NFTCollection__factory;
 
+    // NFTAuction Contract
+    nftAuctionFactory = (await ethers.getContractFactory(
+      "NFTAuction"
+    )) as unknown as NFTAuction__factory;
+    nftAuction = await nftAuctionFactory.deploy(await nftCreators.getAddress());
+
     nftCollection = await nftCollectionFactory.deploy(
       "TestCollection",
       "The test collection",
@@ -41,6 +51,7 @@ describe("NFTCollection", function () {
       3000,
       ethers.parseEther("0.8"),
       await nftCreators.getAddress(),
+      await nftAuction.getAddress(),
       "1"
     );
 
@@ -204,7 +215,7 @@ describe("NFTCollection", function () {
         sellerProceeds + royaltyAmount,
         ethers.parseEther("0.000001")
       );
-      expect(addr1BalanceChange).to.equal(BigInt(0)); // Because Addr1's balance didn't change
+      expect(addr1BalanceChange).to.equal(BigInt(0)); // Because addr1's balance didn't change
       expect(contractBalanceChange).to.equal(-offerAmount); // Contract balance decreased by offer amount
 
       // Check the new owner of the NFT

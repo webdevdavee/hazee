@@ -104,6 +104,7 @@ contract NFTMarketplace is ReentrancyGuard {
             _royaltyPercentage,
             _floorPrice,
             address(creatorsContract),
+            address(auctionContract),
             collectionCounter
         );
 
