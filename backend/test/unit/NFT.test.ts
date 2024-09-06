@@ -3,8 +3,6 @@ import { ethers } from "hardhat";
 import {
   NFT,
   NFT__factory,
-  NFTAuction,
-  NFTAuction__factory,
   NFTCreators,
   NFTCreators__factory,
 } from "../../typechain-types";
