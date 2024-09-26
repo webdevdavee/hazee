@@ -64,10 +64,8 @@ contract NFT is ERC721URIStorage, Ownable {
         string memory description,
         Attribute[] memory attributes
     ) public onlyOwner returns (uint256) {
-        require(
-            creatorsContract.creatorIdByAddress(to) != 0,
-            "Creator not registered"
-        );
+        uint256 creatorId = creatorsContract.getCreatorIdByAddress(to);
+        require(creatorId != 0, "Creator not registered");
 
         _tokenIds++;
         uint256 newTokenId = _tokenIds;
@@ -87,9 +85,9 @@ contract NFT is ERC721URIStorage, Ownable {
 
         nftStatus[newTokenId] = NFTStatus.NONE;
         collection[newTokenId] = msg.sender;
-        addActivity(newTokenId, "Minted", 0, block.timestamp);
+        addActivity(newTokenId, "Minted", 0);
 
-        creatorsContract.addCreatedNFT(to, newTokenId);
+        creatorsContract.addCreatedNFT(creatorId, newTokenId);
 
         return newTokenId;
     }
@@ -146,8 +144,7 @@ contract NFT is ERC721URIStorage, Ownable {
     function addActivity(
         uint256 tokenId,
         string memory action,
-        uint256 value,
-        uint256 timestamp
+        uint256 value
     ) public {
         require(exists(tokenId), "NFT: Activity added for nonexistent token");
         require(
@@ -156,8 +153,13 @@ contract NFT is ERC721URIStorage, Ownable {
                 msg.sender == auctionContract,
             "NFT: Only owner or contract owner can add activity"
         );
+        uint256 timestamp = block.timestamp;
         nftActivities[tokenId].push(Activity(action, value, timestamp));
-        creatorsContract.recordActivity(ownerOf(tokenId), action, tokenId);
+
+        uint256 creatorId = creatorsContract.getCreatorIdByAddress(
+            ownerOf(tokenId)
+        );
+        creatorsContract.recordActivity(creatorId, action, tokenId);
     }
 
     function getActivities(

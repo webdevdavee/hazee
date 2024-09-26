@@ -33,16 +33,16 @@ describe("NFTCollection", function () {
 
     nftCreators = await nftCreatorsFactory.deploy();
 
-    // NFT Collection
-    nftCollectionFactory = (await ethers.getContractFactory(
-      "NFTCollection"
-    )) as unknown as NFTCollection__factory;
-
     // NFTAuction Contract
     nftAuctionFactory = (await ethers.getContractFactory(
       "NFTAuction"
     )) as unknown as NFTAuction__factory;
     nftAuction = await nftAuctionFactory.deploy(await nftCreators.getAddress());
+
+    // NFT Collection
+    nftCollectionFactory = (await ethers.getContractFactory(
+      "NFTCollection"
+    )) as unknown as NFTCollection__factory;
 
     nftCollection = await nftCollectionFactory.deploy(
       "TestCollection",

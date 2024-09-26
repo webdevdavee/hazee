@@ -33,35 +33,35 @@ contract NFTCreators {
         bool isActive;
     }
 
-    mapping(address => mapping(uint256 => CollectionOffer))
+    mapping(uint256 => mapping(uint256 => CollectionOffer))
         public creatorCollectionOffers;
 
-    mapping(address => uint256) public creatorIdByAddress;
     mapping(uint256 => Creator) public creators;
-    mapping(address => Activity[]) public creatorActivities;
-    mapping(address => mapping(uint256 => uint256)) public creatorOffers;
-    mapping(address => mapping(uint256 => uint256)) public creatorBids;
+    mapping(uint256 => Activity[]) public creatorActivities;
+    mapping(uint256 => mapping(uint256 => uint256)) public creatorOffers;
+    mapping(uint256 => mapping(uint256 => uint256)) public creatorBids;
+    mapping(address => uint256) public creatorIdByAddress;
 
-    event CreatorRegistered(address indexed creatorAddress, uint256 creatorId);
-    event NFTCreated(address indexed creator, uint256 tokenId);
-    event CollectionCreated(address indexed creator, uint256 collectionId);
+    event CreatorRegistered(address indexed creator, uint256 creatorId);
+    event NFTCreated(uint256 indexed creatorId, uint256 tokenId);
+    event CollectionCreated(uint256 indexed creatorId, uint256 collectionId);
     event ActivityRecorded(
-        address indexed creator,
+        uint256 indexed creatorId,
         string actionType,
         uint256 relatedItemId
     );
 
-    function registerCreator(address _creator) public returns (uint256) {
+    function registerCreator() public returns (uint256) {
         require(
-            creatorIdByAddress[_creator] == 0,
+            creatorIdByAddress[msg.sender] == 0,
             "Creator already registered"
         );
         _creatorIds++;
         uint256 newCreatorId = _creatorIds;
-        creatorIdByAddress[_creator] = newCreatorId;
+        creatorIdByAddress[msg.sender] = newCreatorId;
         creators[newCreatorId] = Creator({
             creatorId: newCreatorId,
-            userAddress: _creator,
+            userAddress: msg.sender,
             createdNFTs: new uint256[](0),
             ownedNFTs: new uint256[](0),
             favouritedNFTs: new uint256[](0),
@@ -71,123 +71,123 @@ contract NFTCreators {
             walletBalance: 0
         });
         allCreatorIds.push(newCreatorId);
-        emit CreatorRegistered(_creator, newCreatorId);
+        emit CreatorRegistered(msg.sender, newCreatorId);
         return newCreatorId;
     }
 
-    function addCreatedNFT(address creator, uint256 tokenId) external {
-        uint256 creatorId = creatorIdByAddress[creator];
+    function addCreatedNFT(uint256 creatorId, uint256 tokenId) external {
         require(creatorId != 0, "Creator not registered");
         creators[creatorId].createdNFTs.push(tokenId);
         creators[creatorId].ownedNFTs.push(tokenId);
-        emit NFTCreated(creator, tokenId);
-        recordActivity(creator, "NFT Created", tokenId);
+        emit NFTCreated(creatorId, tokenId);
+        recordActivity(creatorId, "NFT Created", tokenId);
     }
 
     function addCreatedCollection(
-        address creator,
+        uint256 creatorId,
         uint256 collectionId
     ) external {
-        uint256 creatorId = creatorIdByAddress[creator];
         require(creatorId != 0, "Creator not registered");
         creators[creatorId].createdCollections.push(collectionId);
-        emit CollectionCreated(creator, collectionId);
-        recordActivity(creator, "Collection Created", collectionId);
+        emit CollectionCreated(creatorId, collectionId);
+        recordActivity(creatorId, "Collection Created", collectionId);
     }
 
-    function addToFavourites(address user, uint256 tokenId) external {
-        uint256 creatorId = creatorIdByAddress[user];
+    function addToFavourites(uint256 creatorId, uint256 tokenId) external {
         require(creatorId != 0, "User not registered");
         creators[creatorId].favouritedNFTs.push(tokenId);
-        recordActivity(user, "NFT Favourited", tokenId);
+        recordActivity(creatorId, "NFT Favourited", tokenId);
     }
 
-    function addToCart(address user, uint256 tokenId) external {
-        uint256 creatorId = creatorIdByAddress[user];
+    function addToCart(uint256 creatorId, uint256 tokenId) external {
         require(creatorId != 0, "User not registered");
         creators[creatorId].cartedNFTs.push(tokenId);
-        recordActivity(user, "NFT Added to Cart", tokenId);
+        recordActivity(creatorId, "NFT Added to Cart", tokenId);
     }
 
     function recordActivity(
-        address user,
+        uint256 creatorId,
         string memory actionType,
         uint256 relatedItemId
     ) public {
-        creatorActivities[user].push(
+        creatorActivities[creatorId].push(
             Activity(actionType, block.timestamp, relatedItemId)
         );
-        emit ActivityRecorded(user, actionType, relatedItemId);
+        emit ActivityRecorded(creatorId, actionType, relatedItemId);
     }
 
     function updateCollectionOffer(
-        address user,
+        uint256 creatorId,
         uint256 collectionId,
         uint256 offerAmount,
         uint256 nftCount,
         uint256 expirationTime
     ) external {
-        creatorCollectionOffers[user][collectionId] = CollectionOffer(
+        require(creatorId != 0, "User not registered");
+        creatorCollectionOffers[creatorId][collectionId] = CollectionOffer(
             offerAmount,
             nftCount,
             block.timestamp,
             expirationTime,
             true
         );
-        recordActivity(user, "Collection Offer Placed", collectionId);
+        recordActivity(creatorId, "Collection Offer Placed", collectionId);
     }
 
     function removeCollectionOffer(
-        address user,
+        uint256 creatorId,
         uint256 collectionId
     ) external {
-        require(creatorIdByAddress[user] != 0, "User not registered");
+        require(creatorId != 0, "User not registered");
         require(
-            creatorCollectionOffers[user][collectionId].isActive,
+            creatorCollectionOffers[creatorId][collectionId].isActive,
             "No active offer for this collection"
         );
 
-        delete creatorCollectionOffers[user][collectionId];
-        recordActivity(user, "Collection Offer Removed", collectionId);
+        delete creatorCollectionOffers[creatorId][collectionId];
+        recordActivity(creatorId, "Collection Offer Removed", collectionId);
     }
 
     function updateBid(
-        address user,
+        uint256 creatorId,
         uint256 auctionId,
         uint256 bidAmount
     ) external {
-        creatorBids[user][auctionId] = bidAmount;
-        recordActivity(user, "Bid Placed", auctionId);
+        require(creatorId != 0, "User not registered");
+        creatorBids[creatorId][auctionId] = bidAmount;
+        recordActivity(creatorId, "Bid Placed", auctionId);
     }
 
-    function updateItemsSold(address seller) external {
-        uint256 creatorId = creatorIdByAddress[seller];
+    function updateItemsSold(uint256 creatorId) external {
         require(creatorId != 0, "Seller not registered");
         creators[creatorId].itemsSold++;
-        recordActivity(seller, "Item Sold", creators[creatorId].itemsSold);
+        recordActivity(creatorId, "Item Sold", creators[creatorId].itemsSold);
     }
 
-    function updateWalletBalance(address user, uint256 newBalance) external {
-        uint256 creatorId = creatorIdByAddress[user];
+    function updateWalletBalance(
+        uint256 creatorId,
+        uint256 newBalance
+    ) external {
         require(creatorId != 0, "User not registered");
         creators[creatorId].walletBalance = newBalance;
     }
 
     function getCreatorInfo(
-        address user
+        uint256 creatorId
     ) external view returns (Creator memory) {
-        uint256 creatorId = creatorIdByAddress[user];
         require(creatorId != 0, "User not registered");
         return creators[creatorId];
     }
 
     function getCreatorActivities(
-        address user
+        uint256 creatorId
     ) external view returns (Activity[] memory) {
-        return creatorActivities[user];
+        return creatorActivities[creatorId];
     }
 
-    function getCreatorId(address user) external view returns (uint256) {
+    function getCreatorIdByAddress(
+        address user
+    ) external view returns (uint256) {
         return creatorIdByAddress[user];
     }
 }
