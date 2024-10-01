@@ -76,7 +76,7 @@ contract NFTMarketplace is ReentrancyGuard {
             "Contract not approved"
         );
         require(
-            !i_auctionContract.isNFTOnAuction(_nftContract, _tokenId),
+            !i_auctionContract.isNFTOnAuction(_tokenId),
             "NFT is currently on auction"
         );
 
@@ -184,10 +184,7 @@ contract NFTMarketplace is ReentrancyGuard {
             "NFT is not available for direct purchase"
         );
         require(
-            !i_auctionContract.isNFTOnAuction(
-                listing.nftContract,
-                listing.tokenId
-            ),
+            !i_auctionContract.isNFTOnAuction(listing.tokenId),
             "NFT is currently on auction"
         );
 
@@ -198,10 +195,8 @@ contract NFTMarketplace is ReentrancyGuard {
         uint256 royaltyFee = 0;
 
         NFT nft = NFT(listing.nftContract);
-        (, , , address creator, ) = nft.getMetadata(listing.tokenId);
-        uint256 collectionId = uint256(
-            uint160(nft.getCollection(listing.tokenId))
-        );
+        (, , , , address creator, , , ) = nft.getMetadata(listing.tokenId);
+        uint256 collectionId = nft.getCollection(listing.tokenId);
 
         (, , , , , , , , uint256 royaltyPercentage, , , ) = i_collectionContract
             .getCollectionInfo(collectionId);
@@ -230,14 +225,13 @@ contract NFTMarketplace is ReentrancyGuard {
         );
         i_creatorsContract.updateItemsSold(listingSellerId);
 
-        uint256 creatorId = i_creatorsContract.getCreatorIdByAddress(
-            msg.sender
-        );
+        uint256 buyerId = i_creatorsContract.getCreatorIdByAddress(msg.sender);
         i_creatorsContract.recordActivity(
-            creatorId,
+            buyerId,
             "NFT Purchased",
             listing.tokenId
         );
+        i_creatorsContract.addOwnedNFT(buyerId, listing.tokenId);
 
         i_creatorsContract.recordActivity(
             listingSellerId,

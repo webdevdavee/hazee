@@ -90,8 +90,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         string memory _description,
         uint256 _maxSupply,
         uint256 _royaltyPercentage,
-        uint256 _floorPrice,
-        address _nftAuctionAddress
+        uint256 _floorPrice
     ) external returns (uint256) {
         require(
             _royaltyPercentage <= 4000,
@@ -101,12 +100,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         collectionCounter++;
         uint256 newCollectionId = collectionCounter;
 
-        NFT newNFTContract = new NFT(
-            _name,
-            "NFT",
-            address(creatorsContract),
-            _nftAuctionAddress
-        );
+        NFT newNFTContract = new NFT(_name, "NFT", address(creatorsContract));
 
         collections[newCollectionId] = CollectionInfo({
             collectionAddress: address(this),
@@ -151,6 +145,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
 
     function mintNFT(
         uint256 _collectionId,
+        uint256 price,
         string memory tokenURI,
         string memory nftName,
         string memory nftDescription,
@@ -174,7 +169,9 @@ contract NFTCollections is Ownable, ReentrancyGuard {
             tokenURI,
             nftName,
             nftDescription,
-            attributes
+            price,
+            attributes,
+            _collectionId
         );
 
         mintedTokens[_collectionId].push(tokenId);
@@ -252,7 +249,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         uint256 _collectionId
     )
         external
-        view
+        view 
         returns (
             address collectionAddress,
             address creator,

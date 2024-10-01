@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-
 contract NFTCreators {
     uint256 private _creatorIds;
     uint256[] private allCreatorIds;
@@ -81,6 +79,12 @@ contract NFTCreators {
         creators[creatorId].ownedNFTs.push(tokenId);
         emit NFTCreated(creatorId, tokenId);
         recordActivity(creatorId, "NFT Created", tokenId);
+    }
+
+    function addOwnedNFT(uint256 creatorId, uint256 tokenId) external {
+        require(creatorId != 0, "Creator not registered");
+        creators[creatorId].ownedNFTs.push(tokenId);
+        recordActivity(creatorId, "NFT Owned", tokenId);
     }
 
     function addCreatedCollection(
@@ -170,6 +174,17 @@ contract NFTCreators {
     ) external {
         require(creatorId != 0, "User not registered");
         creators[creatorId].walletBalance = newBalance;
+    }
+
+    function getAllCreators() external view returns (Creator[] memory) {
+        Creator[] memory allCreators = new Creator[](allCreatorIds.length);
+
+        for (uint256 i = 0; i < allCreatorIds.length; i++) {
+            uint256 creatorId = allCreatorIds[i];
+            allCreators[i] = creators[creatorId];
+        }
+
+        return allCreators;
     }
 
     function getCreatorInfo(
