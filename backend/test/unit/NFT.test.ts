@@ -36,15 +36,13 @@ describe("NFT", function () {
     nft = await nftFactory.deploy(
       "TestNFT",
       "TNFT",
-      await nftCreators.getAddress()
+      await nftCreators.getAddress(),
+      nftAuction.address
     );
 
     // Register creators
     await nftCreators.connect(addr1).registerCreator();
     await nftCreators.connect(addr2).registerCreator();
-
-    // Set auction contract
-    await nft.connect(owner).setAuctionContract(nftAuction.address);
   });
 
   describe("Deployment", function () {
@@ -156,7 +154,13 @@ describe("NFT", function () {
       expect(creator).to.equal(addr1.address);
       expect(returnedPrice).to.equal(price);
       expect(status).to.equal(0); // NFTStatus.NONE
-      expect(returnedAttributes).to.deep.equal(attributes);
+
+      // Handle the returned attributes
+      expect(returnedAttributes.length).to.equal(attributes.length);
+      for (let i = 0; i < attributes.length; i++) {
+        expect(returnedAttributes[i].key).to.equal(attributes[i].key);
+        expect(returnedAttributes[i].value).to.equal(attributes[i].value);
+      }
     });
 
     it("Should revert when querying metadata for non-existent token", async function () {

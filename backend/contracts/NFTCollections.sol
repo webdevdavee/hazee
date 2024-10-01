@@ -5,12 +5,14 @@ import "./NFT.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./NFTCreators.sol";
+import "./NFTAuction.sol";
 
 contract NFTCollections is Ownable, ReentrancyGuard {
     uint256 public constant MIN_OFFER_DURATION = 12 hours;
     uint256 public constant MAX_OFFER_DURATION = 1 weeks;
 
-    NFTCreators public creatorsContract;
+    NFTCreators public immutable i_creatorsContract;
+    NFTAuction public immutable i_auctionContract;
 
     struct CollectionInfo {
         address collectionAddress;
@@ -81,8 +83,12 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         address newOwner
     );
 
-    constructor(address _creatorsAddress) Ownable(msg.sender) {
-        creatorsContract = NFTCreators(_creatorsAddress);
+    constructor(
+        address _creatorsAddress,
+        address _auctionContractAddress
+    ) Ownable(msg.sender) {
+        i_creatorsContract = NFTCreators(_creatorsAddress);
+        i_auctionContract = NFTAuction(_auctionContractAddress);
     }
 
     function createCollection(
@@ -100,7 +106,12 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         collectionCounter++;
         uint256 newCollectionId = collectionCounter;
 
-        NFT newNFTContract = new NFT(_name, "NFT", address(creatorsContract));
+        NFT newNFTContract = new NFT(
+            _name,
+            "NFT",
+            address(i_creatorsContract),
+            address(i_auctionContract)
+        );
 
         collections[newCollectionId] = CollectionInfo({
             collectionAddress: address(this),
@@ -181,8 +192,10 @@ contract NFTCollections is Ownable, ReentrancyGuard {
             collection.owners++;
         }
 
-        uint256 creatorId = creatorsContract.getCreatorIdByAddress(msg.sender);
-        creatorsContract.recordActivity(creatorId, "NFT Minted", tokenId);
+        uint256 creatorId = i_creatorsContract.getCreatorIdByAddress(
+            msg.sender
+        );
+        i_creatorsContract.recordActivity(creatorId, "NFT Minted", tokenId);
 
         emit NFTMinted(_collectionId, tokenId, msg.sender);
         return tokenId;
@@ -249,7 +262,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         uint256 _collectionId
     )
         external
-        view 
+        view
         returns (
             address collectionAddress,
             address creator,
@@ -325,8 +338,10 @@ contract NFTCollections is Ownable, ReentrancyGuard {
             true
         );
 
-        uint256 creatorId = creatorsContract.getCreatorIdByAddress(msg.sender);
-        creatorsContract.updateCollectionOffer(
+        uint256 creatorId = i_creatorsContract.getCreatorIdByAddress(
+            msg.sender
+        );
+        i_creatorsContract.updateCollectionOffer(
             creatorId,
             _collectionId,
             msg.value,
@@ -360,9 +375,11 @@ contract NFTCollections is Ownable, ReentrancyGuard {
 
         payable(msg.sender).transfer(amount);
 
-        uint256 creatorId = creatorsContract.getCreatorIdByAddress(msg.sender);
-        creatorsContract.removeCollectionOffer(creatorId, _collectionId);
-        creatorsContract.recordActivity(
+        uint256 creatorId = i_creatorsContract.getCreatorIdByAddress(
+            msg.sender
+        );
+        i_creatorsContract.removeCollectionOffer(creatorId, _collectionId);
+        i_creatorsContract.recordActivity(
             creatorId,
             "Collection Offer Withdrawn",
             0
@@ -404,20 +421,23 @@ contract NFTCollections is Ownable, ReentrancyGuard {
             _updateOwnership(_collectionId, msg.sender, offerer);
         }
 
-        uint256 sellerCreatorId = creatorsContract.getCreatorIdByAddress(
+        uint256 sellerCreatorId = i_creatorsContract.getCreatorIdByAddress(
             msg.sender
         );
-        uint256 offererCreatorId = creatorsContract.getCreatorIdByAddress(
+        uint256 offererCreatorId = i_creatorsContract.getCreatorIdByAddress(
             offerer
         );
-        creatorsContract.removeCollectionOffer(offererCreatorId, _collectionId);
+        i_creatorsContract.removeCollectionOffer(
+            offererCreatorId,
+            _collectionId
+        );
 
-        creatorsContract.recordActivity(
+        i_creatorsContract.recordActivity(
             sellerCreatorId,
             "Collection Offer Accepted",
             0
         );
-        creatorsContract.recordActivity(
+        i_creatorsContract.recordActivity(
             offererCreatorId,
             "Collection Offer Fulfilled",
             0

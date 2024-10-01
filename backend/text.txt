@@ -63,10 +63,6 @@ contract NFT is ERC721URIStorage, Ownable {
         return _ownerOf(tokenId) != address(0);
     }
 
-    function setAuctionContract(address _auctionContract) external onlyOwner {
-        auctionContract = _auctionContract;
-    }
-
     function mint(
         address to,
         string memory tokenURI,
