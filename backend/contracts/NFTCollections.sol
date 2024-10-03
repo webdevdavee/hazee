@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./NFTCreators.sol";
 import "./NFTAuction.sol";
+import "./NFTMarketplace.sol";
 
 contract NFTCollections is Ownable, ReentrancyGuard {
     uint256 public constant MIN_OFFER_DURATION = 12 hours;
@@ -13,6 +14,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
 
     NFTCreators public immutable i_creatorsContract;
     NFTAuction public immutable i_auctionContract;
+    NFTMarketplace public immutable i_marketplaceContract;
 
     struct CollectionInfo {
         address collectionAddress;
@@ -83,6 +85,22 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         address newOwner
     );
 
+    // Custom errors
+    error RoyaltyPercentageTooHigh();
+    error CollectionNotActive();
+    error OnlyCurrentOwnerAllowed();
+    error InvalidNewOwner();
+    error MaximumSupplyReached();
+    error InvalidCollectionID();
+    error OfferBelowFloorPrice();
+    error InvalidNFTCount();
+    error InvalidOfferDuration();
+    error NoActiveCollectionOffer();
+    error OfferExpired();
+    error InvalidNumberOfTokens();
+    error NotTokenOwner();
+    error OffsetOutOfBounds();
+
     constructor(
         address _creatorsAddress,
         address _auctionContractAddress
@@ -98,10 +116,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         uint256 _royaltyPercentage,
         uint256 _floorPrice
     ) external returns (uint256) {
-        require(
-            _royaltyPercentage <= 4000,
-            "Royalty percentage must be 40% or less"
-        );
+        if (_royaltyPercentage > 4000) revert RoyaltyPercentageTooHigh();
 
         collectionCounter++;
         uint256 newCollectionId = collectionCounter;
@@ -110,7 +125,8 @@ contract NFTCollections is Ownable, ReentrancyGuard {
             _name,
             "NFT",
             address(i_creatorsContract),
-            address(i_auctionContract)
+            address(i_auctionContract),
+            address(i_marketplaceContract)
         );
 
         collections[newCollectionId] = CollectionInfo({
@@ -163,18 +179,13 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         NFT.Attribute[] memory attributes
     ) public returns (uint256) {
         CollectionInfo storage collection = collections[_collectionId];
-        require(collection.isActive, "Collection is not active");
-        require(
-            collection.mintedSupply < collection.maxSupply,
-            "Maximum supply reached"
-        );
-        require(
-            msg.sender == collection.currentOwner,
-            "Only current owner can mint"
-        );
+        if (!collection.isActive) revert CollectionNotActive();
+        if (collection.mintedSupply >= collection.maxSupply)
+            revert MaximumSupplyReached();
+        if (msg.sender != collection.currentOwner)
+            revert OnlyCurrentOwnerAllowed();
 
         NFT nft = NFT(collection.nftContract);
-        collection.mintedSupply++;
         uint256 tokenId = nft.mint(
             msg.sender,
             tokenURI,
@@ -184,6 +195,8 @@ contract NFTCollections is Ownable, ReentrancyGuard {
             attributes,
             _collectionId
         );
+
+        collection.mintedSupply++;
 
         mintedTokens[_collectionId].push(tokenId);
 
@@ -212,11 +225,9 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         uint256 _floorPrice
     ) public {
         CollectionInfo storage collection = collections[_collectionId];
-        require(collection.isActive, "Collection is not active");
-        require(
-            msg.sender == collection.currentOwner,
-            "Only current owner can update floor price"
-        );
+        if (!collection.isActive) revert CollectionNotActive();
+        if (msg.sender != collection.currentOwner)
+            revert OnlyCurrentOwnerAllowed();
 
         collection.floorPrice = _floorPrice;
         emit FloorPriceUpdated(_collectionId, _floorPrice);
@@ -227,15 +238,10 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         uint256 _royaltyPercentage
     ) public {
         CollectionInfo storage collection = collections[_collectionId];
-        require(collection.isActive, "Collection is not active");
-        require(
-            msg.sender == collection.currentOwner,
-            "Only current owner can update royalty percentage"
-        );
-        require(
-            _royaltyPercentage <= 4000,
-            "Royalty percentage must be 40% or less"
-        );
+        if (!collection.isActive) revert CollectionNotActive();
+        if (msg.sender != collection.currentOwner)
+            revert OnlyCurrentOwnerAllowed();
+        if (_royaltyPercentage > 4000) revert RoyaltyPercentageTooHigh();
 
         collection.royaltyPercentage = _royaltyPercentage;
         emit RoyaltyPercentageUpdated(_collectionId, _royaltyPercentage);
@@ -245,7 +251,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         uint256 _offset,
         uint256 _limit
     ) external view returns (CollectionInfo[] memory) {
-        require(_offset < collectionCounter, "Offset out of bounds");
+        if (_offset >= collectionCounter) revert OffsetOutOfBounds();
         uint256 end = _offset + _limit;
         if (end > collectionCounter) {
             end = collectionCounter;
@@ -278,10 +284,8 @@ contract NFTCollections is Ownable, ReentrancyGuard {
             bool isActive
         )
     {
-        require(
-            _collectionId > 0 && _collectionId <= collectionCounter,
-            "Invalid collection ID"
-        );
+        if (_collectionId == 0 || _collectionId > collectionCounter)
+            revert InvalidCollectionID();
         CollectionInfo storage collection = collections[_collectionId];
         return (
             collection.collectionAddress,
@@ -305,20 +309,14 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         uint256 duration
     ) public payable nonReentrant {
         CollectionInfo storage collection = collections[_collectionId];
-        require(collection.isActive, "Collection is not active");
+        if (!collection.isActive) revert CollectionNotActive();
 
-        require(
-            msg.value >= collection.floorPrice * nftCount,
-            "Offer must be at least floor price * nftCount"
-        );
-        require(
-            nftCount > 0 && nftCount <= collection.mintedSupply,
-            "Invalid NFT count"
-        );
-        require(
-            duration >= MIN_OFFER_DURATION && duration <= MAX_OFFER_DURATION,
-            "Invalid offer duration"
-        );
+        if (msg.value < collection.floorPrice * nftCount)
+            revert OfferBelowFloorPrice();
+        if (nftCount == 0 || nftCount > collection.mintedSupply)
+            revert InvalidNFTCount();
+        if (duration < MIN_OFFER_DURATION || duration > MAX_OFFER_DURATION)
+            revert InvalidOfferDuration();
 
         CollectionOffer storage existingOffer = collectionOffers[_collectionId][
             msg.sender
@@ -362,12 +360,12 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         uint256 _collectionId
     ) public nonReentrant {
         CollectionInfo storage collection = collections[_collectionId];
-        require(collection.isActive, "Collection is not active");
+        if (!collection.isActive) revert CollectionNotActive();
 
         CollectionOffer storage offer = collectionOffers[_collectionId][
             msg.sender
         ];
-        require(offer.isActive, "No active collection offer");
+        if (!offer.isActive) revert NoActiveCollectionOffer();
 
         uint256 amount = offer.amount;
         offer.isActive = false;
@@ -394,19 +392,16 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         address offerer
     ) public nonReentrant {
         CollectionInfo storage collection = collections[_collectionId];
-        require(collection.isActive, "Collection is not active");
+        if (!collection.isActive) revert CollectionNotActive();
 
         CollectionOffer memory offer = collectionOffers[_collectionId][offerer];
-        require(offer.isActive, "No active collection offer from this address");
-        require(block.timestamp <= offer.expirationTime, "Offer has expired");
-        require(tokenIds.length == offer.nftCount, "Invalid number of tokens");
+        if (!offer.isActive) revert NoActiveCollectionOffer();
+        if (block.timestamp > offer.expirationTime) revert OfferExpired();
+        if (tokenIds.length != offer.nftCount) revert InvalidNumberOfTokens();
 
         NFT nft = NFT(collection.nftContract);
         for (uint256 i = 0; i < tokenIds.length; i++) {
-            require(
-                nft.ownerOf(tokenIds[i]) == msg.sender,
-                "You don't own all the specified tokens"
-            );
+            if (nft.ownerOf(tokenIds[i]) != msg.sender) revert NotTokenOwner();
         }
 
         uint256 royaltyAmount = (offer.amount * collection.royaltyPercentage) /
@@ -454,17 +449,17 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         delete collectionOffers[_collectionId][offerer];
     }
 
-    function deactivateCollection(uint256 _collectionId) external {
-        CollectionInfo storage collection = collections[_collectionId];
-        require(collection.isActive, "Collection is not active");
-        require(
-            msg.sender == collection.currentOwner,
-            "Only current owner can deactivate"
-        );
+    // function deactivateCollection(uint256 _collectionId) external {
+    //     CollectionInfo storage collection = collections[_collectionId];
+    //     require(collection.isActive, "Collection is not active");
+    //     require(
+    //         msg.sender == collection.currentOwner,
+    //         "Only current owner can deactivate"
+    //     );
 
-        collection.isActive = false;
-        emit CollectionDeactivated(_collectionId);
-    }
+    //     collection.isActive = false;
+    //     emit CollectionDeactivated(_collectionId);
+    // }
 
     function _updateOwnership(
         uint256 _collectionId,

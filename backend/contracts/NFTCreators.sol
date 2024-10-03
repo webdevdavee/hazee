@@ -74,7 +74,10 @@ contract NFTCreators {
     }
 
     function addCreatedNFT(uint256 creatorId, uint256 tokenId) external {
-        require(creatorId != 0, "Creator not registered");
+        require(
+            creators[creatorId].userAddress != address(0),
+            "Creator does not exist"
+        );
         creators[creatorId].createdNFTs.push(tokenId);
         creators[creatorId].ownedNFTs.push(tokenId);
         emit NFTCreated(creatorId, tokenId);
@@ -82,7 +85,10 @@ contract NFTCreators {
     }
 
     function addOwnedNFT(uint256 creatorId, uint256 tokenId) external {
-        require(creatorId != 0, "Creator not registered");
+        require(
+            creators[creatorId].userAddress != address(0),
+            "Creator does not exist"
+        );
         creators[creatorId].ownedNFTs.push(tokenId);
         recordActivity(creatorId, "NFT Owned", tokenId);
     }
@@ -91,20 +97,29 @@ contract NFTCreators {
         uint256 creatorId,
         uint256 collectionId
     ) external {
-        require(creatorId != 0, "Creator not registered");
+        require(
+            creators[creatorId].userAddress != address(0),
+            "Creator does not exist"
+        );
         creators[creatorId].createdCollections.push(collectionId);
         emit CollectionCreated(creatorId, collectionId);
         recordActivity(creatorId, "Collection Created", collectionId);
     }
 
     function addToFavourites(uint256 creatorId, uint256 tokenId) external {
-        require(creatorId != 0, "User not registered");
+        require(
+            creators[creatorId].userAddress != address(0),
+            "Creator does not exist"
+        );
         creators[creatorId].favouritedNFTs.push(tokenId);
         recordActivity(creatorId, "NFT Favourited", tokenId);
     }
 
     function addToCart(uint256 creatorId, uint256 tokenId) external {
-        require(creatorId != 0, "User not registered");
+        require(
+            creators[creatorId].userAddress != address(0),
+            "Creator does not exist"
+        );
         creators[creatorId].cartedNFTs.push(tokenId);
         recordActivity(creatorId, "NFT Added to Cart", tokenId);
     }
@@ -127,7 +142,10 @@ contract NFTCreators {
         uint256 nftCount,
         uint256 expirationTime
     ) external {
-        require(creatorId != 0, "User not registered");
+        require(
+            creators[creatorId].userAddress != address(0),
+            "Creator does not exist"
+        );
         creatorCollectionOffers[creatorId][collectionId] = CollectionOffer(
             offerAmount,
             nftCount,
@@ -142,7 +160,10 @@ contract NFTCreators {
         uint256 creatorId,
         uint256 collectionId
     ) external {
-        require(creatorId != 0, "User not registered");
+        require(
+            creators[creatorId].userAddress != address(0),
+            "Creator does not exist"
+        );
         require(
             creatorCollectionOffers[creatorId][collectionId].isActive,
             "No active offer for this collection"
@@ -157,13 +178,19 @@ contract NFTCreators {
         uint256 auctionId,
         uint256 bidAmount
     ) external {
-        require(creatorId != 0, "User not registered");
+        require(
+            creators[creatorId].userAddress != address(0),
+            "Creator does not exist"
+        );
         creatorBids[creatorId][auctionId] = bidAmount;
         recordActivity(creatorId, "Bid Placed", auctionId);
     }
 
     function updateItemsSold(uint256 creatorId) external {
-        require(creatorId != 0, "Seller not registered");
+        require(
+            creators[creatorId].userAddress != address(0),
+            "Creator does not exist"
+        );
         creators[creatorId].itemsSold++;
         recordActivity(creatorId, "Item Sold", creators[creatorId].itemsSold);
     }
@@ -172,7 +199,10 @@ contract NFTCreators {
         uint256 creatorId,
         uint256 newBalance
     ) external {
-        require(creatorId != 0, "User not registered");
+        require(
+            creators[creatorId].userAddress != address(0),
+            "Creator does not exist"
+        );
         creators[creatorId].walletBalance = newBalance;
     }
 
@@ -190,7 +220,10 @@ contract NFTCreators {
     function getCreatorInfo(
         uint256 creatorId
     ) external view returns (Creator memory) {
-        require(creatorId != 0, "User not registered");
+        require(
+            creators[creatorId].userAddress != address(0),
+            "Creator does not exist"
+        );
         return creators[creatorId];
     }
 

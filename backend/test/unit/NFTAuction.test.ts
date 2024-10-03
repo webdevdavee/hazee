@@ -23,6 +23,7 @@ describe("NFTAuction", function () {
   let bidder1: SignerWithAddress;
   let bidder2: SignerWithAddress;
   let fakeAuctionAddress: SignerWithAddress;
+  let fakeMarketplaceAddress: SignerWithAddress;
 
   const TOKEN_ID = 1;
   const STARTING_PRICE = ethers.parseEther("1");
@@ -30,8 +31,14 @@ describe("NFTAuction", function () {
   const AUCTION_DURATION = 7 * 24 * 60 * 60; // 7 days
 
   beforeEach(async function () {
-    [owner, seller, bidder1, bidder2, fakeAuctionAddress] =
-      await ethers.getSigners();
+    [
+      owner,
+      seller,
+      bidder1,
+      bidder2,
+      fakeAuctionAddress,
+      fakeMarketplaceAddress,
+    ] = await ethers.getSigners();
 
     // Deploy NFTCreators
     nftCreatorsFactory = (await ethers.getContractFactory(
@@ -47,7 +54,8 @@ describe("NFTAuction", function () {
       "TestNFT",
       "TNFT",
       await nftCreators.getAddress(),
-      fakeAuctionAddress // Dummy address before actual address can be inputted
+      fakeAuctionAddress, // Dummy address before actual address can be inputted
+      fakeMarketplaceAddress // Dummy marketplace address
     );
 
     // Deploy NFTAuction

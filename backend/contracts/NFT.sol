@@ -11,6 +11,7 @@ contract NFT is ERC721URIStorage, Ownable {
     uint256 private _tokenIds;
     NFTCreators public creatorsContract;
     address public auctionContract;
+    address public marketplaceContract;
 
     enum NFTStatus {
         NONE,
@@ -53,10 +54,12 @@ contract NFT is ERC721URIStorage, Ownable {
         string memory name,
         string memory symbol,
         address _creatorsAddress,
-        address _auctionContractAddress
+        address _auctionContractAddress,
+        address _marketplaceContractAddress
     ) ERC721(name, symbol) Ownable(msg.sender) {
         creatorsContract = NFTCreators(_creatorsAddress);
         auctionContract = _auctionContractAddress;
+        marketplaceContract = _marketplaceContractAddress;
     }
 
     function exists(uint256 tokenId) public view returns (bool) {
@@ -145,8 +148,9 @@ contract NFT is ERC721URIStorage, Ownable {
         require(
             msg.sender == ownerOf(tokenId) ||
                 msg.sender == owner() ||
-                msg.sender == auctionContract,
-            "NFT: Only owner, contract owner, or auction contract can set status"
+                msg.sender == auctionContract ||
+                msg.sender == marketplaceContract,
+            "NFT: Only owner, contract owner, auction contract or marketplace contract can set status"
         );
         _tokenMetadata[tokenId].status = status;
         emit NFTStatusChanged(tokenId, status);

@@ -15,284 +15,304 @@ describe("NFTCreators", function () {
   beforeEach(async function () {
     [owner, creator1, creator2, nonCreator] = await ethers.getSigners();
 
-    // NFT Contract
     nftCreatorsFactory = (await ethers.getContractFactory(
       "NFTCreators"
     )) as unknown as NFTCreators__factory;
-
     nftCreators = await nftCreatorsFactory.deploy();
   });
 
-  describe("Creator Registration", function () {
+  describe("registerCreator", function () {
     it("should register a new creator", async function () {
-      await expect(nftCreators.connect(creator1).registerCreator(creator1))
+      await expect(nftCreators.connect(creator1).registerCreator())
         .to.emit(nftCreators, "CreatorRegistered")
-        .withArgs(creator1, 1);
+        .withArgs(creator1.address, 1);
 
-      const creatorInfo = await nftCreators.getCreatorInfo(creator1);
-      expect(creatorInfo.creatorId).to.equal(1);
-      expect(creatorInfo.userAddress).to.equal(creator1);
+      const creatorInfo = await nftCreators.getCreatorInfo(1);
+      expect(creatorInfo.userAddress).to.equal(creator1.address);
     });
 
     it("should not allow registering the same creator twice", async function () {
-      await nftCreators.connect(creator1).registerCreator(creator1);
+      await nftCreators.connect(creator1).registerCreator();
       await expect(
-        nftCreators.connect(creator1).registerCreator(creator1)
+        nftCreators.connect(creator1).registerCreator()
       ).to.be.revertedWith("Creator already registered");
     });
   });
 
-  describe("NFT and Collection Creation", function () {
-    beforeEach(async function () {
-      await nftCreators.connect(creator1).registerCreator(creator1);
+  describe("addCreatedNFT", function () {
+    it("should add a created NFT to the creator's list", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      await nftCreators.addCreatedNFT(1, 1);
+
+      const creatorInfo = await nftCreators.getCreatorInfo(1);
+      expect(creatorInfo.createdNFTs).to.deep.equal([BigInt(1)]);
+      expect(creatorInfo.ownedNFTs).to.deep.equal([BigInt(1)]);
     });
 
-    it("should add a created NFT", async function () {
-      await expect(nftCreators.connect(creator1).addCreatedNFT(creator1, 1))
+    it("should emit NFTCreated event", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      await expect(nftCreators.addCreatedNFT(1, 1))
         .to.emit(nftCreators, "NFTCreated")
-        .withArgs(creator1, 1);
-
-      const creatorInfo = await nftCreators.getCreatorInfo(creator1);
-      expect(creatorInfo.createdNFTs.map((n) => n.toString())).to.include("1");
-      expect(creatorInfo.ownedNFTs.map((n) => n.toString())).to.include("1");
+        .withArgs(1, 1);
     });
 
-    it("should add a created collection", async function () {
-      await expect(
-        nftCreators
-          .connect(creator1)
-          .addCreatedCollection(await creator1.getAddress(), 1)
-      )
+    it("should revert if creator does not exist", async function () {
+      await expect(nftCreators.addCreatedNFT(999, 1)).to.be.revertedWith(
+        "Creator does not exist"
+      );
+    });
+  });
+
+  describe("addOwnedNFT", function () {
+    it("should add an owned NFT to the creator's list", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      await nftCreators.addOwnedNFT(1, 2);
+
+      const creatorInfo = await nftCreators.getCreatorInfo(1);
+      expect(creatorInfo.ownedNFTs).to.deep.equal([BigInt(2)]);
+    });
+
+    it("should revert if creator does not exist", async function () {
+      await expect(nftCreators.addOwnedNFT(999, 1)).to.be.revertedWith(
+        "Creator does not exist"
+      );
+    });
+  });
+
+  describe("addCreatedCollection", function () {
+    it("should add a created collection to the creator's list", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      await nftCreators.addCreatedCollection(1, 1);
+
+      const creatorInfo = await nftCreators.getCreatorInfo(1);
+      expect(creatorInfo.createdCollections).to.deep.equal([BigInt(1)]);
+    });
+
+    it("should emit CollectionCreated event", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      await expect(nftCreators.addCreatedCollection(1, 1))
         .to.emit(nftCreators, "CollectionCreated")
-        .withArgs(await creator1.getAddress(), 1);
-
-      const creatorInfo = await nftCreators.getCreatorInfo(
-        await creator1.getAddress()
-      );
-      expect(
-        creatorInfo.createdCollections.map((n) => n.toString())
-      ).to.include("1");
+        .withArgs(1, 1);
     });
 
-    it("should not allow adding NFTs or collections for unregistered creators", async function () {
-      await expect(
-        nftCreators
-          .connect(nonCreator)
-          .addCreatedNFT(await nonCreator.getAddress(), 1)
-      ).to.be.revertedWith("Creator not registered");
-
-      await expect(
-        nftCreators
-          .connect(nonCreator)
-          .addCreatedCollection(await nonCreator.getAddress(), 1)
-      ).to.be.revertedWith("Creator not registered");
+    it("should revert if creator does not exist", async function () {
+      await expect(nftCreators.addCreatedCollection(999, 1)).to.be.revertedWith(
+        "Creator does not exist"
+      );
     });
   });
 
-  describe("Favorites and Cart", function () {
-    beforeEach(async function () {
-      await nftCreators
-        .connect(creator1)
-        .registerCreator(await creator1.getAddress());
+  describe("addToFavourites", function () {
+    it("should add an NFT to the creator's favourites", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      await nftCreators.addToFavourites(1, 1);
+
+      const creatorInfo = await nftCreators.getCreatorInfo(1);
+      expect(creatorInfo.favouritedNFTs).to.deep.equal([BigInt(1)]);
     });
 
-    it("should add an NFT to favorites", async function () {
-      await nftCreators
-        .connect(creator1)
-        .addToFavourites(await creator1.getAddress(), 1);
-      const creatorInfo = await nftCreators.getCreatorInfo(
-        await creator1.getAddress()
+    it("should revert if creator does not exist", async function () {
+      await expect(nftCreators.addToFavourites(999, 1)).to.be.revertedWith(
+        "Creator does not exist"
       );
-      expect(creatorInfo.favouritedNFTs.map((n) => n.toString())).to.include(
-        "1"
-      );
-    });
-
-    it("should add an NFT to cart", async function () {
-      await nftCreators
-        .connect(creator1)
-        .addToCart(await creator1.getAddress(), 1);
-      const creatorInfo = await nftCreators.getCreatorInfo(
-        await creator1.getAddress()
-      );
-      expect(creatorInfo.cartedNFTs.map((n) => n.toString())).to.include("1");
-    });
-
-    it("should not allow unregistered users to add to favorites or cart", async function () {
-      await expect(
-        nftCreators
-          .connect(nonCreator)
-          .addToFavourites(await nonCreator.getAddress(), 1)
-      ).to.be.revertedWith("User not registered");
-
-      await expect(
-        nftCreators
-          .connect(nonCreator)
-          .addToCart(await nonCreator.getAddress(), 1)
-      ).to.be.revertedWith("User not registered");
     });
   });
 
-  describe("Activities", function () {
-    beforeEach(async function () {
-      await nftCreators
-        .connect(creator1)
-        .registerCreator(await creator1.getAddress());
+  describe("addToCart", function () {
+    it("should add an NFT to the creator's cart", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      await nftCreators.addToCart(1, 1);
+
+      const creatorInfo = await nftCreators.getCreatorInfo(1);
+      expect(creatorInfo.cartedNFTs).to.deep.equal([BigInt(1)]);
     });
 
-    it("should record activities", async function () {
-      await nftCreators
-        .connect(creator1)
-        .recordActivity(await creator1.getAddress(), "Test Action", 1);
-      const activities = await nftCreators.getCreatorActivities(
-        await creator1.getAddress()
+    it("should revert if creator does not exist", async function () {
+      await expect(nftCreators.addToCart(999, 1)).to.be.revertedWith(
+        "Creator does not exist"
       );
-      expect(activities).to.have.lengthOf(1);
+    });
+  });
+
+  describe("recordActivity", function () {
+    it("should record an activity for a creator", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      await nftCreators.recordActivity(1, "Test Action", 1);
+
+      const activities = await nftCreators.getCreatorActivities(1);
       expect(activities[0].actionType).to.equal("Test Action");
       expect(activities[0].relatedItemId).to.equal(1);
     });
+
+    it("should emit ActivityRecorded event", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      await expect(nftCreators.recordActivity(1, "Test Action", 1))
+        .to.emit(nftCreators, "ActivityRecorded")
+        .withArgs(1, "Test Action", 1);
+    });
   });
 
-  describe("Collection Offers", function () {
-    beforeEach(async function () {
-      await nftCreators
-        .connect(creator1)
-        .registerCreator(await creator1.getAddress());
-    });
-
+  describe("updateCollectionOffer", function () {
     it("should update a collection offer", async function () {
-      const offerAmount = ethers.parseEther("1");
-      const nftCount = 5;
+      await nftCreators.connect(creator1).registerCreator();
       const expirationTime = (await time.latest()) + 3600; // 1 hour from now
-
-      await nftCreators
-        .connect(creator1)
-        .updateCollectionOffer(
-          await creator1.getAddress(),
-          1,
-          offerAmount,
-          nftCount,
-          expirationTime
-        );
-
-      const offer = await nftCreators.creatorCollectionOffers(
-        await creator1.getAddress(),
-        1
+      await nftCreators.updateCollectionOffer(
+        1,
+        1,
+        ethers.parseEther("1"),
+        5,
+        expirationTime
       );
-      expect(offer.amount).to.equal(offerAmount);
-      expect(offer.nftCount).to.equal(nftCount);
+
+      const offer = await nftCreators.creatorCollectionOffers(1, 1);
+      expect(offer.amount).to.equal(ethers.parseEther("1"));
+      expect(offer.nftCount).to.equal(5);
       expect(offer.expirationTime).to.equal(expirationTime);
       expect(offer.isActive).to.be.true;
     });
 
-    it("should remove a collection offer", async function () {
-      const offerAmount = ethers.parseEther("1");
-      const nftCount = 5;
-      const expirationTime = (await time.latest()) + 3600; // 1 hour from now
-
-      await nftCreators
-        .connect(creator1)
-        .updateCollectionOffer(
-          await creator1.getAddress(),
+    it("should revert if creator does not exist", async function () {
+      const expirationTime = (await time.latest()) + 3600;
+      await expect(
+        nftCreators.updateCollectionOffer(
+          999,
           1,
-          offerAmount,
-          nftCount,
+          ethers.parseEther("1"),
+          5,
           expirationTime
-        );
+        )
+      ).to.be.revertedWith("Creator does not exist");
+    });
+  });
 
-      await nftCreators
-        .connect(creator1)
-        .removeCollectionOffer(await creator1.getAddress(), 1);
-
-      const offer = await nftCreators.creatorCollectionOffers(
-        await creator1.getAddress(),
-        1
+  describe("removeCollectionOffer", function () {
+    it("should remove an active collection offer", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      const expirationTime = (await time.latest()) + 3600;
+      await nftCreators.updateCollectionOffer(
+        1,
+        1,
+        ethers.parseEther("1"),
+        5,
+        expirationTime
       );
+      await nftCreators.removeCollectionOffer(1, 1);
+
+      const offer = await nftCreators.creatorCollectionOffers(1, 1);
       expect(offer.isActive).to.be.false;
     });
 
-    it("should not allow removing non-existent offers", async function () {
+    it("should revert if there's no active offer", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      await expect(nftCreators.removeCollectionOffer(1, 1)).to.be.revertedWith(
+        "No active offer for this collection"
+      );
+    });
+
+    it("should revert if creator does not exist", async function () {
       await expect(
-        nftCreators
-          .connect(creator1)
-          .removeCollectionOffer(await creator1.getAddress(), 1)
-      ).to.be.revertedWith("No active offer for this collection");
+        nftCreators.removeCollectionOffer(999, 1)
+      ).to.be.revertedWith("Creator does not exist");
     });
   });
 
-  describe("Bids and Sales", function () {
-    beforeEach(async function () {
-      await nftCreators
-        .connect(creator1)
-        .registerCreator(await creator1.getAddress());
+  describe("updateBid", function () {
+    it("should update a bid for an auction", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      await nftCreators.updateBid(1, 1, ethers.parseEther("1"));
+
+      const bidAmount = await nftCreators.creatorBids(1, 1);
+      expect(bidAmount).to.equal(ethers.parseEther("1"));
     });
 
-    it("should update a bid", async function () {
-      const bidAmount = ethers.parseEther("1");
-      await nftCreators
-        .connect(creator1)
-        .updateBid(await creator1.getAddress(), 1, bidAmount);
-      const bid = await nftCreators.creatorBids(await creator1.getAddress(), 1);
-      expect(bid).to.equal(bidAmount);
+    it("should revert if creator does not exist", async function () {
+      await expect(
+        nftCreators.updateBid(999, 1, ethers.parseEther("1"))
+      ).to.be.revertedWith("Creator does not exist");
     });
+  });
 
-    it("should update items sold", async function () {
-      await nftCreators
-        .connect(creator1)
-        .updateItemsSold(await creator1.getAddress());
-      const creatorInfo = await nftCreators.getCreatorInfo(
-        await creator1.getAddress()
-      );
+  describe("updateItemsSold", function () {
+    it("should increment the items sold count", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      await nftCreators.updateItemsSold(1);
+
+      const creatorInfo = await nftCreators.getCreatorInfo(1);
       expect(creatorInfo.itemsSold).to.equal(1);
     });
 
-    it("should update wallet balance", async function () {
-      const newBalance = ethers.parseEther("10");
-      await nftCreators
-        .connect(creator1)
-        .updateWalletBalance(await creator1.getAddress(), newBalance);
-      const creatorInfo = await nftCreators.getCreatorInfo(
-        await creator1.getAddress()
+    it("should revert if seller is not registered", async function () {
+      await expect(nftCreators.updateItemsSold(999)).to.be.revertedWith(
+        "Creator does not exist"
       );
-      expect(creatorInfo.walletBalance).to.equal(newBalance);
     });
   });
 
-  describe("Getter Functions", function () {
-    beforeEach(async function () {
-      await nftCreators
-        .connect(creator1)
-        .registerCreator(await creator1.getAddress());
+  describe("updateWalletBalance", function () {
+    it("should update the wallet balance", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      await nftCreators.updateWalletBalance(1, ethers.parseEther("10"));
+
+      const creatorInfo = await nftCreators.getCreatorInfo(1);
+      expect(creatorInfo.walletBalance).to.equal(ethers.parseEther("10"));
     });
 
-    it("should get creator info", async function () {
-      const creatorInfo = await nftCreators.getCreatorInfo(
-        await creator1.getAddress()
+    it("should revert if creator does not exist", async function () {
+      await expect(
+        nftCreators.updateWalletBalance(999, ethers.parseEther("10"))
+      ).to.be.revertedWith("Creator does not exist");
+    });
+  });
+
+  describe("getAllCreators", function () {
+    it("should return all registered creators", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      await nftCreators.connect(creator2).registerCreator();
+
+      const allCreators = await nftCreators.getAllCreators();
+      expect(allCreators.length).to.equal(2);
+      expect(allCreators[0].userAddress).to.equal(creator1.address);
+      expect(allCreators[1].userAddress).to.equal(creator2.address);
+    });
+  });
+
+  describe("getCreatorInfo", function () {
+    it("should return the correct creator info", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      const creatorInfo = await nftCreators.getCreatorInfo(1);
+      expect(creatorInfo.userAddress).to.equal(creator1.address);
+    });
+
+    it("should revert if creator does not exist", async function () {
+      await expect(nftCreators.getCreatorInfo(999)).to.be.revertedWith(
+        "Creator does not exist"
       );
-      expect(creatorInfo.creatorId).to.equal(1);
-      expect(creatorInfo.userAddress).to.equal(await creator1.getAddress());
     });
+  });
 
-    it("should get creator activities", async function () {
-      await nftCreators
-        .connect(creator1)
-        .recordActivity(await creator1.getAddress(), "Test Action", 1);
-      const activities = await nftCreators.getCreatorActivities(
-        await creator1.getAddress()
-      );
-      expect(activities).to.have.lengthOf(1);
+  describe("getCreatorActivities", function () {
+    it("should return the correct activities for a creator", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      await nftCreators.recordActivity(1, "Test Action", 1);
+
+      const activities = await nftCreators.getCreatorActivities(1);
+      expect(activities.length).to.equal(1);
+      expect(activities[0].actionType).to.equal("Test Action");
     });
+  });
 
-    it("should get creator ID", async function () {
-      const creatorId = await nftCreators.getCreatorId(
-        await creator1.getAddress()
+  describe("getCreatorIdByAddress", function () {
+    it("should return the correct creator ID for a given address", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      const creatorId = await nftCreators.getCreatorIdByAddress(
+        creator1.address
       );
       expect(creatorId).to.equal(1);
     });
 
-    it("should return 0 for unregistered creator ID", async function () {
-      const creatorId = await nftCreators.getCreatorId(
-        await nonCreator.getAddress()
+    it("should return 0 for an unregistered address", async function () {
+      const creatorId = await nftCreators.getCreatorIdByAddress(
+        nonCreator.address
       );
       expect(creatorId).to.equal(0);
     });
