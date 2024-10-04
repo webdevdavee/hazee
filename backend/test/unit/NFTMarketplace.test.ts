@@ -58,6 +58,15 @@ describe("NFTMarketplace", function () {
       await nftAuction.getAddress()
     );
 
+    nftCollectionsFactory = (await ethers.getContractFactory(
+      "NFTCollections"
+    )) as unknown as NFTCollections__factory;
+    nftCollections = await nftCollectionsFactory.deploy(
+      await nftCreators.getAddress(),
+      await nftAuction.getAddress(),
+      await nftMarketplace.getAddress()
+    );
+
     nftFactory = (await ethers.getContractFactory(
       "NFT"
     )) as unknown as NFT__factory;
@@ -69,25 +78,18 @@ describe("NFTMarketplace", function () {
       await nftMarketplace.getAddress()
     );
 
-    nftCollectionsFactory = (await ethers.getContractFactory(
-      "NFTCollections"
-    )) as unknown as NFTCollections__factory;
-    nftCollections = await nftCollectionsFactory.deploy(
-      await nftCreators.getAddress(),
-      await nftAuction.getAddress()
-    );
-
-    // Mint an NFT for the seller
+    // Register seller as a creator
     await nftCreators.connect(seller).registerCreator();
 
+    // Create a collection
     await nftCollections.connect(seller).createCollection(
       "Test Collection",
-      "Test Description",
       100,
       1000, // 10% royalty
       ethers.parseEther("0.1")
     );
 
+    // Mint an NFT for the seller
     const tokenURI = "https://example.com/token/1";
     const name = "Test NFT";
     const description = "This is a test NFT";
@@ -109,14 +111,34 @@ describe("NFTMarketplace", function () {
   });
 
   describe("listNFT", function () {
+    const name = "Initial NFT";
+    const description = "This is the initial description";
+    const attributes = [{ key: "rarity", value: "common" }];
+
     it("should list an NFT successfully", async function () {
+      // Check NFT ownership
+      expect(await nft.ownerOf(1)).to.equal(seller.address);
+
       await nft
         .connect(seller)
         .setApprovalForAll(await nftMarketplace.getAddress(), true);
+
+      // Check collection exists
+      const collectionInfo = await nftCollections.getCollectionInfo(1);
+      expect(collectionInfo.isActive).to.be.true;
+
       await expect(
         nftMarketplace
           .connect(seller)
-          .listNFT(await nft.getAddress(), 1, INITIAL_PRICE, 1)
+          .listNFT(
+            await nft.getAddress(),
+            1,
+            INITIAL_PRICE,
+            1,
+            name,
+            description,
+            attributes
+          )
       )
         .to.emit(nftMarketplace, "NFTListed")
         .withArgs(
@@ -125,13 +147,31 @@ describe("NFTMarketplace", function () {
           await nft.getAddress(),
           1,
           INITIAL_PRICE,
-          1
+          1 // NFT.NFTStatus.SALE
         );
+
+      // Verify listing
+      const listing = await nftMarketplace.listings(1);
+      expect(listing.isActive).to.be.true;
+      expect(listing.seller).to.equal(seller.address);
+      expect(listing.nftContract).to.equal(await nft.getAddress());
+      expect(listing.tokenId).to.equal(1);
+      expect(listing.price).to.equal(INITIAL_PRICE);
     });
 
     it("should revert if price is zero", async function () {
       await expect(
-        nftMarketplace.connect(seller).listNFT(await nft.getAddress(), 1, 0, 1)
+        nftMarketplace
+          .connect(seller)
+          .listNFT(
+            await nft.getAddress(),
+            1,
+            0,
+            1,
+            name,
+            description,
+            attributes
+          )
       ).to.be.revertedWith("Price must be greater than zero");
     });
 
@@ -139,7 +179,15 @@ describe("NFTMarketplace", function () {
       await expect(
         nftMarketplace
           .connect(buyer)
-          .listNFT(await nft.getAddress(), 1, INITIAL_PRICE, 1)
+          .listNFT(
+            await nft.getAddress(),
+            1,
+            INITIAL_PRICE,
+            1,
+            name,
+            description,
+            attributes
+          )
       ).to.be.revertedWith("You don't own this NFT");
     });
 
@@ -147,19 +195,65 @@ describe("NFTMarketplace", function () {
       await expect(
         nftMarketplace
           .connect(seller)
-          .listNFT(await nft.getAddress(), 1, INITIAL_PRICE, 1)
+          .listNFT(
+            await nft.getAddress(),
+            1,
+            INITIAL_PRICE,
+            1,
+            name,
+            description,
+            attributes
+          )
       ).to.be.revertedWith("Contract not approved");
+    });
+
+    it("should revert if NFT is on auction", async function () {
+      await nft
+        .connect(seller)
+        .setApprovalForAll(await nftAuction.getAddress(), true);
+      await nftAuction
+        .connect(seller)
+        .createAuction(await nft.getAddress(), 1, INITIAL_PRICE, 86400);
+
+      await nft
+        .connect(seller)
+        .setApprovalForAll(await nftMarketplace.getAddress(), true);
+      await expect(
+        nftMarketplace
+          .connect(seller)
+          .listNFT(
+            await nft.getAddress(),
+            1,
+            INITIAL_PRICE,
+            1,
+            name,
+            description,
+            attributes
+          )
+      ).to.be.revertedWith("NFT is currently on auction");
     });
   });
 
   describe("cancelListing", function () {
+    const name = "Initial NFT";
+    const description = "This is the initial description";
+    const attributes = [{ key: "rarity", value: "common" }];
+
     beforeEach(async function () {
       await nft
         .connect(seller)
         .setApprovalForAll(await nftMarketplace.getAddress(), true);
       await nftMarketplace
         .connect(seller)
-        .listNFT(await nft.getAddress(), 1, INITIAL_PRICE, 1);
+        .listNFT(
+          await nft.getAddress(),
+          1,
+          INITIAL_PRICE,
+          1,
+          name,
+          description,
+          attributes
+        );
     });
 
     it("should cancel a listing successfully", async function () {
@@ -183,13 +277,25 @@ describe("NFTMarketplace", function () {
   });
 
   describe("updateListingPrice", function () {
+    const name = "Initial NFT";
+    const description = "This is the initial description";
+    const attributes = [{ key: "rarity", value: "common" }];
+
     beforeEach(async function () {
       await nft
         .connect(seller)
         .setApprovalForAll(await nftMarketplace.getAddress(), true);
       await nftMarketplace
         .connect(seller)
-        .listNFT(await nft.getAddress(), 1, INITIAL_PRICE, 1);
+        .listNFT(
+          await nft.getAddress(),
+          1,
+          INITIAL_PRICE,
+          1,
+          name,
+          description,
+          attributes
+        );
     });
 
     it("should update listing price successfully", async function () {
@@ -198,7 +304,7 @@ describe("NFTMarketplace", function () {
         nftMarketplace.connect(seller).updateListingPrice(1, newPrice)
       )
         .to.emit(nftMarketplace, "NFTListed")
-        .withArgs(1, seller.address, await nft.getAddress(), 1, newPrice, 1);
+        .withArgs(1, seller.address, await nft.getAddress(), 1, newPrice, 0);
     });
 
     it("should revert if non-seller tries to update price", async function () {
@@ -217,13 +323,25 @@ describe("NFTMarketplace", function () {
   });
 
   describe("buyNFT", function () {
+    const name = "Initial NFT";
+    const description = "This is the initial description";
+    const attributes = [{ key: "rarity", value: "common" }];
+
     beforeEach(async function () {
       await nft
         .connect(seller)
         .setApprovalForAll(await nftMarketplace.getAddress(), true);
       await nftMarketplace
         .connect(seller)
-        .listNFT(await nft.getAddress(), 1, INITIAL_PRICE, 1);
+        .listNFT(
+          await nft.getAddress(),
+          1,
+          INITIAL_PRICE,
+          1,
+          name,
+          description,
+          attributes
+        );
     });
 
     it("should allow buying an NFT successfully", async function () {
@@ -251,7 +369,10 @@ describe("NFTMarketplace", function () {
         feeRecipient.address
       );
 
-      await nftMarketplace.connect(buyer).buyNFT(1, { value: INITIAL_PRICE });
+      const tx = await nftMarketplace
+        .connect(buyer)
+        .buyNFT(1, { value: INITIAL_PRICE });
+      await tx.wait();
 
       const finalSellerBalance = await ethers.provider.getBalance(
         seller.address
@@ -262,7 +383,7 @@ describe("NFTMarketplace", function () {
 
       const platformFee =
         (INITIAL_PRICE * BigInt(PLATFORM_FEE_PERCENTAGE)) / 10000n;
-      const royaltyFee = (INITIAL_PRICE * 500n) / 10000n; // 5% royalty
+      const royaltyFee = (INITIAL_PRICE * 1000n) / 10000n; // 10% royalty
       const sellerProceeds = INITIAL_PRICE - platformFee - royaltyFee;
 
       expect(finalSellerBalance - initialSellerBalance).to.equal(
@@ -287,16 +408,41 @@ describe("NFTMarketplace", function () {
         nftMarketplace.connect(buyer).buyNFT(1, { value: INITIAL_PRICE })
       ).to.be.revertedWith("Listing is not active");
     });
+
+    it("should revert if NFT is on auction", async function () {
+      await nft
+        .connect(seller)
+        .setApprovalForAll(await nftAuction.getAddress(), true);
+      await nftAuction
+        .connect(seller)
+        .createAuction(await nft.getAddress(), 1, INITIAL_PRICE, 86400);
+
+      await expect(
+        nftMarketplace.connect(buyer).buyNFT(1, { value: INITIAL_PRICE })
+      ).to.be.revertedWith("NFT is currently on auction");
+    });
   });
 
   describe("isNFTListed", function () {
+    const name = "Initial NFT";
+    const description = "This is the initial description";
+    const attributes = [{ key: "rarity", value: "common" }];
+
     it("should return true for a listed NFT", async function () {
       await nft
         .connect(seller)
         .setApprovalForAll(await nftMarketplace.getAddress(), true);
       await nftMarketplace
         .connect(seller)
-        .listNFT(await nft.getAddress(), 1, INITIAL_PRICE, 1);
+        .listNFT(
+          await nft.getAddress(),
+          1,
+          INITIAL_PRICE,
+          1,
+          name,
+          description,
+          attributes
+        );
       expect(await nftMarketplace.isNFTListed(await nft.getAddress(), 1)).to.be
         .true;
     });

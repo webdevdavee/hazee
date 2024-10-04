@@ -63,7 +63,10 @@ contract NFTMarketplace is ReentrancyGuard {
         address _nftContract,
         uint256 _tokenId,
         uint256 _price,
-        NFT.NFTStatus _saleType
+        uint256 _collectionId,
+        string memory _name,
+        string memory _description,
+        NFT.Attribute[] memory _attributes
     ) external nonReentrant {
         require(_price > 0, "Price must be greater than zero");
         IERC721 nftContract = IERC721(_nftContract);
@@ -80,6 +83,25 @@ contract NFTMarketplace is ReentrancyGuard {
             "NFT is currently on auction"
         );
 
+        NFTCollections.CollectionInfo
+            memory collectionInfo = i_collectionContract.getCollectionInfo(
+                _collectionId
+            );
+
+        require(collectionInfo.isActive == true, "Collection does not exist");
+
+        NFT NFTContract = NFT(_nftContract);
+
+        NFTContract.updateMetadata(
+            msg.sender,
+            _tokenId,
+            _name,
+            _description,
+            _price,
+            _attributes,
+            _collectionId
+        );
+
         listingCounter++;
         listings[listingCounter] = Listing({
             seller: msg.sender,
@@ -87,10 +109,10 @@ contract NFTMarketplace is ReentrancyGuard {
             tokenId: _tokenId,
             price: _price,
             isActive: true,
-            saleType: _saleType
+            saleType: NFT.NFTStatus.SALE
         });
 
-        NFT(_nftContract).setNFTStatus(_tokenId, _saleType);
+        NFTContract.addActivity(_tokenId, "Listed", 0);
 
         uint256 creatorId = i_creatorsContract.getCreatorIdByAddress(
             msg.sender
@@ -103,7 +125,7 @@ contract NFTMarketplace is ReentrancyGuard {
             _nftContract,
             _tokenId,
             _price,
-            _saleType
+            NFT.NFTStatus.SALE
         );
     }
 
@@ -198,24 +220,32 @@ contract NFTMarketplace is ReentrancyGuard {
         (, , , , address creator, , , ) = nft.getMetadata(listing.tokenId);
         uint256 collectionId = nft.getCollection(listing.tokenId);
 
-        (, , , , , , , , uint256 royaltyPercentage, , , ) = i_collectionContract
-            .getCollectionInfo(collectionId);
+        NFTCollections.CollectionInfo
+            memory collectionInfo = i_collectionContract.getCollectionInfo(
+                collectionId
+            );
 
-        royaltyFee = (listing.price * royaltyPercentage) / 10000;
+        royaltyFee = (listing.price * collectionInfo.royaltyPercentage) / 10000;
 
         uint256 sellerProceeds = listing.price - platformFee - royaltyFee;
+
+        require(
+            nftContract.ownerOf(listing.tokenId) == listing.seller,
+            "Seller no longer owns the NFT"
+        );
+
+        // Transfer NFT first to prevent reentrancy
+        nftContract.safeTransferFrom(
+            listing.seller,
+            msg.sender,
+            listing.tokenId
+        );
 
         payable(i_feeRecipient).transfer(platformFee);
         if (royaltyFee > 0) {
             payable(creator).transfer(royaltyFee);
         }
         payable(listing.seller).transfer(sellerProceeds);
-
-        nftContract.safeTransferFrom(
-            listing.seller,
-            msg.sender,
-            listing.tokenId
-        );
 
         nft.addActivity(listing.tokenId, "Sold", listing.price);
         nft.setNFTStatus(listing.tokenId, NFT.NFTStatus.NONE);

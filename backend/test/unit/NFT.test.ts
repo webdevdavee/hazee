@@ -17,9 +17,11 @@ describe("NFT", function () {
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;
   let nftAuction: SignerWithAddress;
+  let nftMarketplace: SignerWithAddress;
 
   beforeEach(async function () {
-    [owner, addr1, addr2, nftAuction] = await ethers.getSigners();
+    [owner, addr1, addr2, nftAuction, nftMarketplace] =
+      await ethers.getSigners();
 
     // NFT Creators Contract
     nftCreatorsFactory = (await ethers.getContractFactory(
@@ -37,7 +39,8 @@ describe("NFT", function () {
       "TestNFT",
       "TNFT",
       await nftCreators.getAddress(),
-      nftAuction.address
+      nftAuction.address,
+      nftMarketplace.address
     );
 
     // Register creators
@@ -248,7 +251,7 @@ describe("NFT", function () {
         );
 
       await expect(nft.connect(addr2).setNFTStatus(1, 1)).to.be.revertedWith(
-        "NFT: Only owner, contract owner, or auction contract can set status"
+        "NFT: Only owner, contract owner, auction contract or marketplace contract can set status"
       );
     });
   });
@@ -442,6 +445,130 @@ describe("NFT", function () {
       await expect(nft.getCollection(999)).to.be.revertedWith(
         "NFT: Collection query for nonexistent token"
       );
+    });
+  });
+
+  describe("Update Metadata", function () {
+    it("Should allow the owner to update metadata", async function () {
+      const tokenURI = "https://example.com/token/1";
+      const initialName = "Initial NFT";
+      const initialDescription = "This is the initial description";
+      const initialPrice = ethers.parseEther("1");
+      const initialAttributes = [{ key: "rarity", value: "common" }];
+      const initialCollectionId = 1;
+
+      // Mint the NFT
+      await nft
+        .connect(addr1)
+        .mint(
+          addr1.address,
+          tokenURI,
+          initialName,
+          initialDescription,
+          initialPrice,
+          initialAttributes,
+          initialCollectionId
+        );
+
+      // New metadata
+      const newName = "Updated NFT";
+      const newDescription = "This is the updated description";
+      const newPrice = ethers.parseEther("2");
+      const newAttributes = [
+        { key: "rarity", value: "rare" },
+        { key: "color", value: "blue" },
+      ];
+      const newCollectionId = 2;
+
+      // Update metadata
+      await expect(
+        nft
+          .connect(addr1)
+          .updateMetadata(
+            addr1.address,
+            1,
+            newName,
+            newDescription,
+            newPrice,
+            newAttributes,
+            newCollectionId
+          )
+      )
+        .to.emit(nft, "MetadataUpdated")
+        .withArgs(1, newName, newDescription);
+
+      // Verify updated metadata
+      const [
+        tokenId,
+        returnedName,
+        returnedDescription,
+        creationDate,
+        creator,
+        returnedPrice,
+        status,
+        returnedAttributes,
+      ] = await nft.getMetadata(1);
+
+      expect(tokenId).to.equal(1);
+      expect(returnedName).to.equal(newName);
+      expect(returnedDescription).to.equal(newDescription);
+      expect(creator).to.equal(addr1.address);
+      expect(returnedPrice).to.equal(newPrice);
+      expect(status).to.equal(0); // NFTStatus.NONE
+
+      expect(returnedAttributes.length).to.equal(newAttributes.length);
+      for (let i = 0; i < newAttributes.length; i++) {
+        expect(returnedAttributes[i].key).to.equal(newAttributes[i].key);
+        expect(returnedAttributes[i].value).to.equal(newAttributes[i].value);
+      }
+
+      // Verify updated collection
+      const updatedCollectionId = await nft.getCollection(1);
+      expect(updatedCollectionId).to.equal(newCollectionId);
+    });
+
+    it("Should not allow non-owners to update metadata", async function () {
+      await nft
+        .connect(addr1)
+        .mint(
+          addr1.address,
+          "tokenURI",
+          "name",
+          "description",
+          ethers.parseEther("1"),
+          [],
+          1
+        );
+
+      await expect(
+        nft
+          .connect(addr2)
+          .updateMetadata(
+            addr2.address,
+            1,
+            "New Name",
+            "New Description",
+            ethers.parseEther("2"),
+            [],
+            2
+          )
+      ).to.be.revertedWith("NFT: Only owner can update metadata");
+    });
+
+    it("Should revert when updating metadata for non-existent token", async function () {
+      await expect(
+        nft
+          .connect(addr1)
+          .updateMetadata(
+            addr1.address,
+            999,
+            "New Name",
+            "New Description",
+            ethers.parseEther("1"),
+            [],
+            1
+          )
+      ).to.be.revertedWith("NFT: Metadata update for nonexistent token");
     });
   });
 });

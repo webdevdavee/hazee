@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-contract NFTCreators {
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract NFTCreators is Ownable {
     uint256 private _creatorIds;
     uint256[] private allCreatorIds;
 
@@ -10,8 +12,6 @@ contract NFTCreators {
         address userAddress;
         uint256[] createdNFTs;
         uint256[] ownedNFTs;
-        uint256[] favouritedNFTs;
-        uint256[] cartedNFTs;
         uint256[] createdCollections;
         uint256 itemsSold;
         uint256 walletBalance;
@@ -33,7 +33,6 @@ contract NFTCreators {
 
     mapping(uint256 => mapping(uint256 => CollectionOffer))
         public creatorCollectionOffers;
-
     mapping(uint256 => Creator) public creators;
     mapping(uint256 => Activity[]) public creatorActivities;
     mapping(uint256 => mapping(uint256 => uint256)) public creatorOffers;
@@ -49,6 +48,8 @@ contract NFTCreators {
         uint256 relatedItemId
     );
 
+    constructor() Ownable(msg.sender) {}
+
     function registerCreator() public returns (uint256) {
         require(
             creatorIdByAddress[msg.sender] == 0,
@@ -62,8 +63,6 @@ contract NFTCreators {
             userAddress: msg.sender,
             createdNFTs: new uint256[](0),
             ownedNFTs: new uint256[](0),
-            favouritedNFTs: new uint256[](0),
-            cartedNFTs: new uint256[](0),
             createdCollections: new uint256[](0),
             itemsSold: 0,
             walletBalance: 0
@@ -73,7 +72,10 @@ contract NFTCreators {
         return newCreatorId;
     }
 
-    function addCreatedNFT(uint256 creatorId, uint256 tokenId) external {
+    function addCreatedNFT(
+        uint256 creatorId,
+        uint256 tokenId
+    ) external onlyOwner {
         require(
             creators[creatorId].userAddress != address(0),
             "Creator does not exist"
@@ -84,7 +86,10 @@ contract NFTCreators {
         recordActivity(creatorId, "NFT Created", tokenId);
     }
 
-    function addOwnedNFT(uint256 creatorId, uint256 tokenId) external {
+    function addOwnedNFT(
+        uint256 creatorId,
+        uint256 tokenId
+    ) external onlyOwner {
         require(
             creators[creatorId].userAddress != address(0),
             "Creator does not exist"
@@ -96,7 +101,7 @@ contract NFTCreators {
     function addCreatedCollection(
         uint256 creatorId,
         uint256 collectionId
-    ) external {
+    ) external onlyOwner {
         require(
             creators[creatorId].userAddress != address(0),
             "Creator does not exist"
@@ -106,29 +111,11 @@ contract NFTCreators {
         recordActivity(creatorId, "Collection Created", collectionId);
     }
 
-    function addToFavourites(uint256 creatorId, uint256 tokenId) external {
-        require(
-            creators[creatorId].userAddress != address(0),
-            "Creator does not exist"
-        );
-        creators[creatorId].favouritedNFTs.push(tokenId);
-        recordActivity(creatorId, "NFT Favourited", tokenId);
-    }
-
-    function addToCart(uint256 creatorId, uint256 tokenId) external {
-        require(
-            creators[creatorId].userAddress != address(0),
-            "Creator does not exist"
-        );
-        creators[creatorId].cartedNFTs.push(tokenId);
-        recordActivity(creatorId, "NFT Added to Cart", tokenId);
-    }
-
     function recordActivity(
         uint256 creatorId,
         string memory actionType,
         uint256 relatedItemId
-    ) public {
+    ) public onlyOwner {
         creatorActivities[creatorId].push(
             Activity(actionType, block.timestamp, relatedItemId)
         );
@@ -141,7 +128,7 @@ contract NFTCreators {
         uint256 offerAmount,
         uint256 nftCount,
         uint256 expirationTime
-    ) external {
+    ) external onlyOwner {
         require(
             creators[creatorId].userAddress != address(0),
             "Creator does not exist"
@@ -159,7 +146,7 @@ contract NFTCreators {
     function removeCollectionOffer(
         uint256 creatorId,
         uint256 collectionId
-    ) external {
+    ) external onlyOwner {
         require(
             creators[creatorId].userAddress != address(0),
             "Creator does not exist"
@@ -177,7 +164,7 @@ contract NFTCreators {
         uint256 creatorId,
         uint256 auctionId,
         uint256 bidAmount
-    ) external {
+    ) external onlyOwner {
         require(
             creators[creatorId].userAddress != address(0),
             "Creator does not exist"
@@ -186,7 +173,7 @@ contract NFTCreators {
         recordActivity(creatorId, "Bid Placed", auctionId);
     }
 
-    function updateItemsSold(uint256 creatorId) external {
+    function updateItemsSold(uint256 creatorId) external onlyOwner {
         require(
             creators[creatorId].userAddress != address(0),
             "Creator does not exist"
@@ -198,7 +185,7 @@ contract NFTCreators {
     function updateWalletBalance(
         uint256 creatorId,
         uint256 newBalance
-    ) external {
+    ) external onlyOwner {
         require(
             creators[creatorId].userAddress != address(0),
             "Creator does not exist"
@@ -237,5 +224,41 @@ contract NFTCreators {
         address user
     ) external view returns (uint256) {
         return creatorIdByAddress[user];
+    }
+
+    // New function to remove an NFT from a creator's owned NFTs
+    function removeOwnedNFT(
+        uint256 creatorId,
+        uint256 tokenId
+    ) external onlyOwner {
+        require(
+            creators[creatorId].userAddress != address(0),
+            "Creator does not exist"
+        );
+        uint256[] storage ownedNFTs = creators[creatorId].ownedNFTs;
+        for (uint256 i = 0; i < ownedNFTs.length; i++) {
+            if (ownedNFTs[i] == tokenId) {
+                ownedNFTs[i] = ownedNFTs[ownedNFTs.length - 1];
+                ownedNFTs.pop();
+                break;
+            }
+        }
+        recordActivity(creatorId, "NFT Removed", tokenId);
+    }
+
+    // New function to get a creator's collection offers
+    function getCreatorCollectionOffers(
+        uint256 creatorId,
+        uint256 collectionId
+    ) external view returns (CollectionOffer memory) {
+        return creatorCollectionOffers[creatorId][collectionId];
+    }
+
+    // New function to get a creator's bids
+    function getCreatorBids(
+        uint256 creatorId,
+        uint256 auctionId
+    ) external view returns (uint256) {
+        return creatorBids[creatorId][auctionId];
     }
 }

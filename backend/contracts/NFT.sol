@@ -20,35 +20,22 @@ contract NFT is ERC721URIStorage, Ownable {
         BOTH
     }
 
-    struct Attribute {
-        string key;
-        string value;
-    }
-
-    struct Metadata {
-        uint256 tokenId;
-        string name;
-        string description;
-        uint256 creationDate;
-        address creator;
-        uint256 price;
-        NFTStatus status;
-        Attribute[] attributes;
-    }
-
     struct Activity {
         string action;
         uint256 value;
         uint256 timestamp;
     }
 
-    mapping(uint256 => Metadata) private _tokenMetadata;
+    mapping(uint256 => NFTStatus) private _tokenStatus;
+    mapping(uint256 => uint256) public tokenPrices;
     mapping(uint256 => Activity[]) public nftActivities;
     mapping(uint256 => uint256) public collection;
 
-    event NFTMinted(uint256 tokenId, address creator, string name);
+    event NFTMinted(uint256 tokenId, address creator);
     event NFTStatusChanged(uint256 tokenId, NFTStatus newStatus);
     event NFTActivityAdded(uint256 tokenId, string action, uint256 value);
+    event PriceSet(uint256 tokenId, uint256 price);
+    event PriceUpdated(uint256 tokenId, uint256 newPrice);
 
     constructor(
         string memory name,
@@ -73,10 +60,7 @@ contract NFT is ERC721URIStorage, Ownable {
     function mint(
         address to,
         string memory tokenURI,
-        string memory name,
-        string memory description,
         uint256 price,
-        Attribute[] memory attributes,
         uint256 _collectionId
     ) public returns (uint256) {
         uint256 creatorId = creatorsContract.getCreatorIdByAddress(to);
@@ -87,60 +71,17 @@ contract NFT is ERC721URIStorage, Ownable {
         _safeMint(to, newTokenId);
         _setTokenURI(newTokenId, tokenURI);
 
-        _tokenMetadata[newTokenId] = Metadata({
-            tokenId: newTokenId,
-            name: name,
-            description: description,
-            creationDate: block.timestamp,
-            creator: to,
-            price: price,
-            status: NFTStatus.NONE,
-            attributes: attributes
-        });
-
+        tokenPrices[newTokenId] = price;
+        _tokenStatus[newTokenId] = NFTStatus.NONE;
         collection[newTokenId] = _collectionId;
-        addActivity(newTokenId, "Minted", 0);
 
+        _addActivity(newTokenId, "Minted", 0);
         creatorsContract.addCreatedNFT(creatorId, newTokenId);
 
-        emit NFTMinted(newTokenId, to, name);
+        emit NFTMinted(newTokenId, to);
+        emit PriceSet(newTokenId, price);
 
         return newTokenId;
-    }
-
-    function getMetadata(
-        uint256 tokenId
-    )
-        public
-        view
-        returns (
-            uint256 theTokenId,
-            string memory name,
-            string memory description,
-            uint256 creationDate,
-            address creator,
-            uint256 price,
-            NFTStatus status,
-            Attribute[] memory attributes
-        )
-    {
-        require(exists(tokenId), "NFT: Metadata query for nonexistent token");
-        Metadata storage tokenMetadata = _tokenMetadata[tokenId];
-        return (
-            tokenMetadata.tokenId,
-            tokenMetadata.name,
-            tokenMetadata.description,
-            tokenMetadata.creationDate,
-            tokenMetadata.creator,
-            tokenMetadata.price,
-            tokenMetadata.status,
-            tokenMetadata.attributes
-        );
-    }
-
-    function getCollection(uint256 tokenId) public view returns (uint256) {
-        require(exists(tokenId), "NFT: Collection query for nonexistent token");
-        return collection[tokenId];
     }
 
     function setNFTStatus(uint256 tokenId, NFTStatus status) external {
@@ -152,22 +93,16 @@ contract NFT is ERC721URIStorage, Ownable {
                 msg.sender == marketplaceContract,
             "NFT: Only owner, contract owner, auction contract or marketplace contract can set status"
         );
-        _tokenMetadata[tokenId].status = status;
+        _tokenStatus[tokenId] = status;
+        _addActivity(tokenId, "Status Changed", uint256(status));
         emit NFTStatusChanged(tokenId, status);
     }
 
-    function addActivity(
+    function _addActivity(
         uint256 tokenId,
         string memory action,
         uint256 value
-    ) public {
-        require(exists(tokenId), "NFT: Activity added for nonexistent token");
-        require(
-            msg.sender == ownerOf(tokenId) ||
-                msg.sender == owner() ||
-                msg.sender == auctionContract,
-            "NFT: Only owner, contract owner, or auction contract can add activity"
-        );
+    ) internal {
         uint256 timestamp = block.timestamp;
         nftActivities[tokenId].push(Activity(action, value, timestamp));
 
@@ -186,38 +121,40 @@ contract NFT is ERC721URIStorage, Ownable {
         return nftActivities[tokenId];
     }
 
+    function setPrice(uint256 tokenId, uint256 price) external {
+        require(exists(tokenId), "NFT: Price set for nonexistent token");
+        require(
+            msg.sender == ownerOf(tokenId),
+            "NFT: Only owner can set price"
+        );
+        tokenPrices[tokenId] = price;
+        _addActivity(tokenId, "Price Set", price);
+        emit PriceSet(tokenId, price);
+    }
+
     function updatePrice(uint256 tokenId, uint256 newPrice) external {
         require(exists(tokenId), "NFT: Price update for nonexistent token");
         require(
             msg.sender == ownerOf(tokenId),
             "NFT: Only owner can update price"
         );
-        _tokenMetadata[tokenId].price = newPrice;
-        addActivity(tokenId, "Price Updated", newPrice);
+        tokenPrices[tokenId] = newPrice;
+        _addActivity(tokenId, "Price Updated", newPrice);
+        emit PriceUpdated(tokenId, newPrice);
     }
 
-    function getAllTokens() public view returns (Metadata[] memory) {
-        Metadata[] memory allTokens = new Metadata[](_tokenIds);
-        for (uint256 i = 1; i <= _tokenIds; i++) {
-            if (exists(i)) {
-                allTokens[i - 1] = _tokenMetadata[i];
-            }
-        }
-        return allTokens;
+    function getPrice(uint256 tokenId) public view returns (uint256) {
+        require(exists(tokenId), "NFT: Price query for nonexistent token");
+        return tokenPrices[tokenId];
     }
 
-    function getTokensByOwner(
-        address owner
-    ) public view returns (Metadata[] memory) {
-        uint256 tokenCount = balanceOf(owner);
-        Metadata[] memory ownedTokens = new Metadata[](tokenCount);
-        uint256 currentIndex = 0;
-        for (uint256 i = 1; i <= _tokenIds; i++) {
-            if (exists(i) && ownerOf(i) == owner) {
-                ownedTokens[currentIndex] = _tokenMetadata[i];
-                currentIndex++;
-            }
-        }
-        return ownedTokens;
+    function getCollection(uint256 tokenId) public view returns (uint256) {
+        require(exists(tokenId), "NFT: Collection query for nonexistent token");
+        return collection[tokenId];
+    }
+
+    function getTokenStatus(uint256 tokenId) public view returns (NFTStatus) {
+        require(exists(tokenId), "NFT: Status query for nonexistent token");
+        return _tokenStatus[tokenId];
     }
 }

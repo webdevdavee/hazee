@@ -9,6 +9,8 @@ import {
   NFTCollections__factory,
   NFTCreators,
   NFTCreators__factory,
+  NFTMarketplace,
+  NFTMarketplace__factory,
 } from "../../typechain-types";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
@@ -17,17 +19,21 @@ describe("NFTCollections", function () {
   let nftAuction: NFTAuction;
   let nftCollections: NFTCollections;
   let nftCreators: NFTCreators;
+  let nftMarketplace: NFTMarketplace;
+  let nftMarketplaceFactory: NFTMarketplace__factory;
   let nft: NFT;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;
   let nftContractAddress: SignerWithAddress;
+  let feeRecipient: SignerWithAddress;
 
   const TWELVE_HOURS = 12 * 60 * 60;
   const ONE_WEEK = 7 * 24 * 60 * 60;
 
   beforeEach(async function () {
-    [owner, addr1, addr2, nftContractAddress] = await ethers.getSigners();
+    [owner, addr1, addr2, nftContractAddress, feeRecipient] =
+      await ethers.getSigners();
 
     // Deploy NFTCreators
     const nftCreatorsFactory = (await ethers.getContractFactory(
@@ -44,13 +50,23 @@ describe("NFTCollections", function () {
       await nftCreators.getAddress()
     );
 
+    nftMarketplaceFactory = (await ethers.getContractFactory(
+      "NFTMarketplace"
+    )) as unknown as NFTMarketplace__factory;
+    nftMarketplace = await nftMarketplaceFactory.deploy(
+      feeRecipient.address,
+      await nftCreators.getAddress(),
+      await nftAuction.getAddress()
+    );
+
     // Deploy NFTCollections
     const nftCollectionsFactory = (await ethers.getContractFactory(
       "NFTCollections"
     )) as unknown as NFTCollections__factory;
     nftCollections = await nftCollectionsFactory.deploy(
       await nftCreators.getAddress(),
-      await nftAuction.getAddress()
+      await nftAuction.getAddress(),
+      await nftMarketplace.getAddress()
     );
 
     // Register creators
@@ -63,7 +79,6 @@ describe("NFTCollections", function () {
     it("should create a new collection", async function () {
       const tx = await nftCollections.createCollection(
         "Test Collection",
-        "Test Description",
         100,
         1000,
         ethers.parseEther("0.1")
@@ -81,7 +96,6 @@ describe("NFTCollections", function () {
       // Verify collection details
       const collectionInfo = await nftCollections.getCollectionInfo(1);
       expect(collectionInfo.name).to.equal("Test Collection");
-      expect(collectionInfo.description).to.equal("Test Description");
       expect(collectionInfo.maxSupply).to.equal(100);
       expect(collectionInfo.royaltyPercentage).to.equal(1000);
       expect(collectionInfo.floorPrice).to.equal(ethers.parseEther("0.1"));
@@ -91,7 +105,6 @@ describe("NFTCollections", function () {
       await expect(
         nftCollections.createCollection(
           "Invalid Collection",
-          "Test",
           100,
           4100,
           ethers.parseEther("0.1")
@@ -109,7 +122,6 @@ describe("NFTCollections", function () {
     beforeEach(async function () {
       await nftCollections.createCollection(
         "Mint Test Collection",
-        "For Minting Tests",
         10,
         1000,
         ethers.parseEther("0.1")
@@ -168,7 +180,6 @@ describe("NFTCollections", function () {
     beforeEach(async function () {
       await nftCollections.createCollection(
         "Offer Test Collection",
-        "For Offer Tests",
         10,
         1000,
         ethers.parseEther("0.1")
@@ -283,7 +294,6 @@ describe("NFTCollections", function () {
     beforeEach(async function () {
       await nftCollections.createCollection(
         "Management Test Collection",
-        "For Management Tests",
         10,
         1000,
         ethers.parseEther("0.1")
@@ -346,7 +356,6 @@ describe("NFTCollections", function () {
       for (let i = 0; i < 5; i++) {
         await nftCollections.createCollection(
           `Test Collection ${i}`,
-          `Description ${i}`,
           100,
           1000,
           ethers.parseEther("0.1")
@@ -376,7 +385,6 @@ describe("NFTCollections", function () {
     beforeEach(async function () {
       await nftCollections.createCollection(
         "Ownership Test Collection",
-        "For Ownership Tests",
         10,
         1000,
         ethers.parseEther("0.1")
@@ -430,7 +438,6 @@ describe("NFTCollections", function () {
     beforeEach(async function () {
       await nftCollections.createCollection(
         "Edge Case Test Collection",
-        "For Edge Case Tests",
         10,
         1000,
         ethers.parseEther("0.1")
