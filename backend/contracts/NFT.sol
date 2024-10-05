@@ -102,7 +102,7 @@ contract NFT is ERC721URIStorage, Ownable {
         uint256 tokenId,
         string memory action,
         uint256 value
-    ) internal {
+    ) public {
         uint256 timestamp = block.timestamp;
         nftActivities[tokenId].push(Activity(action, value, timestamp));
 

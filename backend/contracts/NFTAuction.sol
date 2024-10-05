@@ -95,6 +95,10 @@ contract NFTAuction is ReentrancyGuard, Ownable {
             nftContract.isApprovedForAll(msg.sender, address(this)),
             "Contract not approved"
         );
+        require(
+            nftContract.getTokenStatus(_tokenId) == NFT.NFTStatus.NONE,
+            "NFT is already on sale or auction"
+        );
 
         auctionCount++;
         uint256 endTime = block.timestamp + _duration;
@@ -165,6 +169,7 @@ contract NFTAuction is ReentrancyGuard, Ownable {
         );
 
         uint256 creatorId = creatorsContract.getCreatorIdByAddress(msg.sender);
+        nftContract._addActivity(auction.tokenId, "Bid Placed", msg.value);
         creatorsContract.updateBid(creatorId, auctionId, msg.value);
         creatorsContract.recordActivity(
             creatorId,
@@ -225,7 +230,8 @@ contract NFTAuction is ReentrancyGuard, Ownable {
                 auction.highestBid
             );
 
-            nftContract.addActivity(
+            nftContract.setNFTStatus(auction.tokenId, NFT.NFTStatus.NONE);
+            nftContract._addActivity(
                 auction.tokenId,
                 "Sold in Auction",
                 auction.highestBid
@@ -242,6 +248,7 @@ contract NFTAuction is ReentrancyGuard, Ownable {
                 "Auction Ended (Reserve Not Met)",
                 auction.tokenId
             );
+            nftContract.setNFTStatus(auction.tokenId, NFT.NFTStatus.NONE);
             emit AuctionCancelled(_auctionId);
         }
 
@@ -275,7 +282,27 @@ contract NFTAuction is ReentrancyGuard, Ownable {
             auction.tokenId
         );
 
+        nftContract.setNFTStatus(auction.tokenId, NFT.NFTStatus.NONE);
         emit AuctionCancelled(_auctionId);
+    }
+
+    function getNFTDetails(
+        uint256 _tokenId
+    )
+        external
+        view
+        returns (
+            address owner,
+            uint256 price,
+            NFT.NFTStatus status,
+            uint256 collectionId
+        )
+    {
+        owner = nftContract.ownerOf(_tokenId);
+        price = nftContract.getPrice(_tokenId);
+        status = nftContract.getTokenStatus(_tokenId);
+        collectionId = nftContract.getCollection(_tokenId);
+        return (owner, price, status, collectionId);
     }
 
     function isNFTOnAuction(uint256 _tokenId) public view returns (bool) {
