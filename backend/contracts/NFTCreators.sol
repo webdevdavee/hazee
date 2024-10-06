@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract NFTCreators is Ownable {
+contract NFTCreators {
     uint256 private _creatorIds;
     uint256[] private allCreatorIds;
 
@@ -48,8 +48,6 @@ contract NFTCreators is Ownable {
         uint256 relatedItemId
     );
 
-    constructor() Ownable(msg.sender) {}
-
     function registerCreator() public returns (uint256) {
         require(
             creatorIdByAddress[msg.sender] == 0,
@@ -72,10 +70,7 @@ contract NFTCreators is Ownable {
         return newCreatorId;
     }
 
-    function addCreatedNFT(
-        uint256 creatorId,
-        uint256 tokenId
-    ) external onlyOwner {
+    function addCreatedNFT(uint256 creatorId, uint256 tokenId) external {
         require(
             creators[creatorId].userAddress != address(0),
             "Creator does not exist"
@@ -86,10 +81,7 @@ contract NFTCreators is Ownable {
         recordActivity(creatorId, "NFT Created", tokenId);
     }
 
-    function addOwnedNFT(
-        uint256 creatorId,
-        uint256 tokenId
-    ) external onlyOwner {
+    function addOwnedNFT(uint256 creatorId, uint256 tokenId) external {
         require(
             creators[creatorId].userAddress != address(0),
             "Creator does not exist"
@@ -101,7 +93,7 @@ contract NFTCreators is Ownable {
     function addCreatedCollection(
         uint256 creatorId,
         uint256 collectionId
-    ) external onlyOwner {
+    ) external {
         require(
             creators[creatorId].userAddress != address(0),
             "Creator does not exist"
@@ -115,7 +107,7 @@ contract NFTCreators is Ownable {
         uint256 creatorId,
         string memory actionType,
         uint256 relatedItemId
-    ) public onlyOwner {
+    ) public {
         creatorActivities[creatorId].push(
             Activity(actionType, block.timestamp, relatedItemId)
         );
@@ -128,7 +120,7 @@ contract NFTCreators is Ownable {
         uint256 offerAmount,
         uint256 nftCount,
         uint256 expirationTime
-    ) external onlyOwner {
+    ) external {
         require(
             creators[creatorId].userAddress != address(0),
             "Creator does not exist"
@@ -146,7 +138,7 @@ contract NFTCreators is Ownable {
     function removeCollectionOffer(
         uint256 creatorId,
         uint256 collectionId
-    ) external onlyOwner {
+    ) external {
         require(
             creators[creatorId].userAddress != address(0),
             "Creator does not exist"
@@ -164,7 +156,7 @@ contract NFTCreators is Ownable {
         uint256 creatorId,
         uint256 auctionId,
         uint256 bidAmount
-    ) external onlyOwner {
+    ) external {
         require(
             creators[creatorId].userAddress != address(0),
             "Creator does not exist"
@@ -173,7 +165,7 @@ contract NFTCreators is Ownable {
         recordActivity(creatorId, "Bid Placed", auctionId);
     }
 
-    function updateItemsSold(uint256 creatorId) external onlyOwner {
+    function updateItemsSold(uint256 creatorId) external {
         require(
             creators[creatorId].userAddress != address(0),
             "Creator does not exist"
@@ -185,7 +177,7 @@ contract NFTCreators is Ownable {
     function updateWalletBalance(
         uint256 creatorId,
         uint256 newBalance
-    ) external onlyOwner {
+    ) external {
         require(
             creators[creatorId].userAddress != address(0),
             "Creator does not exist"
@@ -227,10 +219,7 @@ contract NFTCreators is Ownable {
     }
 
     // New function to remove an NFT from a creator's owned NFTs
-    function removeOwnedNFT(
-        uint256 creatorId,
-        uint256 tokenId
-    ) external onlyOwner {
+    function removeOwnedNFT(uint256 creatorId, uint256 tokenId) external {
         require(
             creators[creatorId].userAddress != address(0),
             "Creator does not exist"

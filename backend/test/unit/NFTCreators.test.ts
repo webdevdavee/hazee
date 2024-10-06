@@ -79,6 +79,24 @@ describe("NFTCreators", function () {
     });
   });
 
+  describe("removeOwnedNFT", function () {
+    it("should remove an owned NFT from the creator's list", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      await nftCreators.addOwnedNFT(1, 2);
+      await nftCreators.addOwnedNFT(1, 3);
+      await nftCreators.removeOwnedNFT(1, 2);
+
+      const creatorInfo = await nftCreators.getCreatorInfo(1);
+      expect(creatorInfo.ownedNFTs).to.deep.equal([BigInt(3)]);
+    });
+
+    it("should revert if creator does not exist", async function () {
+      await expect(nftCreators.removeOwnedNFT(999, 1)).to.be.revertedWith(
+        "Creator does not exist"
+      );
+    });
+  });
+
   describe("addCreatedCollection", function () {
     it("should add a created collection to the creator's list", async function () {
       await nftCreators.connect(creator1).registerCreator();
@@ -97,38 +115,6 @@ describe("NFTCreators", function () {
 
     it("should revert if creator does not exist", async function () {
       await expect(nftCreators.addCreatedCollection(999, 1)).to.be.revertedWith(
-        "Creator does not exist"
-      );
-    });
-  });
-
-  describe("addToFavourites", function () {
-    it("should add an NFT to the creator's favourites", async function () {
-      await nftCreators.connect(creator1).registerCreator();
-      await nftCreators.addToFavourites(1, 1);
-
-      const creatorInfo = await nftCreators.getCreatorInfo(1);
-      expect(creatorInfo.favouritedNFTs).to.deep.equal([BigInt(1)]);
-    });
-
-    it("should revert if creator does not exist", async function () {
-      await expect(nftCreators.addToFavourites(999, 1)).to.be.revertedWith(
-        "Creator does not exist"
-      );
-    });
-  });
-
-  describe("addToCart", function () {
-    it("should add an NFT to the creator's cart", async function () {
-      await nftCreators.connect(creator1).registerCreator();
-      await nftCreators.addToCart(1, 1);
-
-      const creatorInfo = await nftCreators.getCreatorInfo(1);
-      expect(creatorInfo.cartedNFTs).to.deep.equal([BigInt(1)]);
-    });
-
-    it("should revert if creator does not exist", async function () {
-      await expect(nftCreators.addToCart(999, 1)).to.be.revertedWith(
         "Creator does not exist"
       );
     });
@@ -164,7 +150,7 @@ describe("NFTCreators", function () {
         expirationTime
       );
 
-      const offer = await nftCreators.creatorCollectionOffers(1, 1);
+      const offer = await nftCreators.getCreatorCollectionOffers(1, 1);
       expect(offer.amount).to.equal(ethers.parseEther("1"));
       expect(offer.nftCount).to.equal(5);
       expect(offer.expirationTime).to.equal(expirationTime);
@@ -198,7 +184,7 @@ describe("NFTCreators", function () {
       );
       await nftCreators.removeCollectionOffer(1, 1);
 
-      const offer = await nftCreators.creatorCollectionOffers(1, 1);
+      const offer = await nftCreators.getCreatorCollectionOffers(1, 1);
       expect(offer.isActive).to.be.false;
     });
 
@@ -221,7 +207,7 @@ describe("NFTCreators", function () {
       await nftCreators.connect(creator1).registerCreator();
       await nftCreators.updateBid(1, 1, ethers.parseEther("1"));
 
-      const bidAmount = await nftCreators.creatorBids(1, 1);
+      const bidAmount = await nftCreators.getCreatorBids(1, 1);
       expect(bidAmount).to.equal(ethers.parseEther("1"));
     });
 

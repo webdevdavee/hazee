@@ -44,8 +44,8 @@ describe("NFT", function () {
     );
 
     // Register creators
+    await nftCreators.connect(owner).registerCreator();
     await nftCreators.connect(addr1).registerCreator();
-    await nftCreators.connect(addr2).registerCreator();
   });
 
   describe("Deployment", function () {
@@ -68,188 +68,66 @@ describe("NFT", function () {
   describe("Minting", function () {
     it("Should allow registered creators to mint NFTs", async function () {
       const tokenURI = "https://example.com/token/1";
-      const name = "Test NFT";
-      const description = "This is a test NFT";
       const price = ethers.parseEther("1");
-      const attributes = [{ key: "rarity", value: "rare" }];
       const collectionId = 1;
 
       await expect(
-        nft
-          .connect(addr1)
-          .mint(
-            addr1.address,
-            tokenURI,
-            name,
-            description,
-            price,
-            attributes,
-            collectionId
-          )
+        nft.connect(addr1).mint(addr1.address, tokenURI, price, collectionId)
       )
         .to.emit(nft, "NFTMinted")
-        .withArgs(1, addr1.address, name);
+        .withArgs(1, addr1.address);
 
-      const [tokenId, , , , creator, , ,] = await nft.getMetadata(1);
-      expect(tokenId).to.equal(1);
-      expect(creator).to.equal(addr1.address);
+      expect(await nft.ownerOf(1)).to.equal(addr1.address);
+      expect(await nft.tokenURI(1)).to.equal(tokenURI);
+      expect(await nft.getPrice(1)).to.equal(price);
+      expect(await nft.getCollection(1)).to.equal(collectionId);
     });
 
     it("Should not allow unregistered creators to mint NFTs", async function () {
       const tokenURI = "https://example.com/token/1";
-      const name = "Test NFT";
-      const description = "This is a test NFT";
       const price = ethers.parseEther("1");
-      const attributes = [{ key: "rarity", value: "rare" }];
       const collectionId = 1;
 
       await expect(
         nft
-          .connect(owner)
-          .mint(
-            owner.address,
-            tokenURI,
-            name,
-            description,
-            price,
-            attributes,
-            collectionId
-          )
+          .connect(nftAuction)
+          .mint(nftAuction.address, tokenURI, price, collectionId)
       ).to.be.revertedWith("Creator not registered");
     });
   });
 
-  describe("Metadata", function () {
-    it("Should return correct metadata for minted NFTs", async function () {
-      const tokenURI = "https://example.com/token/1";
-      const name = "Test NFT";
-      const description = "This is a test NFT";
-      const price = ethers.parseEther("1");
-      const attributes = [{ key: "rarity", value: "rare" }];
-      const collectionId = 1;
-
-      await nft
-        .connect(addr1)
-        .mint(
-          addr1.address,
-          tokenURI,
-          name,
-          description,
-          price,
-          attributes,
-          collectionId
-        );
-
-      const [
-        tokenId,
-        returnedName,
-        returnedDescription,
-        creationDate,
-        creator,
-        returnedPrice,
-        status,
-        returnedAttributes,
-      ] = await nft.getMetadata(1);
-
-      expect(tokenId).to.equal(1);
-      expect(returnedName).to.equal(name);
-      expect(returnedDescription).to.equal(description);
-      expect(creator).to.equal(addr1.address);
-      expect(returnedPrice).to.equal(price);
-      expect(status).to.equal(0); // NFTStatus.NONE
-
-      // Handle the returned attributes
-      expect(returnedAttributes.length).to.equal(attributes.length);
-      for (let i = 0; i < attributes.length; i++) {
-        expect(returnedAttributes[i].key).to.equal(attributes[i].key);
-        expect(returnedAttributes[i].value).to.equal(attributes[i].value);
-      }
-    });
-
-    it("Should revert when querying metadata for non-existent token", async function () {
-      await expect(nft.getMetadata(999)).to.be.revertedWith(
-        "NFT: Metadata query for nonexistent token"
-      );
-    });
-  });
-
   describe("NFT Status", function () {
-    it("Should allow owner to set NFT status", async function () {
+    beforeEach(async function () {
       await nft
         .connect(addr1)
-        .mint(
-          addr1.address,
-          "tokenURI",
-          "name",
-          "description",
-          ethers.parseEther("1"),
-          [],
-          1
-        );
+        .mint(addr1.address, "tokenURI", ethers.parseEther("1"), 1);
+    });
 
+    it("Should allow owner to set NFT status", async function () {
       await expect(nft.connect(addr1).setNFTStatus(1, 1)) // 1 = NFTStatus.SALE
         .to.emit(nft, "NFTStatusChanged")
         .withArgs(1, 1);
 
-      const [, , , , , , status] = await nft.getMetadata(1);
-      expect(status).to.equal(1);
+      expect(await nft.getTokenStatus(1)).to.equal(1);
     });
 
     it("Should allow contract owner to set NFT status", async function () {
-      await nft
-        .connect(addr1)
-        .mint(
-          addr1.address,
-          "tokenURI",
-          "name",
-          "description",
-          ethers.parseEther("1"),
-          [],
-          1
-        );
-
       await expect(nft.connect(owner).setNFTStatus(1, 2)) // 2 = NFTStatus.AUCTION
         .to.emit(nft, "NFTStatusChanged")
         .withArgs(1, 2);
 
-      const [, , , , , , status] = await nft.getMetadata(1);
-      expect(status).to.equal(2);
+      expect(await nft.getTokenStatus(1)).to.equal(2);
     });
 
     it("Should allow auction contract to set NFT status", async function () {
-      await nft
-        .connect(addr1)
-        .mint(
-          addr1.address,
-          "tokenURI",
-          "name",
-          "description",
-          ethers.parseEther("1"),
-          [],
-          1
-        );
-
       await expect(nft.connect(nftAuction).setNFTStatus(1, 3)) // 3 = NFTStatus.BOTH
         .to.emit(nft, "NFTStatusChanged")
         .withArgs(1, 3);
 
-      const [, , , , , , status] = await nft.getMetadata(1);
-      expect(status).to.equal(3);
+      expect(await nft.getTokenStatus(1)).to.equal(3);
     });
 
     it("Should not allow non-authorized addresses to set NFT status", async function () {
-      await nft
-        .connect(addr1)
-        .mint(
-          addr1.address,
-          "tokenURI",
-          "name",
-          "description",
-          ethers.parseEther("1"),
-          [],
-          1
-        );
-
       await expect(nft.connect(addr2).setNFTStatus(1, 1)).to.be.revertedWith(
         "NFT: Only owner, contract owner, auction contract or marketplace contract can set status"
       );
@@ -260,166 +138,46 @@ describe("NFT", function () {
     it("Should add and retrieve activities correctly", async function () {
       await nft
         .connect(addr1)
-        .mint(
-          addr1.address,
-          "tokenURI",
-          "name",
-          "description",
-          ethers.parseEther("1"),
-          [],
-          1
-        );
+        .mint(addr1.address, "tokenURI", ethers.parseEther("1"), 1);
 
-      await expect(
-        nft.connect(addr1).addActivity(1, "Listed", ethers.parseEther("2"))
-      )
-        .to.emit(nft, "NFTActivityAdded")
-        .withArgs(1, "Listed", ethers.parseEther("2"));
+      await nft.connect(addr1).setNFTStatus(1, 1); // Set status to SALE
 
       const activities = await nft.getActivities(1);
       expect(activities.length).to.equal(2); // Including the "Minted" activity
-      expect(activities[1].action).to.equal("Listed");
-      expect(activities[1].value).to.equal(ethers.parseEther("2"));
-    });
-
-    it("Should not allow non-authorized addresses to add activities", async function () {
-      await nft
-        .connect(addr1)
-        .mint(
-          addr1.address,
-          "tokenURI",
-          "name",
-          "description",
-          ethers.parseEther("1"),
-          [],
-          1
-        );
-
-      await expect(
-        nft.connect(addr2).addActivity(1, "Listed", ethers.parseEther("2"))
-      ).to.be.revertedWith(
-        "NFT: Only owner, contract owner, or auction contract can add activity"
-      );
+      expect(activities[1].action).to.equal("Status Changed");
+      expect(activities[1].value).to.equal(1);
     });
   });
 
   describe("Price Updates", function () {
-    it("Should allow owner to update price", async function () {
+    beforeEach(async function () {
       await nft
         .connect(addr1)
-        .mint(
-          addr1.address,
-          "tokenURI",
-          "name",
-          "description",
-          ethers.parseEther("1"),
-          [],
-          1
-        );
+        .mint(addr1.address, "tokenURI", ethers.parseEther("1"), 1);
+    });
 
+    it("Should allow owner to set price", async function () {
       const newPrice = ethers.parseEther("2");
-      await nft.connect(addr1).updatePrice(1, newPrice);
+      await expect(nft.connect(addr1).setPrice(1, newPrice))
+        .to.emit(nft, "PriceSet")
+        .withArgs(1, newPrice);
 
-      const [, , , , , price, ,] = await nft.getMetadata(1);
-      expect(price).to.equal(newPrice);
+      expect(await nft.getPrice(1)).to.equal(newPrice);
+    });
+
+    it("Should allow owner to update price", async function () {
+      const newPrice = ethers.parseEther("2");
+      await expect(nft.connect(addr1).updatePrice(1, newPrice))
+        .to.emit(nft, "PriceUpdated")
+        .withArgs(1, newPrice);
+
+      expect(await nft.getPrice(1)).to.equal(newPrice);
     });
 
     it("Should not allow non-owners to update price", async function () {
-      await nft
-        .connect(addr1)
-        .mint(
-          addr1.address,
-          "tokenURI",
-          "name",
-          "description",
-          ethers.parseEther("1"),
-          [],
-          1
-        );
-
       await expect(
         nft.connect(addr2).updatePrice(1, ethers.parseEther("2"))
       ).to.be.revertedWith("NFT: Only owner can update price");
-    });
-  });
-
-  describe("Token Queries", function () {
-    it("Should return all tokens", async function () {
-      await nft
-        .connect(addr1)
-        .mint(
-          addr1.address,
-          "tokenURI1",
-          "name1",
-          "description1",
-          ethers.parseEther("1"),
-          [],
-          1
-        );
-
-      await nft
-        .connect(addr2)
-        .mint(
-          addr2.address,
-          "tokenURI2",
-          "name2",
-          "description2",
-          ethers.parseEther("2"),
-          [],
-          2
-        );
-
-      const allTokens = await nft.getAllTokens();
-      expect(allTokens.length).to.equal(2);
-      expect(allTokens[0].name).to.equal("name1");
-      expect(allTokens[1].name).to.equal("name2");
-    });
-
-    it("Should return tokens by owner", async function () {
-      await nft
-        .connect(addr1)
-        .mint(
-          addr1.address,
-          "tokenURI1",
-          "name1",
-          "description1",
-          ethers.parseEther("1"),
-          [],
-          1
-        );
-
-      await nft
-        .connect(addr1)
-        .mint(
-          addr1.address,
-          "tokenURI2",
-          "name2",
-          "description2",
-          ethers.parseEther("2"),
-          [],
-          2
-        );
-
-      await nft
-        .connect(addr2)
-        .mint(
-          addr2.address,
-          "tokenURI3",
-          "name3",
-          "description3",
-          ethers.parseEther("3"),
-          [],
-          3
-        );
-
-      const addr1Tokens = await nft.getTokensByOwner(addr1.address);
-      expect(addr1Tokens.length).to.equal(2);
-      expect(addr1Tokens[0].name).to.equal("name1");
-      expect(addr1Tokens[1].name).to.equal("name2");
-
-      const addr2Tokens = await nft.getTokensByOwner(addr2.address);
-      expect(addr2Tokens.length).to.equal(1);
-      expect(addr2Tokens[0].name).to.equal("name3");
     });
   });
 
@@ -427,15 +185,7 @@ describe("NFT", function () {
     it("Should set and retrieve collection correctly", async function () {
       await nft
         .connect(addr1)
-        .mint(
-          addr1.address,
-          "tokenURI",
-          "name",
-          "description",
-          ethers.parseEther("1"),
-          [],
-          42
-        );
+        .mint(addr1.address, "tokenURI", ethers.parseEther("1"), 42);
 
       const collectionId = await nft.getCollection(1);
       expect(collectionId).to.equal(42);
@@ -448,127 +198,14 @@ describe("NFT", function () {
     });
   });
 
-  describe("Update Metadata", function () {
-    it("Should allow the owner to update metadata", async function () {
-      const tokenURI = "https://example.com/token/1";
-      const initialName = "Initial NFT";
-      const initialDescription = "This is the initial description";
-      const initialPrice = ethers.parseEther("1");
-      const initialAttributes = [{ key: "rarity", value: "common" }];
-      const initialCollectionId = 1;
-
-      // Mint the NFT
+  describe("Token Existence", function () {
+    it("Should correctly report token existence", async function () {
       await nft
         .connect(addr1)
-        .mint(
-          addr1.address,
-          tokenURI,
-          initialName,
-          initialDescription,
-          initialPrice,
-          initialAttributes,
-          initialCollectionId
-        );
+        .mint(addr1.address, "tokenURI", ethers.parseEther("1"), 1);
 
-      // New metadata
-      const newName = "Updated NFT";
-      const newDescription = "This is the updated description";
-      const newPrice = ethers.parseEther("2");
-      const newAttributes = [
-        { key: "rarity", value: "rare" },
-        { key: "color", value: "blue" },
-      ];
-      const newCollectionId = 2;
-
-      // Update metadata
-      await expect(
-        nft
-          .connect(addr1)
-          .updateMetadata(
-            addr1.address,
-            1,
-            newName,
-            newDescription,
-            newPrice,
-            newAttributes,
-            newCollectionId
-          )
-      )
-        .to.emit(nft, "MetadataUpdated")
-        .withArgs(1, newName, newDescription);
-
-      // Verify updated metadata
-      const [
-        tokenId,
-        returnedName,
-        returnedDescription,
-        creationDate,
-        creator,
-        returnedPrice,
-        status,
-        returnedAttributes,
-      ] = await nft.getMetadata(1);
-
-      expect(tokenId).to.equal(1);
-      expect(returnedName).to.equal(newName);
-      expect(returnedDescription).to.equal(newDescription);
-      expect(creator).to.equal(addr1.address);
-      expect(returnedPrice).to.equal(newPrice);
-      expect(status).to.equal(0); // NFTStatus.NONE
-
-      expect(returnedAttributes.length).to.equal(newAttributes.length);
-      for (let i = 0; i < newAttributes.length; i++) {
-        expect(returnedAttributes[i].key).to.equal(newAttributes[i].key);
-        expect(returnedAttributes[i].value).to.equal(newAttributes[i].value);
-      }
-
-      // Verify updated collection
-      const updatedCollectionId = await nft.getCollection(1);
-      expect(updatedCollectionId).to.equal(newCollectionId);
-    });
-
-    it("Should not allow non-owners to update metadata", async function () {
-      await nft
-        .connect(addr1)
-        .mint(
-          addr1.address,
-          "tokenURI",
-          "name",
-          "description",
-          ethers.parseEther("1"),
-          [],
-          1
-        );
-
-      await expect(
-        nft
-          .connect(addr2)
-          .updateMetadata(
-            addr2.address,
-            1,
-            "New Name",
-            "New Description",
-            ethers.parseEther("2"),
-            [],
-            2
-          )
-      ).to.be.revertedWith("NFT: Only owner can update metadata");
-    });
-
-    it("Should revert when updating metadata for non-existent token", async function () {
-      await expect(
-        nft
-          .connect(addr1)
-          .updateMetadata(
-            addr1.address,
-            999,
-            "New Name",
-            "New Description",
-            ethers.parseEther("1"),
-            [],
-            1
-          )
-      ).to.be.revertedWith("NFT: Metadata update for nonexistent token");
+      expect(await nft.exists(1)).to.be.true;
+      expect(await nft.exists(2)).to.be.false;
     });
   });
 });

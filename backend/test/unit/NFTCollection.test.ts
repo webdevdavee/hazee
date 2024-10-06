@@ -21,18 +21,18 @@ describe("NFTCollections", function () {
   let nftCreators: NFTCreators;
   let nftMarketplace: NFTMarketplace;
   let nftMarketplaceFactory: NFTMarketplace__factory;
-  let nft: NFT;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;
   let nftContractAddress: SignerWithAddress;
   let feeRecipient: SignerWithAddress;
+  let dummyAddress: SignerWithAddress;
 
   const TWELVE_HOURS = 12 * 60 * 60;
   const ONE_WEEK = 7 * 24 * 60 * 60;
 
   beforeEach(async function () {
-    [owner, addr1, addr2, nftContractAddress, feeRecipient] =
+    [owner, addr1, addr2, nftContractAddress, feeRecipient, dummyAddress] =
       await ethers.getSigners();
 
     // Deploy NFTCreators
@@ -56,7 +56,8 @@ describe("NFTCollections", function () {
     nftMarketplace = await nftMarketplaceFactory.deploy(
       feeRecipient.address,
       await nftCreators.getAddress(),
-      await nftAuction.getAddress()
+      await nftAuction.getAddress(),
+      dummyAddress
     );
 
     // Deploy NFTCollections
@@ -132,10 +133,7 @@ describe("NFTCollections", function () {
       const tx = await nftCollections.mintNFT(
         collectionId,
         ethers.parseEther("0.2"),
-        "ipfs://testURI",
-        "Test NFT",
-        "Test NFT Description",
-        []
+        "ipfs://testURI"
       );
 
       await expect(tx)
@@ -154,10 +152,7 @@ describe("NFTCollections", function () {
         await nftCollections.mintNFT(
           collectionId,
           ethers.parseEther("0.2"),
-          `ipfs://testURI${i}`,
-          `Test NFT ${i}`,
-          `Test NFT Description ${i}`,
-          []
+          `ipfs://testURI${i}`
         );
       }
 
@@ -165,10 +160,7 @@ describe("NFTCollections", function () {
         nftCollections.mintNFT(
           collectionId,
           ethers.parseEther("0.2"),
-          "ipfs://testURIExtra",
-          "Extra NFT",
-          "Should Fail",
-          []
+          "ipfs://testURIExtra"
         )
       ).to.be.revertedWithCustomError(nftCollections, "MaximumSupplyReached");
     });
@@ -190,10 +182,7 @@ describe("NFTCollections", function () {
         await nftCollections.mintNFT(
           collectionId,
           ethers.parseEther("0.2"),
-          `ipfs://testURI${i}`,
-          `Test NFT ${i}`,
-          `Test NFT Description ${i}`,
-          []
+          `ipfs://testURI${i}`
         );
       }
     });
@@ -395,14 +384,7 @@ describe("NFTCollections", function () {
       await expect(
         nftCollections
           .connect(addr1)
-          .mintNFT(
-            collectionId,
-            ethers.parseEther("0.2"),
-            "ipfs://testURI",
-            "Test NFT",
-            "Test NFT Description",
-            []
-          )
+          .mintNFT(collectionId, ethers.parseEther("0.2"), "ipfs://testURI")
       ).to.be.revertedWithCustomError(
         nftCollections,
         "OnlyCurrentOwnerAllowed"
@@ -447,10 +429,7 @@ describe("NFTCollections", function () {
       await nftCollections.mintNFT(
         collectionId,
         ethers.parseEther("0.1"),
-        "ipfs://test1",
-        "Test 1",
-        "Desc 1",
-        []
+        "ipfs://test1"
       );
     });
 
@@ -506,10 +485,7 @@ describe("NFTCollections", function () {
       await nftCollections.mintNFT(
         collectionId,
         ethers.parseEther("0.1"),
-        "ipfs://test1",
-        "Test 1",
-        "Desc 1",
-        []
+        "ipfs://test1"
       );
 
       // Fast forward time

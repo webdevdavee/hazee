@@ -143,7 +143,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
 
         emit CollectionAdded(
             newCollectionId,
-            address(newNFTContract),
+            address(this),
             msg.sender,
             _name
         );

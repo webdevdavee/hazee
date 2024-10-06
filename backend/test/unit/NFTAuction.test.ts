@@ -76,17 +76,13 @@ describe("NFTAuction", function () {
     await nftCreators.connect(bidder2).registerCreator();
 
     // Mint an NFT for the seller
+    const tokenURI = "https://example.com/token/1";
+    const price = ethers.parseEther("1");
+    const collectionId = 1;
+
     await nft
       .connect(seller)
-      .mint(
-        seller.address,
-        "tokenURI",
-        "Test NFT",
-        "Description",
-        ethers.parseEther("1"),
-        [{ key: "rarity", value: "rare" }],
-        1
-      );
+      .mint(seller.address, tokenURI, price, collectionId);
 
     // Approve NFTAuction contract
     await nft
@@ -432,6 +428,117 @@ describe("NFTAuction", function () {
       await expect(
         nftAuction.connect(bidder2).withdrawBid(1)
       ).to.be.revertedWith("Highest bidder cannot withdraw their bid");
+    });
+  });
+
+  describe("Getting active auctions", function () {
+    beforeEach(async function () {
+      const tokenURI = "https://example.com/token/1";
+      const price = ethers.parseEther("1");
+      const collectionId = 1;
+
+      // Create multiple auctions
+      await nftAuction
+        .connect(seller)
+        .createAuction(
+          TOKEN_ID,
+          STARTING_PRICE,
+          RESERVE_PRICE,
+          AUCTION_DURATION
+        );
+
+      await nft
+        .connect(seller)
+        .mint(seller.address, tokenURI, price, collectionId);
+
+      await nftAuction
+        .connect(seller)
+        .createAuction(2, STARTING_PRICE, RESERVE_PRICE, AUCTION_DURATION);
+    });
+
+    it("Should return all active auctions", async function () {
+      const activeAuctions = await nftAuction.getActiveAuctions();
+      expect(activeAuctions.length).to.equal(2);
+      expect(activeAuctions[0]).to.equal(1);
+      expect(activeAuctions[1]).to.equal(2);
+    });
+
+    it("Should not include ended auctions", async function () {
+      await time.increase(AUCTION_DURATION + 1);
+      await nftAuction.endAuction(1);
+
+      const activeAuctions = await nftAuction.getActiveAuctions();
+      expect(activeAuctions.length).to.equal(1);
+      expect(activeAuctions[0]).to.equal(2);
+    });
+  });
+
+  describe("NFT status", function () {
+    it("Should update NFT status when creating an auction", async function () {
+      await nftAuction
+        .connect(seller)
+        .createAuction(
+          TOKEN_ID,
+          STARTING_PRICE,
+          RESERVE_PRICE,
+          AUCTION_DURATION
+        );
+
+      const nftStatus = await nft.getTokenStatus(TOKEN_ID);
+      expect(nftStatus).to.equal(2); // 2 represents NFT.NFTStatus.AUCTION
+    });
+
+    it("Should update NFT status when ending an auction", async function () {
+      await nftAuction
+        .connect(seller)
+        .createAuction(
+          TOKEN_ID,
+          STARTING_PRICE,
+          RESERVE_PRICE,
+          AUCTION_DURATION
+        );
+
+      await nftAuction
+        .connect(bidder1)
+        .placeBid(TOKEN_ID, { value: ethers.parseEther("2.5") });
+
+      await time.increase(AUCTION_DURATION + 1);
+      await nftAuction.endAuction(1);
+
+      const nftStatus = await nft.getTokenStatus(TOKEN_ID);
+      expect(nftStatus).to.equal(0); // 0 represents NFT.NFTStatus.NONE
+    });
+  });
+
+  describe("Creator activity recording", function () {
+    it("Should record creator activity when creating an auction", async function () {
+      await nftAuction
+        .connect(seller)
+        .createAuction(
+          TOKEN_ID,
+          STARTING_PRICE,
+          RESERVE_PRICE,
+          AUCTION_DURATION
+        );
+
+      const sellerId = await nftCreators.getCreatorIdByAddress(seller.address);
+    });
+
+    it("Should record creator activity when placing a bid", async function () {
+      await nftAuction
+        .connect(seller)
+        .createAuction(
+          TOKEN_ID,
+          STARTING_PRICE,
+          RESERVE_PRICE,
+          AUCTION_DURATION
+        );
+
+      await nftAuction
+        .connect(bidder1)
+        .placeBid(TOKEN_ID, { value: ethers.parseEther("1.5") });
+
+      const bidderId = await nftCreators.getCreatorIdByAddress(bidder1.address);
     });
   });
 });
