@@ -121,6 +121,8 @@ contract NFTAuction is ReentrancyGuard, Ownable {
         uint256 creatorId = creatorsContract.getCreatorIdByAddress(msg.sender);
         creatorsContract.recordActivity(creatorId, "Auction Created", _tokenId);
 
+        nftContract.setNFTStatus(_tokenId, NFT.NFTStatus.AUCTION);
+
         emit AuctionCreated(
             auctionCount,
             msg.sender,
@@ -129,8 +131,6 @@ contract NFTAuction is ReentrancyGuard, Ownable {
             _reservePrice,
             endTime
         );
-
-        nftContract.setNFTStatus(_tokenId, NFT.NFTStatus.AUCTION);
     }
 
     function placeBid(uint256 _tokenId) external payable nonReentrant {

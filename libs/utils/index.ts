@@ -5,3 +5,8 @@ export const formatFileSize = (bytes: number) => {
     return (bytes / 1024 / 1024).toFixed(2) + " MB";
   return (bytes / 1024 / 1024 / 1024).toFixed(2) + " GB";
 };
+
+export const truncateAddress = (address: string) => {
+  if (!address) return "";
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+};

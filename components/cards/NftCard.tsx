@@ -1,8 +1,6 @@
 import Image from "next/image";
 import { LuHeart } from "react-icons/lu";
 import Link from "next/link";
-import { BsCartPlus } from "react-icons/bs";
-import { FaPlus } from "react-icons/fa";
 
 type Props = {
   type: string;
@@ -72,21 +70,13 @@ const NftCard: React.FC<Props> = ({ type, nft }) => {
                 <p className="text-sm text-gray-400">Price</p>
                 <p>{nft.price}</p>
               </div>
-              <div className="flex items-center gap-4">
-                <Link
-                  href="#"
-                  className="bg-abstract font-medium
+              <Link
+                href="#"
+                className="bg-abstract font-medium
                 border border-base p-[0.6rem] rounded-full"
-                >
-                  Buy now
-                </Link>
-                <button
-                  type="button"
-                  className="bg-white p-[0.85rem] rounded-lg"
-                >
-                  <FaPlus color="#181818" />
-                </button>
-              </div>
+              >
+                Buy now
+              </Link>
             </div>
           </div>
         )}

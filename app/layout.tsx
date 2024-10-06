@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import Overlay from "@/components/layout/Overlay";
+import { WalletProvider } from "@/context/WalletProvider";
 
 const dm_sans = DM_Sans({
   subsets: ["latin", "latin-ext"],
@@ -21,8 +22,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={dm_sans.className}>
-        <Overlay />
-        {children}
+        <WalletProvider>
+          <Overlay />
+          {children}
+        </WalletProvider>
       </body>
     </html>
   );

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { FaRegShareFromSquare } from "react-icons/fa6";
-import { IoMdHeartEmpty } from "react-icons/io";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import NFTPurchaseCard from "../cards/NFTPurchaseCard";
 import useCopyToClipboard from "@/hooks/useCopyToClipboard";
@@ -59,12 +58,6 @@ const NFTInfo: React.FC<Props> = ({ nft }) => {
           <div className="flex items-center gap-2">
             <MdOutlineRemoveRedEye size={25} />
             <p>23 views</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button type="button">
-              <IoMdHeartEmpty size={25} />
-            </button>
-            <p>4 favourites</p>
           </div>
           <button
             type="button"

@@ -65,8 +65,7 @@ contract NFTMarketplace is ReentrancyGuard {
     function listNFT(
         address _nftContract,
         uint256 _tokenId,
-        uint256 _price,
-        NFT.NFTStatus _saleType
+        uint256 _price
     ) external nonReentrant {
         require(_price > 0, "Price must be greater than zero");
         IERC721 nftContract = IERC721(_nftContract);
@@ -81,10 +80,6 @@ contract NFTMarketplace is ReentrancyGuard {
         require(
             !i_auctionContract.isNFTOnAuction(_tokenId),
             "NFT is currently on auction"
-        );
-        require(
-            _saleType == NFT.NFTStatus.SALE || _saleType == NFT.NFTStatus.BOTH,
-            "Invalid sale type"
         );
 
         NFT NFTContract = NFT(_nftContract);
@@ -103,10 +98,10 @@ contract NFTMarketplace is ReentrancyGuard {
             tokenId: _tokenId,
             price: _price,
             isActive: true,
-            saleType: _saleType
+            saleType: NFT.NFTStatus.SALE
         });
 
-        NFTContract.setNFTStatus(_tokenId, _saleType);
+        NFTContract.setNFTStatus(_tokenId, NFT.NFTStatus.SALE);
         NFTContract._addActivity(_tokenId, "Listed", _price);
 
         uint256 creatorId = i_creatorsContract.getCreatorIdByAddress(
@@ -120,7 +115,7 @@ contract NFTMarketplace is ReentrancyGuard {
             _nftContract,
             _tokenId,
             _price,
-            _saleType
+            NFT.NFTStatus.SALE
         );
     }
 

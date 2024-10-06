@@ -5,8 +5,8 @@ import Searchbar from "../ui/Searchbar";
 import Button from "../ui/Button";
 import React from "react";
 import Dropdown from "../ui/Dropdown";
-import { RiShoppingBag4Line } from "react-icons/ri";
 import useDropdown from "@/hooks/useDropdown";
+import { useWallet } from "@/context/WalletProvider";
 
 const Navbar = () => {
   const exploreDropdown = useDropdown([
@@ -19,6 +19,8 @@ const Navbar = () => {
     { id: 1, label: "NFT", link: "/studio/nft" },
     { id: 2, label: "Collection", link: "/studio/collection" },
   ]);
+
+  const { connectWallet, truncatedAddress, balance } = useWallet();
 
   return (
     <section className="sticky top-0 z-[45]">
@@ -61,10 +63,14 @@ const Navbar = () => {
                 />
               </div>
             </div>
-            <Button text="Connect wallet" style="bg-primary font-medium" />
-            <button type="button">
-              <RiShoppingBag4Line size={30} />
-            </button>
+            <Button
+              text={truncatedAddress as string}
+              style="bg-primary font-medium"
+              onclick={connectWallet}
+            />
+            <p className="bg-secondary font-medium p-[0.6rem] rounded-full">
+              {balance as string} ETH
+            </p>
           </ul>
         </nav>
       </div>
