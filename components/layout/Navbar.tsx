@@ -68,8 +68,11 @@ const Navbar = () => {
               style="bg-primary font-medium"
               onclick={connectWallet}
             />
-            <p className="bg-secondary font-medium p-[0.6rem] rounded-full">
-              {balance as string} ETH
+            <p
+              className="bg-secondary font-medium p-[0.6rem] rounded-full"
+              style={{ display: balance ? "block" : "none" }}
+            >
+              {balance as string}
             </p>
           </ul>
         </nav>
