@@ -7,6 +7,9 @@ import React from "react";
 import Dropdown from "../ui/Dropdown";
 import useDropdown from "@/hooks/useDropdown";
 import { useWallet } from "@/context/WalletProvider";
+import { useOverlayStore } from "@/libs/zustand/overlayStore";
+import Modal from "./Modal";
+import ConnectWallet from "./ConnectWallet";
 
 const Navbar = () => {
   const exploreDropdown = useDropdown([
@@ -20,64 +23,100 @@ const Navbar = () => {
     { id: 2, label: "Collection", link: "/studio/collection" },
   ]);
 
-  const { connectWallet, truncatedAddress, balance } = useWallet();
+  const { connectWallet, truncatedAddress, balance, isWalletConnected } =
+    useWallet();
+  const [walletConnection, setWalletConnection] = React.useState<boolean>();
+
+  React.useEffect(() => {
+    const checkWalletConnection = async () => {
+      const isConnected = await isWalletConnected();
+      setWalletConnection(isConnected);
+    };
+    checkWalletConnection();
+  }, [isWalletConnected]);
+
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const showOverlay = useOverlayStore((state) => state.showOverlay);
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+    showOverlay();
+  };
 
   return (
-    <section className="sticky top-0 z-[45]">
-      <div className="backdrop-blur-md bg-base/70 border-b border-b-secondary">
-        <nav className="mx-8 flex items-center justify-between py-4">
-          <div className="flex gap-10 items-center">
-            <Link href="/" className="text-white text-2xl">
-              Hazee.
-            </Link>
-            <Searchbar placeholder="search..." />
-          </div>
-          <ul className="flex gap-5 items-center">
-            <div
-              onMouseOver={exploreDropdown.toggle}
-              onMouseOut={exploreDropdown.toggle}
-            >
-              <Button
-                text="Explore"
-                style="text-[gray] font-medium hover:text-white transition-colors"
-              />
-              <div className="relative">
-                <Dropdown
-                  items={exploreDropdown.items}
-                  isOpen={exploreDropdown.isOpen}
-                />
-              </div>
+    <>
+      {isModalOpen && (
+        <Modal title="Connect to Hazee" setIsModalOpen={setIsModalOpen}>
+          <ConnectWallet connectWallet={connectWallet} />
+        </Modal>
+      )}
+      <section className="sticky top-0 z-[45]">
+        <div className="backdrop-blur-md bg-base/70 border-b border-b-secondary">
+          <nav className="mx-8 flex items-center justify-between py-4">
+            <div className="flex gap-10 items-center">
+              <Link href="/" className="text-white text-2xl">
+                Hazee.
+              </Link>
+              <Searchbar placeholder="search..." />
             </div>
-            <div
-              onMouseOver={createDropdown.toggle}
-              onMouseOut={createDropdown.toggle}
-            >
-              <Button
-                text="Create"
-                style="text-[gray] font-medium hover:text-white transition-colors"
-              />
-              <div className="relative">
-                <Dropdown
-                  items={createDropdown.items}
-                  isOpen={createDropdown.isOpen}
+            <ul className="flex gap-5 items-center">
+              <div
+                onMouseOver={exploreDropdown.toggle}
+                onMouseOut={exploreDropdown.toggle}
+              >
+                <Button
+                  text="Explore"
+                  style="text-[gray] font-medium hover:text-white transition-colors"
                 />
+                <div className="relative">
+                  <Dropdown
+                    items={exploreDropdown.items}
+                    isOpen={exploreDropdown.isOpen}
+                  />
+                </div>
               </div>
-            </div>
-            <Button
-              text={truncatedAddress as string}
-              style="bg-primary font-medium"
-              onclick={connectWallet}
-            />
-            <p
-              className="bg-secondary font-medium p-[0.6rem] rounded-full"
-              style={{ display: balance ? "block" : "none" }}
-            >
-              {balance as string}
-            </p>
-          </ul>
-        </nav>
-      </div>
-    </section>
+              <div
+                onMouseOver={createDropdown.toggle}
+                onMouseOut={createDropdown.toggle}
+              >
+                <Button
+                  text="Create"
+                  style="text-[gray] font-medium hover:text-white transition-colors"
+                />
+                <div className="relative">
+                  <Dropdown
+                    items={createDropdown.items}
+                    isOpen={createDropdown.isOpen}
+                  />
+                </div>
+              </div>
+              <>
+                {!walletConnection ? (
+                  <Button
+                    text={truncatedAddress as string}
+                    style="bg-primary font-medium"
+                    onclick={handleOpenModal}
+                  />
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <Button
+                      text={truncatedAddress as string}
+                      style="bg-primary font-medium"
+                    />
+                    <p
+                      className="bg-secondary font-medium p-[0.6rem] rounded-full"
+                      style={{ display: balance ? "block" : "none" }}
+                    >
+                      {balance as string} ETH
+                    </p>
+                  </div>
+                )}
+              </>
+            </ul>
+          </nav>
+        </div>
+      </section>
+    </>
   );
 };
 
