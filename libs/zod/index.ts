@@ -15,7 +15,7 @@ export type TPriceRangeSchema = z.infer<typeof priceRangeSchema>;
 
 export const createNFTSchema = z.object({
   name: z.string().min(3, "Use 3 characters or more"),
-  supply: z.string().min(3, "Use 3 characters or more"),
+  supply: z.string().min(1, "Use 1 characters or more"),
   description: z.string().min(3, "Use 3 characters or more").optional(),
 });
 

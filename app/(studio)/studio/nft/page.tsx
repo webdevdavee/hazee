@@ -1,5 +1,4 @@
 import CreateNFTForm from "../../_components/CreateNFTForm";
-import FileUploader from "../../_components/FileUploader";
 
 const page = () => {
   return (
@@ -10,10 +9,7 @@ const page = () => {
           You will not be able to make changes to your NFT once minted.
         </p>
       </div>
-      <div className="flex justify-between gap-24 mt-10">
-        <FileUploader />
-        <CreateNFTForm />
-      </div>
+      <CreateNFTForm />
     </section>
   );
 };

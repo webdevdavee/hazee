@@ -1,9 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { DropzoneRootProps, useDropzone } from "react-dropzone";
+import { useDropzone } from "react-dropzone";
 import clsx from "clsx";
 import { FiUploadCloud } from "react-icons/fi";
+
+type Props = {
+  fileError: string | undefined;
+  setFileError: React.Dispatch<React.SetStateAction<string | undefined>>;
+  setFile: React.Dispatch<React.SetStateAction<File | undefined>>;
+};
 
 type FileType =
   | "image/jpeg"
@@ -12,7 +18,11 @@ type FileType =
   | "video/mp4"
   | "image/gif";
 
-const SmallFileUploader = () => {
+const SmallFileUploader: React.FC<Props> = ({
+  fileError,
+  setFileError,
+  setFile,
+}) => {
   const [isDragActive, setIsDragActive] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
@@ -43,6 +53,8 @@ const SmallFileUploader = () => {
 
   const handleFileUpload = (file: File) => {
     // Do something with the uploaded file
+    if (file) setFileError("");
+    setFile(file);
     console.log(file);
   };
 
@@ -87,6 +99,7 @@ const SmallFileUploader = () => {
           <p className="text-gray-300 text-sm">Maximum file size: 50MB</p>
         </div>
       </div>
+      <p className="text-red-500">{fileError}</p>
     </section>
   );
 };
