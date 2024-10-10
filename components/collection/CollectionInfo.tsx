@@ -7,7 +7,15 @@ const CollectionInfo: React.FC<Props> = ({ collection }) => {
     <div className="flex justify-between">
       <div className="w-[60%] flex flex-col gap-3">
         <h1 className="mt-3 font-medium">{collection?.name}</h1>
-        <p className="text-[gray]">Created by Hazee</p>
+        <div className="flex items-center gap-4">
+          <p className="text-[gray]">Created by Hazee</p>
+          <div className="flex items-center gap-1">
+            <p>Royalties</p>
+            <span className="p-1 rounded-md bg-abstract text-xs ml-1 font-medium">
+              2.5%
+            </span>
+          </div>
+        </div>
         <TruncateText
           text={
             "Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos aliaspraesentium asperiores tempora inventore ad? At vitae porro istedoloribus. Laborum enim ea omnis tempore, cupiditate dolorum, quodincidunt natus error alias beatae totam quia. Pariatur, a? Quod,accusantium eveniet sunt culpa ipsum soluta eius quae ea quaerat autemodit magnam eum id officiis aut omnis, cumque, repellendus explicabodeleniti sint illo nesciunt quas vero. Inventore doloribus temporaimpedit cupiditate debitis unde quia voluptatum culpa recusandae. Estamet harum atque soluta exercitationem porro, ex accusantium natusexplicabo? Doloremque, maiores non! Modi laborum expedita dignissimosdolorem sint nemo non error aperiam."

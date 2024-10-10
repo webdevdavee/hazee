@@ -1,7 +1,6 @@
 "use client";
 
 import Button from "../ui/Button";
-import { FaPlus } from "react-icons/fa6";
 import Modal from "@/components/layout/Modal";
 import { useOverlayStore } from "@/libs/zustand/overlayStore";
 import React from "react";
@@ -59,15 +58,10 @@ const NFTPurchaseCard: React.FC<Props> = ({ nft }) => {
           style="bg-white text-base font-medium w-full rounded-md"
           onclick={handleOpenModal}
         />
-        <div className="flex items-center gap-2 w-full">
-          <Button
-            text="Buy now"
-            style="bg-primary font-medium rounded-md w-full "
-          />
-          <button type="button" className="bg-white p-[0.85rem] rounded-lg">
-            <FaPlus color="#181818" />
-          </button>
-        </div>
+        <Button
+          text="Buy now"
+          style="bg-primary font-medium rounded-md w-full "
+        />
       </div>
     </section>
   );
