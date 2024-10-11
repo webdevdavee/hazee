@@ -9,6 +9,17 @@ const COINMARKETCAP_API_KEY = process.env.COINMARKETCAP_API_KEY || "";
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
+  networks: {
+    sepolia: {
+      url: SEPOLIA_RPC_URL,
+      accounts: [PRIVATE_KEY],
+      chainId: 11155111,
+    },
+    localhost: {
+      url: "http://127.0.0.1:8545/",
+      chainId: 31337,
+    },
+  },
   solidity: {
     version: "0.8.24",
     settings: {

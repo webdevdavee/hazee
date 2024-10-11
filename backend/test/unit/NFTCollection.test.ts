@@ -50,24 +50,21 @@ describe("NFTCollections", function () {
       await nftCreators.getAddress()
     );
 
-    nftMarketplaceFactory = (await ethers.getContractFactory(
-      "NFTMarketplace"
-    )) as unknown as NFTMarketplace__factory;
-    nftMarketplace = await nftMarketplaceFactory.deploy(
-      feeRecipient.address,
-      await nftCreators.getAddress(),
-      await nftAuction.getAddress(),
-      dummyAddress
-    );
-
     // Deploy NFTCollections
     const nftCollectionsFactory = (await ethers.getContractFactory(
       "NFTCollections"
     )) as unknown as NFTCollections__factory;
     nftCollections = await nftCollectionsFactory.deploy(
+      await nftCreators.getAddress()
+    );
+
+    nftMarketplaceFactory = (await ethers.getContractFactory(
+      "NFTMarketplace"
+    )) as unknown as NFTMarketplace__factory;
+    nftMarketplace = await nftMarketplaceFactory.deploy(
       await nftCreators.getAddress(),
       await nftAuction.getAddress(),
-      await nftMarketplace.getAddress()
+      await nftCollections.getAddress()
     );
 
     // Register creators

@@ -14,8 +14,8 @@ contract NFTCollections is Ownable, ReentrancyGuard {
     uint256 private constant MAX_ROYALTY_PERCENTAGE = 4000;
 
     NFTCreators private immutable i_creatorsContract;
-    NFTAuction private immutable i_auctionContract;
-    NFTMarketplace private immutable i_marketplaceContract;
+    address private auctionContract;
+    address private marketplaceContract;
 
     struct CollectionInfo {
         address creator;
@@ -99,14 +99,18 @@ contract NFTCollections is Ownable, ReentrancyGuard {
     error NotTokenOwner();
     error OffsetOutOfBounds();
 
-    constructor(
-        address _creatorsAddress,
-        address _auctionContractAddress,
-        address _marketplaceAddress
-    ) Ownable(msg.sender) {
+    constructor(address _creatorsAddress) Ownable(msg.sender) {
         i_creatorsContract = NFTCreators(_creatorsAddress);
-        i_auctionContract = NFTAuction(_auctionContractAddress);
-        i_marketplaceContract = NFTMarketplace(_marketplaceAddress);
+    }
+
+    function setAuctionContract(address _auctionContract) external onlyOwner {
+        auctionContract = _auctionContract;
+    }
+
+    function setMarketplaceContract(
+        address _marketplaceContract
+    ) external onlyOwner {
+        marketplaceContract = _marketplaceContract;
     }
 
     function createCollection(
@@ -124,8 +128,8 @@ contract NFTCollections is Ownable, ReentrancyGuard {
             _name,
             "NFT",
             address(i_creatorsContract),
-            address(i_auctionContract),
-            address(i_marketplaceContract)
+            auctionContract,
+            marketplaceContract
         );
 
         collections[newCollectionId] = CollectionInfo({
@@ -141,12 +145,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
             isActive: true
         });
 
-        emit CollectionAdded(
-            newCollectionId,
-            address(this),
-            msg.sender,
-            _name
-        );
+        emit CollectionAdded(newCollectionId, address(this), msg.sender, _name);
 
         return newCollectionId;
     }

@@ -35,8 +35,7 @@ describe("NFTMarketplace", function () {
   const INITIAL_PRICE = ethers.parseEther("1");
 
   beforeEach(async function () {
-    [owner, seller, buyer, feeRecipient, dummyAddress] =
-      await ethers.getSigners();
+    [owner, seller, buyer, dummyAddress] = await ethers.getSigners();
 
     nftCreatorsFactory = (await ethers.getContractFactory(
       "NFTCreators"
@@ -47,7 +46,7 @@ describe("NFTMarketplace", function () {
       "NFTAuction"
     )) as unknown as NFTAuction__factory;
     nftAuction = await nftAuctionFactory.deploy(
-      feeRecipient.address,
+      dummyAddress.address,
       await nftCreators.getAddress()
     );
 
@@ -55,16 +54,13 @@ describe("NFTMarketplace", function () {
       "NFTCollections"
     )) as unknown as NFTCollections__factory;
     nftCollections = await nftCollectionsFactory.deploy(
-      await nftCreators.getAddress(),
-      await nftAuction.getAddress(),
-      dummyAddress
+      await nftCreators.getAddress()
     );
 
     nftMarketplaceFactory = (await ethers.getContractFactory(
       "NFTMarketplace"
     )) as unknown as NFTMarketplace__factory;
     nftMarketplace = await nftMarketplaceFactory.deploy(
-      feeRecipient.address,
       await nftCreators.getAddress(),
       await nftAuction.getAddress(),
       await nftCollections.getAddress()
@@ -119,7 +115,14 @@ describe("NFTMarketplace", function () {
           .listNFT(await nft.getAddress(), 1, INITIAL_PRICE)
       )
         .to.emit(nftMarketplace, "NFTListed")
-        .withArgs(1, seller.address, await nft.getAddress(), 1, INITIAL_PRICE);
+        .withArgs(
+          1,
+          seller.address,
+          await nft.getAddress(),
+          1,
+          INITIAL_PRICE,
+          1
+        );
 
       const listing = await nftMarketplace.listings(1);
       expect(listing.isActive).to.be.true;
@@ -283,8 +286,8 @@ describe("NFTMarketplace", function () {
       const initialSellerBalance = await ethers.provider.getBalance(
         seller.address
       );
-      const initialFeeRecipientBalance = await ethers.provider.getBalance(
-        feeRecipient.address
+      const initialMarketplaceBalance = await ethers.provider.getBalance(
+        await nftMarketplace.getAddress()
       );
 
       const tx = await nftMarketplace
@@ -295,8 +298,8 @@ describe("NFTMarketplace", function () {
       const finalSellerBalance = await ethers.provider.getBalance(
         seller.address
       );
-      const finalFeeRecipientBalance = await ethers.provider.getBalance(
-        feeRecipient.address
+      const finalMarketplaceBalance = await ethers.provider.getBalance(
+        await nftMarketplace.getAddress()
       );
 
       const platformFee =
@@ -307,7 +310,7 @@ describe("NFTMarketplace", function () {
       expect(finalSellerBalance - initialSellerBalance).to.equal(
         sellerProceeds
       );
-      expect(finalFeeRecipientBalance - initialFeeRecipientBalance).to.equal(
+      expect(finalMarketplaceBalance - initialMarketplaceBalance).to.equal(
         platformFee
       );
     });

@@ -51,12 +51,11 @@ contract NFTMarketplace is ReentrancyGuard {
     event ListingPriceUpdated(uint256 listingId, uint256 newPrice);
 
     constructor(
-        address _feeRecipient,
         address _creatorsContractAddress,
         address _auctionContractAddress,
         address _collectionContractAddress
     ) {
-        i_feeRecipient = _feeRecipient;
+        i_feeRecipient = address(this);
         i_creatorsContract = NFTCreators(_creatorsContractAddress);
         i_auctionContract = NFTAuction(_auctionContractAddress);
         i_collectionContract = INFTCollections(_collectionContractAddress);
