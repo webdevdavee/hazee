@@ -3,6 +3,7 @@ import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import Overlay from "@/components/layout/Overlay";
 import { WalletProvider } from "@/context/WalletProvider";
+import { ToastProvider } from "@/context/ToastProvider";
 
 const dm_sans = DM_Sans({
   subsets: ["latin", "latin-ext"],
@@ -22,10 +23,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={dm_sans.className}>
-        <WalletProvider>
-          <Overlay />
-          {children}
-        </WalletProvider>
+        <ToastProvider>
+          <WalletProvider>
+            <Overlay />
+            {children}
+          </WalletProvider>
+        </ToastProvider>
       </body>
     </html>
   );

@@ -26,17 +26,24 @@ const Navbar = () => {
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const showOverlay = useOverlayStore((state) => state.showOverlay);
+  const hideOverlay = useOverlayStore((state) => state.hideOverlay);
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
     showOverlay();
   };
 
+  const handleConnectWallet = () => {
+    setIsModalOpen(false);
+    hideOverlay();
+    connectWallet();
+  };
+
   return (
     <>
       {isModalOpen && (
         <Modal title="Connect to Hazee" setIsModalOpen={setIsModalOpen}>
-          <ConnectWallet connectWallet={connectWallet} />
+          <ConnectWallet connectWallet={handleConnectWallet} />
         </Modal>
       )}
 
@@ -62,7 +69,7 @@ const Navbar = () => {
                   className="bg-secondary font-medium p-[0.6rem] rounded-full"
                   style={{ display: balance ? "block" : "none" }}
                 >
-                  {balance as string} ETH
+                  {parseInt(balance as string)} ETH
                 </p>
               </div>
             )}

@@ -2,7 +2,7 @@ import Image from "next/image";
 import React from "react";
 
 type Props = {
-  connectWallet: () => Promise<void>;
+  connectWallet: () => void;
 };
 
 const ConnectWallet: React.FC<Props> = ({ connectWallet }) => {

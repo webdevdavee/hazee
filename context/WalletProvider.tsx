@@ -3,6 +3,9 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { truncateAddress } from "@/libs/utils";
+import { creatorsContractABI } from "../backend/abi/CreatorsContract/CreatorsContract";
+import { NFTCreatorsAddress } from "../backend/constants";
+import { useToast } from "./ToastProvider";
 
 declare global {
   interface Window {
@@ -33,6 +36,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
+  const { showToast } = useToast(); // Use the toast context
 
   useEffect(() => {
     checkIfWalletIsConnected();
@@ -43,14 +47,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       if (typeof window.ethereum !== "undefined") {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const accounts = await provider.listAccounts();
-        const getBalance = await provider.getBalance(accounts[0].address);
         if (accounts.length > 0) {
           setWalletAddress(accounts[0].address);
+          const getBalance = await provider.getBalance(accounts[0].address);
           setBalance(ethers.formatEther(getBalance));
         }
       }
     } catch (error) {
       console.error("Error checking if wallet is connected:", error);
+      showToast("Failed to check wallet connection", "error");
     }
   };
 
@@ -60,16 +65,45 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         const provider = new ethers.BrowserProvider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
         const signer = await provider.getSigner();
-        const address = await signer.getAddress();
-        setWalletAddress(address);
-        const getBalance = await provider.getBalance(address);
+        const userAddress = await signer.getAddress();
+        setWalletAddress(userAddress);
+
+        const getBalance = await provider.getBalance(userAddress);
         setBalance(ethers.formatEther(getBalance));
-        window.location.reload();
+
+        showToast("Wallet connected successfully", "success");
+
+        const creatorContract = new ethers.Contract(
+          NFTCreatorsAddress,
+          creatorsContractABI,
+          signer
+        );
+
+        try {
+          const isRegistered = await creatorContract.isAddressRegistered(
+            userAddress
+          );
+          if (!isRegistered) {
+            console.log("Registering as a creator...");
+            const tx = await creatorContract.registerCreator();
+            await tx.wait();
+            showToast("Registration successful!", "success");
+          } else {
+            showToast("Already registered as a creator", "info");
+          }
+        } catch (checkError) {
+          console.error("Error during contract interaction:", checkError);
+          showToast("Error during creator registration", "error");
+        }
       } else {
-        alert("Please install MetaMask or another Ethereum wallet");
+        showToast(
+          "Please install MetaMask or another Ethereum wallet",
+          "error"
+        );
       }
     } catch (error) {
       console.error("Error connecting wallet:", error);
+      showToast("Failed to connect wallet. Please try again.", "error");
     }
   };
 
@@ -90,6 +124,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     } catch (error) {
       console.error("Error checking wallet connection:", error);
+      showToast("Error checking wallet connection", "error");
     }
 
     return false;
