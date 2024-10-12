@@ -87,7 +87,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
             console.log("Registering as a creator...");
             const tx = await creatorContract.registerCreator();
             await tx.wait();
-            showToast("Registration successful!", "success");
+            showToast("Registration successful", "success");
           } else {
             showToast("Already registered as a creator", "info");
           }
