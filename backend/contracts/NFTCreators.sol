@@ -70,6 +70,16 @@ contract NFTCreators {
         return newCreatorId;
     }
 
+    function isCreatorRegistered(uint256 creatorId) public view returns (bool) {
+        return creators[creatorId].userAddress != address(0);
+    }
+
+    function isAddressRegistered(
+        address userAddress
+    ) public view returns (bool) {
+        return creatorIdByAddress[userAddress] != 0;
+    }
+
     function addCreatedNFT(uint256 creatorId, uint256 tokenId) external {
         require(
             creators[creatorId].userAddress != address(0),

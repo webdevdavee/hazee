@@ -39,6 +39,36 @@ describe("NFTCreators", function () {
     });
   });
 
+  describe("isCreatorRegistered", function () {
+    it("should return true for a registered creator", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      const isRegistered = await nftCreators.isCreatorRegistered(1);
+      expect(isRegistered).to.be.true;
+    });
+
+    it("should return false for an unregistered creator ID", async function () {
+      const isRegistered = await nftCreators.isCreatorRegistered(999);
+      expect(isRegistered).to.be.false;
+    });
+  });
+
+  describe("isAddressRegistered", function () {
+    it("should return true for a registered address", async function () {
+      await nftCreators.connect(creator1).registerCreator();
+      const isRegistered = await nftCreators.isAddressRegistered(
+        creator1.address
+      );
+      expect(isRegistered).to.be.true;
+    });
+
+    it("should return false for an unregistered address", async function () {
+      const isRegistered = await nftCreators.isAddressRegistered(
+        nonCreator.address
+      );
+      expect(isRegistered).to.be.false;
+    });
+  });
+
   describe("addCreatedNFT", function () {
     it("should add a created NFT to the creator's list", async function () {
       await nftCreators.connect(creator1).registerCreator();
