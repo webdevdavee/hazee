@@ -36,7 +36,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
-  const { showToast } = useToast(); // Use the toast context
+  const { showToast } = useToast();
 
   useEffect(() => {
     checkIfWalletIsConnected();
