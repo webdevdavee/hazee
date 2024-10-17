@@ -4,6 +4,9 @@ import "./globals.css";
 import Overlay from "@/components/layout/Overlay";
 import { WalletProvider } from "@/context/WalletProvider";
 import { ToastProvider } from "@/context/ToastProvider";
+import { NFTCreatorsProvider } from "@/context/NFTCreatorProvider";
+import { NFTMarketplaceProvider } from "@/context/NFTMarketplaceProvider";
+import { NFTAuctionProvider } from "@/context/NFTAuctionProvider";
 
 const dm_sans = DM_Sans({
   subsets: ["latin", "latin-ext"],
@@ -25,8 +28,14 @@ export default function RootLayout({
       <body className={dm_sans.className}>
         <ToastProvider>
           <WalletProvider>
-            <Overlay />
-            {children}
+            <NFTCreatorsProvider>
+              <NFTMarketplaceProvider>
+                <NFTAuctionProvider>
+                  <Overlay />
+                  {children}
+                </NFTAuctionProvider>
+              </NFTMarketplaceProvider>
+            </NFTCreatorsProvider>
           </WalletProvider>
         </ToastProvider>
       </body>

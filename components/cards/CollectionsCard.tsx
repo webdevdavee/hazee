@@ -4,10 +4,10 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 
 type Props = {
-  collection: Collection;
+  data: number;
 };
 
-const CollectionsCard: React.FC<Props> = ({ collection }) => {
+const CollectionsCard: React.FC<Props> = ({ data }) => {
   return (
     <motion.div
       whileHover={{ y: -10 }}

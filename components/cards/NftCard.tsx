@@ -1,13 +1,38 @@
 import Image from "next/image";
 import { LuHeart } from "react-icons/lu";
 import Link from "next/link";
+import { useNFTMarketplace } from "@/context/NFTMarketplaceProvider";
+import React from "react";
+import { useNFTAuction } from "@/context/NFTAuctionProvider";
 
 type Props = {
   type: string;
-  nft: sampleNft;
+  data: number;
 };
 
-const NftCard: React.FC<Props> = ({ type, nft }) => {
+const NftCard: React.FC<Props> = ({ type, data }) => {
+  const { getListingDetails, isContractReady } = useNFTMarketplace();
+  const [token, setToken] = React.useState<NFTListing | null>();
+  const [auctionDetails, setAuctionDetails] =
+    React.useState<AuctionDetails | null>(null);
+  const [bidAmount, setBidAmount] = React.useState("");
+  const { getAuctionDetails, placeBid, isNFTOnAuction, endAuction } =
+    useNFTAuction();
+
+  React.useEffect(() => {
+    if (isContractReady) {
+      const fetchtokens = async () => {
+        setToken(await getListingDetails(data));
+        const isOnAuction = await isNFTOnAuction(data);
+        if (isOnAuction) {
+          const details = await getAuctionDetails(data);
+          setAuctionDetails(details);
+        }
+      };
+      fetchtokens();
+    }
+  }, [isContractReady, data]);
+
   return (
     <section className="relative group">
       {/* Rainbow border */}
@@ -15,9 +40,9 @@ const NftCard: React.FC<Props> = ({ type, nft }) => {
 
       {/* Card content */}
       <div className="relative rounded-3xl overflow-hidden">
-        <Link href={`/nft/${nft.id}`} className="relative">
+        <Link href={`/nft/${token?.listingId}`} className="relative">
           <Image
-            src={nft.src}
+            src={token?.imageUrl as string}
             width={300}
             height={300}
             quality={100}
@@ -35,40 +60,46 @@ const NftCard: React.FC<Props> = ({ type, nft }) => {
               <div className="flex flex-col">
                 <p className="text-sm text-gray-400">@Hazee</p>
                 <Link href="#" className="font-medium">
-                  {nft.name}
+                  {token?.name}
                 </Link>
               </div>
-              <Link
-                href="#"
-                className="bg-abstract font-medium
+              {token?.saleType === 2 ||
+                (token?.saleType === 3 && (
+                  <Link
+                    href="#"
+                    className="bg-abstract font-medium
                 border border-base p-[0.6rem] rounded-full"
-              >
-                Place bid
-              </Link>
+                  >
+                    Place bid
+                  </Link>
+                ))}
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <p className="text-sm text-gray-400">Current bid</p>
-                <p>{nft.bid}</p>
-              </div>
-              <div className="flex flex-col">
-                <p className="text-sm text-gray-400">Ending in</p>
-                <p>{nft.ends}</p>
-              </div>
-            </div>
+            {token?.saleType === 2 ||
+              (token?.saleType === 3 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <p className="text-sm text-gray-400">Current bid</p>
+                    <p>{auctionDetails?.highestBid}</p>
+                  </div>
+                  <div className="flex flex-col">
+                    <p className="text-sm text-gray-400">Ending in</p>
+                    <p>{auctionDetails?.endTime}</p>
+                  </div>
+                </div>
+              ))}
           </div>
         ) : (
           <div className="flex flex-col gap-3 bg-secondary p-3">
             <div className="flex flex-col">
               <p className="text-sm text-gray-400">@Hazee</p>
               <Link href="#" className="font-medium">
-                {nft.name}
+                {token?.name}
               </Link>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex flex-col">
                 <p className="text-sm text-gray-400">Price</p>
-                <p>{nft.price}</p>
+                <p>{token?.price}</p>
               </div>
               <Link
                 href="#"

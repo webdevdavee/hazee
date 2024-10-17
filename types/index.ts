@@ -18,15 +18,13 @@ type Collection = {
   src: string[];
 };
 
-type Creator = {
+type User = {
   id: number;
+  email: string;
+  walletAddress: string;
   username: string;
-  name: string;
-  src: string;
-  owns: number;
-  sold: number;
-  created: number;
-  cover: string;
+  photo: string;
+  coverphoto: string;
 };
 
 type DropdownItem = {
@@ -44,3 +42,36 @@ type TruncateTextProps = {
   maxChars: number;
   className?: string;
 };
+
+interface NFTListing {
+  listingId: number;
+  seller: string;
+  nftContract: string;
+  tokenId: number;
+  price: string;
+  isActive: boolean;
+  saleType: number;
+  // Additional metadata from NFT contract
+  name?: string;
+  description?: string;
+  imageUrl?: string;
+}
+
+interface Bid {
+  bidder: string;
+  amount: string;
+  timestamp: number;
+}
+
+interface AuctionDetails {
+  seller: string;
+  tokenId: number;
+  startingPrice: string;
+  reservePrice: string;
+  endTime: number;
+  highestBidder: string;
+  highestBid: string;
+  ended: boolean;
+  active: boolean;
+  bids: Bid[];
+}

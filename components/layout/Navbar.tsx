@@ -23,8 +23,13 @@ const Navbar = () => {
     { id: 2, label: "Collection", link: "/studio/collection" },
   ]);
 
-  const { connectWallet, truncatedAddress, balance, isWalletConnected } =
-    useWallet();
+  const {
+    walletAddress,
+    connectWallet,
+    truncatedAddress,
+    balance,
+    isWalletConnected,
+  } = useWallet();
   const [walletConnection, setWalletConnection] = React.useState<boolean>();
 
   React.useEffect(() => {
@@ -100,16 +105,18 @@ const Navbar = () => {
               <>
                 {!walletConnection ? (
                   <Button
-                    text={truncatedAddress as string}
+                    text="Connect wallet"
                     style="bg-primary font-medium"
                     onclick={handleOpenModal}
                   />
                 ) : (
                   <div className="flex items-center gap-3">
-                    <Button
-                      text={truncatedAddress as string}
-                      style="bg-primary font-medium"
-                    />
+                    <Link href={`/creator/${walletAddress}`}>
+                      <Button
+                        text={truncatedAddress as string}
+                        style="bg-primary font-medium"
+                      />
+                    </Link>
                     <p
                       className="bg-secondary font-medium p-[0.6rem] rounded-full"
                       style={{ display: balance ? "block" : "none" }}

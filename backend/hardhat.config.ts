@@ -20,6 +20,10 @@ const config: HardhatUserConfig = {
       chainId: 31337,
     },
   },
+  typechain: {
+    outDir: "typechain-types",
+    target: "ethers-v6",
+  },
   solidity: {
     version: "0.8.24",
     settings: {

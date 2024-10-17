@@ -1,17 +1,32 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "../ui/Button";
-import { collections, sampleNfts } from "@/constants";
 import NftCard from "../cards/NftCard";
 import CollectionsCard from "../cards/CollectionsCard";
+import { useNFTCreators } from "@/context/NFTCreatorProvider";
 
 type Props = {
-  creator: Creator | undefined;
+  userWalletAddress: string;
 };
 
-const CreatorItemsTab: React.FC<Props> = ({ creator }) => {
+const CreatorItemsTab: React.FC<Props> = ({ userWalletAddress }) => {
+  const { getUserInfo, currentUser, isContractReady } = useNFTCreators();
+
+  React.useEffect(() => {
+    if (isContractReady && userWalletAddress) {
+      getUserInfo(userWalletAddress);
+    }
+  }, [userWalletAddress, isContractReady]);
+
+  console.log(currentUser);
+
   const [tab, setTab] = React.useState("Created");
-  const tabs = ["Created", "Owned", "Collections", `Sold: ${creator?.sold}K`];
+  const tabs = [
+    "Created",
+    "Owned",
+    "Collections",
+    `Sold: ${currentUser?.itemsSold}`,
+  ];
 
   const handleSelectTabs = (tab: string) => {
     if (tab.includes("Sold:")) return;
@@ -30,9 +45,18 @@ const CreatorItemsTab: React.FC<Props> = ({ creator }) => {
         return (
           <div>
             <div className="mt-4 grid grid-cols-4 gap-6">
-              {sampleNfts.map((nft) => (
-                <NftCard key={nft.id} type="list" nft={nft} />
-              ))}
+              {currentUser?.createdNFTs &&
+              currentUser?.createdNFTs.length > 0 ? (
+                currentUser?.createdNFTs.map((tokenId, index) => (
+                  <NftCard
+                    key={`${tokenId}-${index}`}
+                    type="list"
+                    data={tokenId}
+                  />
+                ))
+              ) : (
+                <h3 className="mt-3">No data to show</h3>
+              )}
             </div>
           </div>
         );
@@ -40,9 +64,17 @@ const CreatorItemsTab: React.FC<Props> = ({ creator }) => {
         return (
           <div>
             <div className="mt-4 grid grid-cols-4 gap-6">
-              {sampleNfts.map((nft) => (
-                <NftCard key={nft.id} type="list" nft={nft} />
-              ))}
+              {currentUser?.ownedNFTs && currentUser?.ownedNFTs.length > 0 ? (
+                currentUser?.ownedNFTs.map((tokenId, index) => (
+                  <NftCard
+                    key={`${tokenId}-${index}`}
+                    type="list"
+                    data={tokenId}
+                  />
+                ))
+              ) : (
+                <h3 className="mt-3">No data to show</h3>
+              )}
             </div>
           </div>
         );
@@ -50,9 +82,17 @@ const CreatorItemsTab: React.FC<Props> = ({ creator }) => {
         return (
           <div>
             <div className="mt-4 grid grid-cols-4 gap-6">
-              {collections.map((collection) => (
-                <CollectionsCard key={collection.id} collection={collection} />
-              ))}
+              {currentUser?.createdCollections &&
+              currentUser?.createdCollections.length > 0 ? (
+                currentUser?.createdCollections.map((collectionId, index) => (
+                  <CollectionsCard
+                    key={`${collectionId}-${index}`}
+                    data={collectionId}
+                  />
+                ))
+              ) : (
+                <h3 className="mt-3">No data to show</h3>
+              )}
             </div>
           </div>
         );

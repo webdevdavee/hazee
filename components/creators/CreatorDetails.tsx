@@ -7,13 +7,19 @@ import React from "react";
 import { FaLink } from "react-icons/fa";
 import { IoCopyOutline } from "react-icons/io5";
 import CreatorItemsTab from "./CreatorItemsTab";
+import { truncateAddress } from "@/libs/utils";
 
 type Props = {
-  creator: Creator | undefined;
+  userWalletAddress: string;
+  userDetails: User;
 };
 
-const CreatorDetails: React.FC<Props> = ({ creator }) => {
-  const creatorsAddress = "0x0937...383h47sd";
+const CreatorDetails: React.FC<Props> = ({
+  userWalletAddress,
+  userDetails,
+}) => {
+  const dummyCreatorsAddress = "0x0000...00000ASddx";
+
   const { copyToClipboard: copyAddress, copyStatus: copyAddressStatus } =
     useCopyToClipboard();
   const { copyToClipboard: copyCreatorUrl, copyStatus: copyCreatorUrlStatus } =
@@ -35,32 +41,46 @@ const CreatorDetails: React.FC<Props> = ({ creator }) => {
     <section>
       <div>
         <div className="flex items-center justify-center rounded-xl overflow-hidden h-80">
-          <Image
-            src={creator?.cover as string}
-            width={1000}
-            height={1000}
-            quality={100}
-            alt={creator?.name as string}
-            className="w-full object-cover"
-          />
+          {!userDetails?.coverphoto ? (
+            <div className="w-full h-full object-cover bg-secondary" />
+          ) : (
+            <Image
+              src={userDetails?.coverphoto as string}
+              width={1000}
+              height={1000}
+              quality={100}
+              alt={userDetails?.username || "Unnamed"}
+              className="w-full object-cover"
+            />
+          )}
         </div>
         <div className="w-fit rounded-full overflow-hidden -mt-20 ml-6">
           <Image
-            src={creator?.src as string}
+            src={userDetails?.photo || "/images/default-avatar.webp"}
             width={150}
             height={150}
             quality={100}
-            alt={creator?.name as string}
+            alt={userDetails?.username || "Unnamed"}
             className="object-cover h-[9.5rem]"
           />
         </div>
       </div>
       <div>
-        <h1 className="mt-3 font-medium">{creator?.name}</h1>
+        <h1 className="mt-3 font-medium">
+          {userDetails?.username || "Unnamed"}
+        </h1>
         <span className="flex items-center gap-5">
           <div className="flex items-center gap-2">
-            <p className="text-[gray]">Address: {creatorsAddress}</p>
-            <button type="button" onClick={() => copyAddress(creatorsAddress)}>
+            <div className="flex items-center gap-2">
+              <p>Address: </p>
+              <p className="text-[gray]">
+                {truncateAddress(userWalletAddress) || dummyCreatorsAddress}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => copyAddress(dummyCreatorsAddress)}
+            >
               {copyAddressStatus === "copied" ? (
                 "Copied"
               ) : (
@@ -81,7 +101,7 @@ const CreatorDetails: React.FC<Props> = ({ creator }) => {
           </button>
         </span>
       </div>
-      <CreatorItemsTab creator={creator} />
+      <CreatorItemsTab userWalletAddress={userWalletAddress} />
     </section>
   );
 };

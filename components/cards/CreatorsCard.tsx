@@ -14,7 +14,7 @@ const CreatorsCard: React.FC<Props> = ({ creator }) => {
       transition={{ duration: 0.3 }}
       className="w-full rounded-2xl overflow-hidden"
     >
-      <Link href={`/creators/${creator.id}`} className="block">
+      <Link href={`/creator/${creator.id}`} className="block">
         <section className="bg-secondary p-4 relative">
           <div className="relative rounded-xl overflow-hidden">
             <div className="w-full flex items-center justify-center">
