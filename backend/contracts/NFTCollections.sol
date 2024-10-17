@@ -18,6 +18,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
     address private marketplaceContract;
 
     struct CollectionInfo {
+        uint256 collectionId;
         address creator;
         address currentOwner;
         string name;
@@ -133,6 +134,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         );
 
         collections[newCollectionId] = CollectionInfo({
+            collectionId: newCollectionId,
             creator: msg.sender,
             currentOwner: msg.sender,
             name: _name,
@@ -148,6 +150,10 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         emit CollectionAdded(newCollectionId, address(this), msg.sender, _name);
 
         return newCollectionId;
+    }
+
+    function getTotalCollectionsCount() public view returns (uint256) {
+        return collectionCounter;
     }
 
     function mintNFT(
