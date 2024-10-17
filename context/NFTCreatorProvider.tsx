@@ -13,14 +13,18 @@ import { NFTCreatorsContractAddress } from "../backend/constants";
 import { useToast } from "./ToastProvider";
 import { useWallet } from "./WalletProvider";
 
-interface Creator {
-  creatorId: number;
-  userAddress: string;
-  createdNFTs: number[];
-  ownedNFTs: number[];
-  createdCollections: number[];
-  itemsSold: number;
-  walletBalance: number;
+interface Activity {
+  actionType: string;
+  timestamp: number;
+  relatedItemId: number;
+}
+
+interface CollectionOffer {
+  amount: number;
+  nftCount: number;
+  timestamp: number;
+  expirationTime: number;
+  isActive: boolean;
 }
 
 interface NFTCreatorsContextType {
@@ -29,6 +33,49 @@ interface NFTCreatorsContextType {
   getUserInfo: (address: string) => Promise<void>;
   isLoading: boolean;
   isContractReady: boolean;
+  registerCreator: () => Promise<number>;
+  isCreatorRegistered: (creatorId: number) => Promise<boolean>;
+  isAddressRegistered: (address: string) => Promise<boolean>;
+  addCreatedNFT: (creatorId: number, tokenId: number) => Promise<void>;
+  addOwnedNFT: (creatorId: number, tokenId: number) => Promise<void>;
+  addCreatedCollection: (
+    creatorId: number,
+    collectionId: number
+  ) => Promise<void>;
+  recordActivity: (
+    creatorId: number,
+    actionType: string,
+    relatedItemId: number
+  ) => Promise<void>;
+  updateCollectionOffer: (
+    creatorId: number,
+    collectionId: number,
+    offerAmount: number,
+    nftCount: number,
+    expirationTime: number
+  ) => Promise<void>;
+  removeCollectionOffer: (
+    creatorId: number,
+    collectionId: number
+  ) => Promise<void>;
+  updateBid: (
+    creatorId: number,
+    auctionId: number,
+    bidAmount: number
+  ) => Promise<void>;
+  updateItemsSold: (creatorId: number) => Promise<void>;
+  updateWalletBalance: (creatorId: number, newBalance: number) => Promise<void>;
+  getAllCreators: () => Promise<Creator[]>;
+  getCreatorInfo: (creatorId: number) => Promise<Creator>;
+  getCreatorActivities: (creatorId: number) => Promise<Activity[]>;
+  getCreatorIdByAddress: (address: string) => Promise<number>;
+  removeOwnedNFT: (creatorId: number, tokenId: number) => Promise<void>;
+  getCreatorCollectionOffers: (
+    creatorId: number,
+    collectionId: number
+  ) => Promise<CollectionOffer>;
+  getCreatorBids: (creatorId: number, auctionId: number) => Promise<number>;
+  getCreatorCount: () => Promise<number>;
 }
 
 const NFTCreatorsContext = createContext<NFTCreatorsContextType | undefined>(
@@ -133,12 +180,166 @@ export const NFTCreatorsProvider: React.FC<NFTCreatorsProviderProps> = ({
     }
   };
 
+  const registerCreator = async () => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    const tx = await contract.registerCreator();
+    const receipt = await tx.wait();
+    const event = receipt.events.find(
+      (e: any) => e.event === "CreatorRegistered"
+    );
+    return Number(event.args.creatorId);
+  };
+
+  const isCreatorRegistered = async (creatorId: number) => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    return contract.isCreatorRegistered(creatorId);
+  };
+
+  const isAddressRegistered = async (address: string) => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    return contract.isAddressRegistered(address);
+  };
+
+  const addCreatedNFT = async (creatorId: number, tokenId: number) => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    await contract.addCreatedNFT(creatorId, tokenId);
+  };
+
+  const addOwnedNFT = async (creatorId: number, tokenId: number) => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    await contract.addOwnedNFT(creatorId, tokenId);
+  };
+
+  const addCreatedCollection = async (
+    creatorId: number,
+    collectionId: number
+  ) => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    await contract.addCreatedCollection(creatorId, collectionId);
+  };
+
+  const recordActivity = async (
+    creatorId: number,
+    actionType: string,
+    relatedItemId: number
+  ) => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    await contract.recordActivity(creatorId, actionType, relatedItemId);
+  };
+
+  const updateCollectionOffer = async (
+    creatorId: number,
+    collectionId: number,
+    offerAmount: number,
+    nftCount: number,
+    expirationTime: number
+  ) => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    await contract.updateCollectionOffer(
+      creatorId,
+      collectionId,
+      offerAmount,
+      nftCount,
+      expirationTime
+    );
+  };
+
+  const removeCollectionOffer = async (
+    creatorId: number,
+    collectionId: number
+  ) => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    await contract.removeCollectionOffer(creatorId, collectionId);
+  };
+
+  const updateBid = async (
+    creatorId: number,
+    auctionId: number,
+    bidAmount: number
+  ) => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    await contract.updateBid(creatorId, auctionId, bidAmount);
+  };
+
+  const updateItemsSold = async (creatorId: number) => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    await contract.updateItemsSold(creatorId);
+  };
+
+  const updateWalletBalance = async (creatorId: number, newBalance: number) => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    await contract.updateWalletBalance(creatorId, newBalance);
+  };
+
+  const getAllCreators = async () => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    return contract.getAllCreators();
+  };
+
+  const getCreatorInfo = async (creatorId: number) => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    return contract.getCreatorInfo(creatorId);
+  };
+
+  const getCreatorActivities = async (creatorId: number) => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    return contract.getCreatorActivities(creatorId);
+  };
+
+  const getCreatorIdByAddress = async (address: string) => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    return contract.getCreatorIdByAddress(address);
+  };
+
+  const removeOwnedNFT = async (creatorId: number, tokenId: number) => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    await contract.removeOwnedNFT(creatorId, tokenId);
+  };
+
+  const getCreatorCollectionOffers = async (
+    creatorId: number,
+    collectionId: number
+  ) => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    return contract.getCreatorCollectionOffers(creatorId, collectionId);
+  };
+
+  const getCreatorBids = async (creatorId: number, auctionId: number) => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    return contract.getCreatorBids(creatorId, auctionId);
+  };
+
+  const getCreatorCount = async () => {
+    if (!contract || !isContractReady) throw new Error("Contract not ready");
+    return contract.getCreatorCount();
+  };
+
   const value = {
     contract,
     currentUser,
     getUserInfo,
     isLoading,
     isContractReady,
+    registerCreator,
+    isCreatorRegistered,
+    isAddressRegistered,
+    addCreatedNFT,
+    addOwnedNFT,
+    addCreatedCollection,
+    recordActivity,
+    updateCollectionOffer,
+    removeCollectionOffer,
+    updateBid,
+    updateItemsSold,
+    updateWalletBalance,
+    getAllCreators,
+    getCreatorInfo,
+    getCreatorActivities,
+    getCreatorIdByAddress,
+    removeOwnedNFT,
+    getCreatorCollectionOffers,
+    getCreatorBids,
+    getCreatorCount,
   };
 
   return (

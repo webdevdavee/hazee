@@ -41,3 +41,10 @@ export const bidPriceSchema = z.object({
 });
 
 export type TBidPriceSchema = z.infer<typeof bidPriceSchema>;
+
+export const editProfileSchema = z.object({
+  username: z.string().min(3, "Use 3 characters or more"),
+  email: z.string().email(),
+});
+
+export type TEditProfileSchema = z.infer<typeof editProfileSchema>;

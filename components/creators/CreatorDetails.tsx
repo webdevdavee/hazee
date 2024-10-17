@@ -8,6 +8,8 @@ import { FaLink } from "react-icons/fa";
 import { IoCopyOutline } from "react-icons/io5";
 import CreatorItemsTab from "./CreatorItemsTab";
 import { truncateAddress } from "@/libs/utils";
+import { IoSettingsOutline } from "react-icons/io5";
+import Link from "next/link";
 
 type Props = {
   userWalletAddress: string;
@@ -18,8 +20,6 @@ const CreatorDetails: React.FC<Props> = ({
   userWalletAddress,
   userDetails,
 }) => {
-  const dummyCreatorsAddress = "0x0000...00000ASddx";
-
   const { copyToClipboard: copyAddress, copyStatus: copyAddressStatus } =
     useCopyToClipboard();
   const { copyToClipboard: copyCreatorUrl, copyStatus: copyCreatorUrlStatus } =
@@ -65,41 +65,52 @@ const CreatorDetails: React.FC<Props> = ({
           />
         </div>
       </div>
-      <div>
-        <h1 className="mt-3 font-medium">
-          {userDetails?.username || "Unnamed"}
-        </h1>
-        <span className="flex items-center gap-5">
-          <div className="flex items-center gap-2">
+      <div className="flex justify-between">
+        <div>
+          <h1 className="mt-3 font-medium">
+            {userDetails?.username || "Unnamed"}
+          </h1>
+          <span className="flex items-center gap-5">
             <div className="flex items-center gap-2">
-              <p>Address: </p>
-              <p className="text-[gray]">
-                {truncateAddress(userWalletAddress) || dummyCreatorsAddress}
-              </p>
+              <div className="flex items-center gap-2">
+                <p>Address: </p>
+                <p className="text-[gray]">
+                  {truncateAddress(userWalletAddress) ||
+                    "Couldn't load address"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => copyAddress(userWalletAddress)}
+                disabled={!userWalletAddress}
+              >
+                {copyAddressStatus === "copied" ? (
+                  "Copied"
+                ) : (
+                  <IoCopyOutline size={15} />
+                )}
+              </button>
             </div>
             <button
               type="button"
-              onClick={() => copyAddress(dummyCreatorsAddress)}
+              className="w-fit bg-secondary p-2 rounded-md text-sm"
+              onClick={() => copyCreatorUrl(fullURL)}
             >
-              {copyAddressStatus === "copied" ? (
-                "Copied"
+              {copyCreatorUrlStatus === "copied" ? (
+                "Link copied!"
               ) : (
-                <IoCopyOutline size={15} />
+                <FaLink size={15} />
               )}
             </button>
-          </div>
-          <button
-            type="button"
-            className="w-fit bg-secondary p-2 rounded-md text-sm"
-            onClick={() => copyCreatorUrl(fullURL)}
-          >
-            {copyCreatorUrlStatus === "copied" ? (
-              "Link copied!"
-            ) : (
-              <FaLink size={15} />
-            )}
-          </button>
-        </span>
+          </span>
+        </div>
+        <Link
+          href="/creator/settings"
+          className="p-2 rounded-md bg-secondary flex items-center gap-3 h-fit transition cursor-pointer hover:bg-secondaryhover"
+        >
+          <IoSettingsOutline size={20} />
+          <p>Settings</p>
+        </Link>
       </div>
       <CreatorItemsTab userWalletAddress={userWalletAddress} />
     </section>

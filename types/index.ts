@@ -43,6 +43,16 @@ type TruncateTextProps = {
   className?: string;
 };
 
+interface Creator {
+  creatorId: number;
+  userAddress: string;
+  createdNFTs: number[];
+  ownedNFTs: number[];
+  createdCollections: number[];
+  itemsSold: number;
+  walletBalance: number;
+}
+
 interface NFTListing {
   listingId: number;
   seller: string;
