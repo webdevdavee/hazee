@@ -70,6 +70,10 @@ contract NFTCreators {
         return newCreatorId;
     }
 
+    function getCreatorCount() public view returns (uint256) {
+        return allCreatorIds.length;
+    }
+
     function isCreatorRegistered(uint256 creatorId) public view returns (bool) {
         return creators[creatorId].userAddress != address(0);
     }
