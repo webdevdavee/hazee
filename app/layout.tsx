@@ -7,6 +7,7 @@ import { ToastProvider } from "@/context/ToastProvider";
 import { NFTCreatorsProvider } from "@/context/NFTCreatorProvider";
 import { NFTMarketplaceProvider } from "@/context/NFTMarketplaceProvider";
 import { NFTAuctionProvider } from "@/context/NFTAuctionProvider";
+import { NFTCollectionsProvider } from "@/context/NFTCollectionProvider";
 
 const dm_sans = DM_Sans({
   subsets: ["latin", "latin-ext"],
@@ -31,8 +32,10 @@ export default function RootLayout({
             <NFTCreatorsProvider>
               <NFTMarketplaceProvider>
                 <NFTAuctionProvider>
-                  <Overlay />
-                  {children}
+                  <NFTCollectionsProvider>
+                    <Overlay />
+                    {children}
+                  </NFTCollectionsProvider>
                 </NFTAuctionProvider>
               </NFTMarketplaceProvider>
             </NFTCreatorsProvider>

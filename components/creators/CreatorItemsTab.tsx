@@ -87,7 +87,7 @@ const CreatorItemsTab: React.FC<Props> = ({ userWalletAddress }) => {
                 currentUser?.createdCollections.map((collectionId, index) => (
                   <CollectionsCard
                     key={`${collectionId}-${index}`}
-                    data={collectionId}
+                    collectionId={collectionId}
                   />
                 ))
               ) : (

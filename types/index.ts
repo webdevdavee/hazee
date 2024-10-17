@@ -75,3 +75,18 @@ interface AuctionDetails {
   active: boolean;
   bids: Bid[];
 }
+
+interface CollectionInfo {
+  collectionId: number;
+  creator: string;
+  currentOwner: string;
+  name: string;
+  nftContract: string;
+  maxSupply: number;
+  mintedSupply: number;
+  royaltyPercentage: number;
+  floorPrice: string;
+  owners: number;
+  isActive: boolean;
+  imageUrl?: string;
+}

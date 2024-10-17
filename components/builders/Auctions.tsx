@@ -1,62 +1,59 @@
 "use client";
 
-import { IoIosArrowDown } from "react-icons/io";
 import Button from "../ui/Button";
 import NftCard from "../cards/NftCard";
-import { sampleNfts } from "@/constants";
 import React from "react";
-import Dropdown from "../ui/Dropdown";
-import useDropdown from "@/hooks/useDropdown";
+import { useWallet } from "@/context/WalletProvider";
+import { useNFTMarketplace } from "@/context/NFTMarketplaceProvider";
 
 const Auctions = () => {
-  const auctionDropdown = useDropdown([{ id: 1, label: "New", link: "/" }]);
+  const { walletAddress } = useWallet();
+  const { getActiveListings, listings, isContractReady } = useNFTMarketplace();
+
+  const [offset, setOffset] = React.useState(0);
+  const [limit] = React.useState(4);
+
+  React.useEffect(() => {
+    if (isContractReady && walletAddress) {
+      const fetchTokens = async () => {
+        await getActiveListings(offset, limit);
+      };
+      fetchTokens();
+    }
+  }, [walletAddress, isContractReady, limit, offset]);
+
+  const loadMoreTokens = () => {
+    setOffset((prev) => prev + limit);
+  };
 
   return (
     <section className="w-full">
       <div>
         <div className="flex items-center gap-8">
           <h1>Auctions</h1>
-          <div
-            onMouseOver={auctionDropdown.toggle}
-            onMouseOut={auctionDropdown.toggle}
-          >
-            <div className="flex items-center gap-3 border border-secondary text-sm py-2 px-3 rounded-full">
-              <p>Popular</p>
-              <IoIosArrowDown />
-            </div>
-            <div className="relative">
-              <Dropdown
-                items={auctionDropdown.items}
-                isOpen={auctionDropdown.isOpen}
-              />
-            </div>
-          </div>
-
-          <ul className="flex items-center gap-4">
-            <Button text="All" style="bg-primary text-sm px-4" />
-            <Button
-              text="Art"
-              style="border border-secondary text-sm px-4 hover:bg-secondary hover:transition"
-            />
-            <Button
-              text="Gaming"
-              style="border border-secondary text-sm px-4 hover:bg-secondary hover:transition"
-            />
-            <Button
-              text="Music"
-              style="border border-secondary text-sm px-4 hover:bg-secondary hover:transition"
-            />
-          </ul>
         </div>
-        <div className="w-full grid grid-cols-4 justify-center gap-6 mt-6">
-          {sampleNfts.slice(0, 4).map((nft) => (
-            <NftCard key={nft.id} nft={nft} type="auction" />
-          ))}
-        </div>
+        {listings && listings.length > 0 ? (
+          listings.map(
+            (listing, index) =>
+              listing.saleType === 2 ||
+              (listing.saleType === 3 && (
+                <div className="w-full grid grid-cols-4 justify-center gap-6 mt-6">
+                  <NftCard
+                    key={`${listing.listingId}-${index}`}
+                    type="list"
+                    data={listing.listingId}
+                  />
+                </div>
+              ))
+          )
+        ) : (
+          <h3 className="my-16 text-center w-full">No data to show yet</h3>
+        )}
         <div className="w-full flex items-center justify-center mt-8">
           <Button
-            text="Load more"
+            text="Fetch next"
             style="border border-secondary rounded-full hover:bg-secondary hover:transition"
+            onclick={loadMoreTokens}
           />
         </div>
       </div>

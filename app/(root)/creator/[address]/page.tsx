@@ -16,7 +16,7 @@ export async function generateMetadata({
 }: Params): Promise<Metadata> {
   const user: User = await getUserByWalletAddress(address);
   return {
-    title: `${user?.username} - Hazee`,
+    title: `${user?.username || "Your profile"} - Hazee`,
   };
 }
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useNFTMarketplace } from "@/context/NFTMarketplaceProvider";
 import React from "react";
 import { useNFTAuction } from "@/context/NFTAuctionProvider";
+import { truncateAddress } from "@/libs/utils";
 
 type Props = {
   type: string;
@@ -21,7 +22,7 @@ const NftCard: React.FC<Props> = ({ type, data }) => {
 
   React.useEffect(() => {
     if (isContractReady) {
-      const fetchtokens = async () => {
+      const fetchtoken = async () => {
         setToken(await getListingDetails(data));
         const isOnAuction = await isNFTOnAuction(data);
         if (isOnAuction) {
@@ -29,7 +30,7 @@ const NftCard: React.FC<Props> = ({ type, data }) => {
           setAuctionDetails(details);
         }
       };
-      fetchtokens();
+      fetchtoken();
     }
   }, [isContractReady, data]);
 
@@ -58,7 +59,9 @@ const NftCard: React.FC<Props> = ({ type, data }) => {
           <div className="flex flex-col gap-3 bg-secondary p-3">
             <div className="flex items-center justify-between">
               <div className="flex flex-col">
-                <p className="text-sm text-gray-400">@Hazee</p>
+                <p className="text-sm text-gray-400">
+                  @{truncateAddress(token?.seller as string)}
+                </p>
                 <Link href="#" className="font-medium">
                   {token?.name}
                 </Link>
