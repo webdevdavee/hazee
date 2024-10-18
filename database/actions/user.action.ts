@@ -27,7 +27,7 @@ export const updateUserData = async (
     if (user.coverPhoto) userData.coverPhoto = user.coverPhoto;
 
     await User.findOneAndUpdate(
-      { email: user.email },
+      { walletAddress: user.walletAddress },
       { $set: userData },
       { upsert: true, new: true }
     );

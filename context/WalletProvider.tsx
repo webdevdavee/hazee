@@ -69,16 +69,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         // Request accounts and switch to the correct network
         await provider.send("eth_requestAccounts", []);
 
-        // Get network details
-        const network = await provider.getNetwork();
-        console.log("Connected to network:", network.chainId);
-
         const signer = await provider.getSigner();
         const userAddress = await signer.getAddress();
         setWalletAddress(userAddress);
-
-        // Get and reset the nonce if necessary
-        const nonce = await provider.getTransactionCount(userAddress);
 
         const getBalance = await provider.getBalance(userAddress);
         setBalance(ethers.formatEther(getBalance));
