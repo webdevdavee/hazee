@@ -6,6 +6,7 @@ import { truncateAddress } from "@/libs/utils";
 import { NFTCreatorsContractAddress } from "../backend/constants";
 import { useToast } from "./ToastProvider";
 import { abi as creatorsContractABI } from "../backend/artifacts/contracts/NFTCreators.sol/NFTCreators.json";
+import { updateUserData } from "@/database/actions/user.action";
 
 declare global {
   interface Window {
@@ -78,12 +79,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Get and reset the nonce if necessary
         const nonce = await provider.getTransactionCount(userAddress);
-        console.log("Current nonce:", nonce);
 
         const getBalance = await provider.getBalance(userAddress);
         setBalance(ethers.formatEther(getBalance));
 
         showToast("Wallet connected successfully", "success");
+
+        // Save user's wallet address in MongoDB database
+        await updateUserData({ walletAddress: userAddress });
 
         const creatorContract = new ethers.Contract(
           NFTCreatorsContractAddress,

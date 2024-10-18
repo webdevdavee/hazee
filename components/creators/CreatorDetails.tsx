@@ -2,7 +2,7 @@
 
 import useCopyToClipboard from "@/hooks/useCopyToClipboard";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 import { FaLink } from "react-icons/fa";
 import { IoCopyOutline } from "react-icons/io5";
@@ -10,23 +10,24 @@ import CreatorItemsTab from "./CreatorItemsTab";
 import { truncateAddress } from "@/libs/utils";
 import { IoSettingsOutline } from "react-icons/io5";
 import Link from "next/link";
+import { useWallet } from "@/context/WalletProvider";
 
 type Props = {
-  userWalletAddress: string;
+  urlWalletAddress: string;
   userDetails: User;
 };
 
-const CreatorDetails: React.FC<Props> = ({
-  userWalletAddress,
-  userDetails,
-}) => {
+const CreatorDetails: React.FC<Props> = ({ urlWalletAddress, userDetails }) => {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { walletAddress } = useWallet();
+
   const { copyToClipboard: copyAddress, copyStatus: copyAddressStatus } =
     useCopyToClipboard();
   const { copyToClipboard: copyCreatorUrl, copyStatus: copyCreatorUrlStatus } =
     useCopyToClipboard();
 
   const [fullURL, setFullURL] = React.useState<string>("");
-  const pathname = usePathname();
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
@@ -41,11 +42,11 @@ const CreatorDetails: React.FC<Props> = ({
     <section>
       <div>
         <div className="flex items-center justify-center rounded-xl overflow-hidden h-80">
-          {!userDetails?.coverphoto ? (
+          {!userDetails?.coverPhoto ? (
             <div className="w-full h-full object-cover bg-secondary" />
           ) : (
             <Image
-              src={userDetails?.coverphoto as string}
+              src={userDetails?.coverPhoto as string}
               width={1000}
               height={1000}
               quality={100}
@@ -75,14 +76,13 @@ const CreatorDetails: React.FC<Props> = ({
               <div className="flex items-center gap-2">
                 <p>Address: </p>
                 <p className="text-[gray]">
-                  {truncateAddress(userWalletAddress) ||
-                    "Couldn't load address"}
+                  {truncateAddress(urlWalletAddress) || "Couldn't load address"}
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => copyAddress(userWalletAddress)}
-                disabled={!userWalletAddress}
+                onClick={() => copyAddress(urlWalletAddress)}
+                disabled={!urlWalletAddress}
               >
                 {copyAddressStatus === "copied" ? (
                   "Copied"
@@ -104,15 +104,17 @@ const CreatorDetails: React.FC<Props> = ({
             </button>
           </span>
         </div>
-        <Link
-          href="/creator/settings"
-          className="p-2 rounded-md bg-secondary flex items-center gap-3 h-fit transition cursor-pointer hover:bg-secondaryhover"
-        >
-          <IoSettingsOutline size={20} />
-          <p>Settings</p>
-        </Link>
+        {walletAddress === urlWalletAddress && (
+          <Link
+            href={`/creator/settings`}
+            className="p-2 rounded-md bg-secondary flex items-center gap-3 h-fit transition cursor-pointer hover:bg-secondaryhover"
+          >
+            <IoSettingsOutline size={20} />
+            <p>Settings</p>
+          </Link>
+        )}
       </div>
-      <CreatorItemsTab userWalletAddress={userWalletAddress} />
+      <CreatorItemsTab urlWalletAddress={urlWalletAddress} />
     </section>
   );
 };

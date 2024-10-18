@@ -15,7 +15,7 @@ type Props = {
 
 type FileType = "image/jpeg" | "image/png" | "image/gif";
 
-const ImageUploader: React.FC<Props> = ({
+const CoverPhotoUploader: React.FC<Props> = ({
   fileError,
   setFileError,
   setFile,
@@ -25,7 +25,7 @@ const ImageUploader: React.FC<Props> = ({
   const [uploadedFile, setUploadedFile] = React.useState<File[] | null>(null);
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
 
-  const maxFileSize = 4 * 1024 * 1024; // 4 MB
+  const maxFileSize = 20 * 1024 * 1024; // 20 MB (as per your comment)
 
   const supportedFileTypes: FileType[] = [
     "image/jpeg",
@@ -34,8 +34,8 @@ const ImageUploader: React.FC<Props> = ({
   ];
 
   useEffect(() => {
-    if (user && user.photo) {
-      setPreviewUrl(user.photo);
+    if (user && user.coverPhoto) {
+      setPreviewUrl(user.coverPhoto);
     }
   }, [user]);
 
@@ -62,11 +62,11 @@ const ImageUploader: React.FC<Props> = ({
   };
 
   return (
-    <div className="w-full flex items-center justify-center gap-4">
+    <div>
       <div
         {...getRootProps()}
         className={clsx(
-          "relative w-36 h-36 p-4 border-2 rounded-full overflow-hidden transition-colors duration-300 cursor-pointer hover:bg-secondary hover:transition",
+          "relative w-full h-36 p-4 border-2 rounded-md overflow-hidden transition-colors duration-300 cursor-pointer hover:bg-secondary hover:transition",
           {
             "border-gray-300 hover:border-gray-400": !isDragActive,
             "border-blue-500": isDragActive,
@@ -86,20 +86,21 @@ const ImageUploader: React.FC<Props> = ({
           <div className="flex items-center justify-center h-full">
             <div className="flex flex-col items-center justify-center">
               <FiUploadCloud size={40} />
+              <div className="flex flex-col items-center justify-center mt-4">
+                <p className="font-medium">Cover Photo</p>
+                <p className="text-gray-300 text-sm">
+                  Supported file types: JPEG, PNG, GIF
+                </p>
+                <p className="text-gray-300 text-sm">Maximum file size: 20MB</p>
+              </div>
             </div>
           </div>
         )}
       </div>
-      <div className="flex flex-col justify-center">
-        <p className="font-medium">Profile Photo</p>
-        <p className="text-gray-300 text-sm">
-          Supported file types: JPEG, PNG, GIF
-        </p>
-        <p className="text-gray-300 text-sm">Maximum file size: 4MB</p>
-      </div>
-      {fileError && <p className="text-red-500">{fileError}</p>}
+
+      <p className="text-red-500">{fileError}</p>
     </div>
   );
 };
 
-export default ImageUploader;
+export default CoverPhotoUploader;

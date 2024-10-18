@@ -43,7 +43,14 @@ export const bidPriceSchema = z.object({
 export type TBidPriceSchema = z.infer<typeof bidPriceSchema>;
 
 export const editProfileSchema = z.object({
-  username: z.string().min(3, "Use 3 characters or more"),
+  username: z
+    .string()
+    .min(3, "Use 3 characters or more")
+    .regex(
+      /^[a-z0-9_]+$/,
+      "Only lowercase letters, numbers, and underscores are allowed"
+    )
+    .transform((val) => val.toLowerCase()),
   email: z.string().email(),
 });
 

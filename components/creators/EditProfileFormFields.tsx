@@ -20,6 +20,7 @@ const EditProfileFormFields: React.FC<Props> = ({ register, errors }) => {
         inputType="text"
         placeholder="Username"
         required
+        style="lowercase placeholder:first-letter:uppercase"
         error={
           errors.username && (
             <p className="text-red-500">{errors.username.message}</p>
@@ -31,7 +32,7 @@ const EditProfileFormFields: React.FC<Props> = ({ register, errors }) => {
         label="Email"
         htmlFor="email"
         inputType="email"
-        placeholder="Email"
+        placeholder="email"
         required
         error={
           errors.email && <p className="text-red-500">{errors.email.message}</p>

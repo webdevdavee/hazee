@@ -4,30 +4,46 @@ import { revalidatePath } from "next/cache";
 import { connectToDatabase } from "..";
 import User from "../models/user.model";
 
-export const saveUser = async (
+export const updateUserData = async (
   user: {
-    email: string;
-    walletAddress: string;
-    username: string;
-    photo: string;
-    coverphoto: string;
+    email?: string;
+    walletAddress?: string;
+    username?: string;
+    photo?: string;
+    coverPhoto?: string;
   },
-  path: string
+  path?: string
 ) => {
   try {
     await connectToDatabase();
 
-    await User.create(user);
-    revalidatePath(path);
+    const userData: any = {
+      email: user.email,
+      username: user.username,
+    };
+
+    if (user.walletAddress) userData.walletAddress = user.walletAddress;
+    if (user.photo) userData.photo = user.photo;
+    if (user.coverPhoto) userData.coverPhoto = user.coverPhoto;
+
+    await User.findOneAndUpdate(
+      { email: user.email },
+      { $set: userData },
+      { upsert: true, new: true }
+    );
+
+    revalidatePath(path || "/");
+
+    return { success: "Profile updated!" };
   } catch (error: any) {
-    throw new Error(error);
+    return { error: "Error updating profile." };
   }
 };
 
 export const getUserByWalletAddress = async (walletAddress: string) => {
   try {
     await connectToDatabase();
-    const user = await User.find({ walletAddress });
+    const user = await User.findOne({ walletAddress });
     if (!user) {
       throw new Error("User not found");
     }

@@ -6,9 +6,17 @@ type Props = {
   type?: "button" | "submit" | "reset";
   onclick?: () => void;
   onhover?: () => void;
+  disabled?: boolean;
 };
 
-const Button: React.FC<Props> = ({ text, style, type, onclick, onhover }) => {
+const Button: React.FC<Props> = ({
+  text,
+  style,
+  type,
+  onclick,
+  onhover,
+  disabled,
+}) => {
   return (
     <button
       type={type ?? "button"}
@@ -16,6 +24,7 @@ const Button: React.FC<Props> = ({ text, style, type, onclick, onhover }) => {
       onClick={onclick}
       onMouseOver={onhover}
       onMouseOut={onhover}
+      disabled={disabled}
     >
       {text}
     </button>

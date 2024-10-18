@@ -19,12 +19,12 @@ type Collection = {
 };
 
 type User = {
-  id: number;
+  _id: string;
   email: string;
   walletAddress: string;
   username: string;
   photo: string;
-  coverphoto: string;
+  coverPhoto: string;
 };
 
 type DropdownItem = {

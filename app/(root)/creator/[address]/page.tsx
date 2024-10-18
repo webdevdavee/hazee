@@ -24,7 +24,7 @@ const page = async ({ params: { address } }: Params) => {
   const user: User = await getUserByWalletAddress(address);
   return (
     <>
-      <CreatorDetails userWalletAddress={address} userDetails={user} />
+      <CreatorDetails urlWalletAddress={address} userDetails={user} />
     </>
   );
 };

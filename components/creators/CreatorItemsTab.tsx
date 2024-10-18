@@ -6,19 +6,17 @@ import CollectionsCard from "../cards/CollectionsCard";
 import { useNFTCreators } from "@/context/NFTCreatorProvider";
 
 type Props = {
-  userWalletAddress: string;
+  urlWalletAddress: string;
 };
 
-const CreatorItemsTab: React.FC<Props> = ({ userWalletAddress }) => {
+const CreatorItemsTab: React.FC<Props> = ({ urlWalletAddress }) => {
   const { getUserInfo, currentUser, isContractReady } = useNFTCreators();
 
   React.useEffect(() => {
-    if (isContractReady && userWalletAddress) {
-      getUserInfo(userWalletAddress);
+    if (isContractReady && urlWalletAddress) {
+      getUserInfo(urlWalletAddress);
     }
-  }, [userWalletAddress, isContractReady]);
-
-  console.log(currentUser);
+  }, [urlWalletAddress, isContractReady]);
 
   const [tab, setTab] = React.useState("Created");
   const tabs = [
