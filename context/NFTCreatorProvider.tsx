@@ -8,7 +8,7 @@ import React, {
   useEffect,
 } from "react";
 import { ethers } from "ethers";
-import { abi as creatorsContractABI } from "../backend/artifacts/contracts/NFTCreators.sol/NFTCreators.json";
+import { creatorsContractABI } from "@/backend/abi/NFTCreatorsABI";
 import { NFTCreatorsContractAddress } from "../backend/constants";
 import { useToast } from "./ToastProvider";
 import { useWallet } from "./WalletProvider";

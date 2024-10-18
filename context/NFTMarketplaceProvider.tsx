@@ -8,7 +8,7 @@ import React, {
   useEffect,
 } from "react";
 import { ethers } from "ethers";
-import { abi as marketplaceABI } from "../backend/artifacts/contracts/NFTMarketplace.sol/NFTMarketplace.json";
+import { marketplaceContractABI } from "@/backend/abi/NFTMarketplaceABI";
 import { abi as nftABI } from "../backend/artifacts/contracts/NFT.sol/NFT.json";
 import {
   NFTMarketplaceContractAddress,
@@ -72,7 +72,7 @@ export const NFTMarketplaceProvider: React.FC<NFTMarketplaceProviderProps> = ({
 
           const marketplaceContract = new ethers.Contract(
             NFTMarketplaceContractAddress,
-            marketplaceABI,
+            marketplaceContractABI,
             signer
           );
 

@@ -8,7 +8,7 @@ import React, {
   useEffect,
 } from "react";
 import { ethers } from "ethers";
-import { abi as auctionABI } from "../backend/artifacts/contracts/NFTAuction.sol/NFTAuction.json";
+import { auctionContractABI } from "@/backend/abi/NFTAuctionABI";
 import { NFTAuctionContractAddress } from "../backend/constants";
 import { useToast } from "./ToastProvider";
 import { useWallet } from "./WalletProvider";
@@ -65,7 +65,7 @@ export const NFTAuctionProvider: React.FC<NFTAuctionProviderProps> = ({
 
           const auctionContract = new ethers.Contract(
             NFTAuctionContractAddress,
-            auctionABI,
+            auctionContractABI,
             signer
           );
 

@@ -8,7 +8,7 @@ import React, {
   useEffect,
 } from "react";
 import { ethers } from "ethers";
-import { abi as collectionsABI } from "../backend/artifacts/contracts/NFTCollections.sol/NFTCollections.json";
+import { collectionsContractABI } from "@/backend/abi/NFTCollectionsABI";
 import { NFTCollectionsContractAddress } from "../backend/constants";
 import { useToast } from "./ToastProvider";
 import { useWallet } from "./WalletProvider";
@@ -109,7 +109,7 @@ export const NFTCollectionsProvider: React.FC<NFTCollectionsProviderProps> = ({
 
           const collectionsContract = new ethers.Contract(
             NFTCollectionsContractAddress,
-            collectionsABI,
+            collectionsContractABI,
             signer
           );
 

@@ -5,7 +5,7 @@ import { ethers } from "ethers";
 import { truncateAddress } from "@/libs/utils";
 import { NFTCreatorsContractAddress } from "../backend/constants";
 import { useToast } from "./ToastProvider";
-import { abi as creatorsContractABI } from "../backend/artifacts/contracts/NFTCreators.sol/NFTCreators.json";
+import { creatorsContractABI } from "@/backend/abi/NFTCreatorsABI";
 import { updateUserData } from "@/database/actions/user.action";
 
 declare global {
