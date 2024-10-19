@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "./NFT.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./NFTCreators.sol";
 import "./NFTAuction.sol";
 import "./NFTMarketplace.sol";
 
@@ -13,21 +12,17 @@ contract NFTCollections is Ownable, ReentrancyGuard {
     uint256 private constant MAX_OFFER_DURATION = 1 weeks;
     uint256 private constant MAX_ROYALTY_PERCENTAGE = 4000;
 
-    NFTCreators private immutable i_creatorsContract;
     address private auctionContract;
     address private marketplaceContract;
 
     struct CollectionInfo {
         uint256 collectionId;
         address creator;
-        address currentOwner;
-        string name;
         address nftContract;
         uint256 maxSupply;
         uint256 mintedSupply;
         uint256 royaltyPercentage;
         uint256 floorPrice;
-        uint256 owners;
         bool isActive;
     }
 
@@ -43,10 +38,11 @@ contract NFTCollections is Ownable, ReentrancyGuard {
     mapping(uint256 => CollectionInfo) private collections;
     mapping(uint256 => mapping(address => CollectionOffer))
         private collectionOffers;
-    mapping(uint256 => mapping(address => bool)) private isOwner;
-    mapping(uint256 => uint256[]) private mintedTokens;
+    mapping(address => uint256[]) private userCreatedCollections;
+    mapping(address => uint256[]) private userOfferCollections;
     uint256 public collectionCounter;
 
+    // Events
     event NFTMinted(
         uint256 indexed collectionId,
         uint256 indexed tokenId,
@@ -82,13 +78,12 @@ contract NFTCollections is Ownable, ReentrancyGuard {
     event CollectionAdded(
         uint256 indexed collectionId,
         address indexed collectionAddress,
-        address indexed creator,
-        string name
+        address indexed creator
     );
 
+    // Custom Errors
     error RoyaltyPercentageTooHigh();
     error CollectionNotActive();
-    error OnlyCurrentOwnerAllowed();
     error MaximumSupplyReached();
     error InvalidCollectionID();
     error OfferBelowFloorPrice();
@@ -99,10 +94,9 @@ contract NFTCollections is Ownable, ReentrancyGuard {
     error InvalidNumberOfTokens();
     error NotTokenOwner();
     error OffsetOutOfBounds();
+    error Unauthorized();
 
-    constructor(address _creatorsAddress) Ownable(msg.sender) {
-        i_creatorsContract = NFTCreators(_creatorsAddress);
-    }
+    constructor() Ownable(msg.sender) {}
 
     function setAuctionContract(address _auctionContract) external onlyOwner {
         auctionContract = _auctionContract;
@@ -115,7 +109,6 @@ contract NFTCollections is Ownable, ReentrancyGuard {
     }
 
     function createCollection(
-        string memory _name,
         uint256 _maxSupply,
         uint256 _royaltyPercentage,
         uint256 _floorPrice
@@ -126,9 +119,8 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         uint256 newCollectionId = ++collectionCounter;
 
         NFT newNFTContract = new NFT(
-            _name,
-            "NFT",
-            address(i_creatorsContract),
+            "Test NFT",
+            "TNFT",
             auctionContract,
             marketplaceContract
         );
@@ -136,67 +128,54 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         collections[newCollectionId] = CollectionInfo({
             collectionId: newCollectionId,
             creator: msg.sender,
-            currentOwner: msg.sender,
-            name: _name,
             nftContract: address(newNFTContract),
             maxSupply: _maxSupply,
             mintedSupply: 0,
             royaltyPercentage: _royaltyPercentage,
             floorPrice: _floorPrice,
-            owners: 0,
             isActive: true
         });
 
-        emit CollectionAdded(newCollectionId, address(this), msg.sender, _name);
+        userCreatedCollections[msg.sender].push(newCollectionId);
+
+        emit CollectionAdded(
+            newCollectionId,
+            address(newNFTContract),
+            msg.sender
+        );
 
         return newCollectionId;
-    }
-
-    function getTotalCollectionsCount() public view returns (uint256) {
-        return collectionCounter;
     }
 
     function mintNFT(
         uint256 _collectionId,
         uint256 price,
-        string memory tokenURI
-    ) public returns (uint256) {
+        string calldata tokenURI
+    ) external returns (uint256) {
         CollectionInfo storage collection = collections[_collectionId];
         if (!collection.isActive) revert CollectionNotActive();
         if (collection.mintedSupply >= collection.maxSupply)
             revert MaximumSupplyReached();
-        if (msg.sender != collection.currentOwner)
-            revert OnlyCurrentOwnerAllowed();
+        if (msg.sender != collection.creator) revert Unauthorized();
 
         NFT nft = NFT(collection.nftContract);
-        uint256 tokenId = nft.mint(msg.sender, tokenURI, price, _collectionId);
+        uint256 tokenId = nft.mint(tokenURI, price, _collectionId);
 
-        collection.mintedSupply++;
-        mintedTokens[_collectionId].push(tokenId);
-
-        if (!isOwner[_collectionId][msg.sender]) {
-            isOwner[_collectionId][msg.sender] = true;
-            collection.owners++;
+        unchecked {
+            collection.mintedSupply++;
         }
 
         emit NFTMinted(_collectionId, tokenId, msg.sender);
         return tokenId;
     }
 
-    function getMintedNFTs(
-        uint256 _collectionId
-    ) public view returns (uint256[] memory) {
-        return mintedTokens[_collectionId];
-    }
-
     function updateFloorPrice(
         uint256 _collectionId,
         uint256 _floorPrice
-    ) public {
+    ) external {
         CollectionInfo storage collection = collections[_collectionId];
         if (!collection.isActive) revert CollectionNotActive();
-        if (msg.sender != collection.currentOwner)
-            revert OnlyCurrentOwnerAllowed();
+        if (msg.sender != collection.creator) revert Unauthorized();
 
         collection.floorPrice = _floorPrice;
         emit FloorPriceUpdated(_collectionId, _floorPrice);
@@ -205,11 +184,10 @@ contract NFTCollections is Ownable, ReentrancyGuard {
     function updateRoyaltyPercentage(
         uint256 _collectionId,
         uint256 _royaltyPercentage
-    ) public {
+    ) external {
         CollectionInfo storage collection = collections[_collectionId];
         if (!collection.isActive) revert CollectionNotActive();
-        if (msg.sender != collection.currentOwner)
-            revert OnlyCurrentOwnerAllowed();
+        if (msg.sender != collection.creator) revert Unauthorized();
         if (_royaltyPercentage > MAX_ROYALTY_PERCENTAGE)
             revert RoyaltyPercentageTooHigh();
 
@@ -217,35 +195,11 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         emit RoyaltyPercentageUpdated(_collectionId, _royaltyPercentage);
     }
 
-    function getCollections(
-        uint256 _offset,
-        uint256 _limit
-    ) external view returns (CollectionInfo[] memory) {
-        if (_offset >= collectionCounter) revert OffsetOutOfBounds();
-        uint256 end = _offset + _limit > collectionCounter
-            ? collectionCounter
-            : _offset + _limit;
-        uint256 length = end - _offset;
-        CollectionInfo[] memory result = new CollectionInfo[](length);
-        for (uint256 i = 0; i < length; i++) {
-            result[i] = collections[_offset + i + 1];
-        }
-        return result;
-    }
-
-    function getCollectionInfo(
-        uint256 _collectionId
-    ) external view returns (CollectionInfo memory) {
-        if (_collectionId == 0 || _collectionId > collectionCounter)
-            revert InvalidCollectionID();
-        return collections[_collectionId];
-    }
-
     function placeCollectionOffer(
         uint256 _collectionId,
         uint256 nftCount,
         uint256 duration
-    ) public payable nonReentrant {
+    ) external payable nonReentrant {
         CollectionInfo storage collection = collections[_collectionId];
         if (!collection.isActive) revert CollectionNotActive();
         if (msg.value < collection.floorPrice * nftCount)
@@ -260,18 +214,20 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         ];
         if (existingOffer.isActive) {
             payable(msg.sender).transfer(existingOffer.amount);
+        } else {
+            userOfferCollections[msg.sender].push(_collectionId);
         }
 
         uint256 expirationTime = block.timestamp + duration;
 
-        collectionOffers[_collectionId][msg.sender] = CollectionOffer(
-            msg.sender,
-            msg.value,
-            nftCount,
-            block.timestamp,
-            expirationTime,
-            true
-        );
+        collectionOffers[_collectionId][msg.sender] = CollectionOffer({
+            offerer: msg.sender,
+            amount: msg.value,
+            nftCount: nftCount,
+            timestamp: block.timestamp,
+            expirationTime: expirationTime,
+            isActive: true
+        });
 
         emit CollectionOfferPlaced(
             _collectionId,
@@ -284,10 +240,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
 
     function withdrawCollectionOffer(
         uint256 _collectionId
-    ) public nonReentrant {
-        CollectionInfo storage collection = collections[_collectionId];
-        if (!collection.isActive) revert CollectionNotActive();
-
+    ) external nonReentrant {
         CollectionOffer storage offer = collectionOffers[_collectionId][
             msg.sender
         ];
@@ -304,9 +257,9 @@ contract NFTCollections is Ownable, ReentrancyGuard {
 
     function acceptCollectionOffer(
         uint256 _collectionId,
-        uint256[] memory tokenIds,
+        uint256[] calldata tokenIds,
         address offerer
-    ) public nonReentrant {
+    ) external nonReentrant {
         CollectionInfo storage collection = collections[_collectionId];
         if (!collection.isActive) revert CollectionNotActive();
 
@@ -318,6 +271,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         NFT nft = NFT(collection.nftContract);
         for (uint256 i = 0; i < tokenIds.length; i++) {
             if (nft.ownerOf(tokenIds[i]) != msg.sender) revert NotTokenOwner();
+            nft.safeTransferFrom(msg.sender, offerer, tokenIds[i]);
         }
 
         uint256 royaltyAmount = (offer.amount * collection.royaltyPercentage) /
@@ -327,10 +281,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         payable(collection.creator).transfer(royaltyAmount);
         payable(msg.sender).transfer(sellerProceeds);
 
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            nft.safeTransferFrom(msg.sender, offerer, tokenIds[i]);
-            _updateOwnership(_collectionId, msg.sender, offerer);
-        }
+        delete collectionOffers[_collectionId][offerer];
 
         emit CollectionOfferAccepted(
             _collectionId,
@@ -339,37 +290,28 @@ contract NFTCollections is Ownable, ReentrancyGuard {
             offerer,
             offer.amount
         );
-
-        delete collectionOffers[_collectionId][offerer];
     }
 
-    function _updateOwnership(
-        uint256 _collectionId,
-        address from,
-        address to
-    ) private {
-        CollectionInfo storage collection = collections[_collectionId];
-        if (from != address(0) && isOwner[_collectionId][from]) {
-            bool stillOwner = false;
-            NFT nft = NFT(collection.nftContract);
-            for (uint256 i = 0; i < mintedTokens[_collectionId].length; i++) {
-                if (nft.ownerOf(mintedTokens[_collectionId][i]) == from) {
-                    stillOwner = true;
-                    break;
-                }
-            }
-            if (!stillOwner) {
-                isOwner[_collectionId][from] = false;
-                collection.owners--;
-            }
-        }
-        if (to != address(0) && !isOwner[_collectionId][to]) {
-            isOwner[_collectionId][to] = true;
-            collection.owners++;
-        }
+    // View Functions
+    function getUserCreatedCollections(
+        address user
+    ) external view returns (uint256[] memory) {
+        return userCreatedCollections[user];
+    }
+
+    function getUserCollectionOffers(
+        address user
+    ) external view returns (uint256[] memory) {
+        return userOfferCollections[user];
+    }
+
+    function getCollectionInfo(
+        uint256 _collectionId
+    ) external view returns (CollectionInfo memory) {
+        if (_collectionId == 0 || _collectionId > collectionCounter)
+            revert InvalidCollectionID();
+        return collections[_collectionId];
     }
 
     receive() external payable {}
-
-    fallback() external payable {}
 }

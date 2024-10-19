@@ -1,51 +1,30 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import {
-  NFT,
-  NFT__factory,
-  NFTCreators,
-  NFTCreators__factory,
-} from "../../typechain-types";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { NFT, NFT__factory } from "../../typechain-types";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("NFT", function () {
   let nftFactory: NFT__factory;
   let nft: NFT;
-  let nftCreatorsFactory: NFTCreators__factory;
-  let nftCreators: NFTCreators;
-  let owner: SignerWithAddress;
-  let addr1: SignerWithAddress;
-  let addr2: SignerWithAddress;
-  let nftAuction: SignerWithAddress;
-  let nftMarketplace: SignerWithAddress;
+  let owner: HardhatEthersSigner;
+  let addr1: HardhatEthersSigner;
+  let addr2: HardhatEthersSigner;
+  let auctionContract: HardhatEthersSigner;
+  let marketplaceContract: HardhatEthersSigner;
 
   beforeEach(async function () {
-    [owner, addr1, addr2, nftAuction, nftMarketplace] =
+    [owner, addr1, addr2, auctionContract, marketplaceContract] =
       await ethers.getSigners();
 
-    // NFT Creators Contract
-    nftCreatorsFactory = (await ethers.getContractFactory(
-      "NFTCreators"
-    )) as unknown as NFTCreators__factory;
-
-    nftCreators = await nftCreatorsFactory.deploy();
-
-    // NFT Contract
     nftFactory = (await ethers.getContractFactory(
       "NFT"
     )) as unknown as NFT__factory;
-
     nft = await nftFactory.deploy(
       "TestNFT",
       "TNFT",
-      await nftCreators.getAddress(),
-      nftAuction.address,
-      nftMarketplace.address
+      auctionContract.address,
+      marketplaceContract.address
     );
-
-    // Register creators
-    await nftCreators.connect(owner).registerCreator();
-    await nftCreators.connect(addr1).registerCreator();
   });
 
   describe("Deployment", function () {
@@ -58,22 +37,21 @@ describe("NFT", function () {
       expect(await nft.symbol()).to.equal("TNFT");
     });
 
-    it("Should set the correct creators contract", async function () {
-      expect(await nft.creatorsContract()).to.equal(
-        await nftCreators.getAddress()
+    it("Should set the correct auction and marketplace contracts", async function () {
+      expect(await nft.auctionContract()).to.equal(auctionContract.address);
+      expect(await nft.marketplaceContract()).to.equal(
+        marketplaceContract.address
       );
     });
   });
 
   describe("Minting", function () {
-    it("Should allow registered creators to mint NFTs", async function () {
+    it("Should allow users to mint NFTs", async function () {
       const tokenURI = "https://example.com/token/1";
       const price = ethers.parseEther("1");
       const collectionId = 1;
 
-      await expect(
-        nft.connect(addr1).mint(addr1.address, tokenURI, price, collectionId)
-      )
+      await expect(nft.connect(addr1).mint(tokenURI, price, collectionId))
         .to.emit(nft, "NFTMinted")
         .withArgs(1, addr1.address);
 
@@ -82,25 +60,11 @@ describe("NFT", function () {
       expect(await nft.getPrice(1)).to.equal(price);
       expect(await nft.getCollection(1)).to.equal(collectionId);
     });
-
-    it("Should not allow unregistered creators to mint NFTs", async function () {
-      const tokenURI = "https://example.com/token/1";
-      const price = ethers.parseEther("1");
-      const collectionId = 1;
-
-      await expect(
-        nft
-          .connect(nftAuction)
-          .mint(nftAuction.address, tokenURI, price, collectionId)
-      ).to.be.revertedWith("Creator not registered");
-    });
   });
 
   describe("NFT Status", function () {
     beforeEach(async function () {
-      await nft
-        .connect(addr1)
-        .mint(addr1.address, "tokenURI", ethers.parseEther("1"), 1);
+      await nft.connect(addr1).mint("tokenURI", ethers.parseEther("1"), 1);
     });
 
     it("Should allow owner to set NFT status", async function () {
@@ -120,40 +84,31 @@ describe("NFT", function () {
     });
 
     it("Should allow auction contract to set NFT status", async function () {
-      await expect(nft.connect(nftAuction).setNFTStatus(1, 3)) // 3 = NFTStatus.BOTH
+      await expect(nft.connect(auctionContract).setNFTStatus(1, 3)) // 3 = NFTStatus.BOTH
         .to.emit(nft, "NFTStatusChanged")
         .withArgs(1, 3);
 
       expect(await nft.getTokenStatus(1)).to.equal(3);
     });
 
+    it("Should allow marketplace contract to set NFT status", async function () {
+      await expect(nft.connect(marketplaceContract).setNFTStatus(1, 1)) // 1 = NFTStatus.SALE
+        .to.emit(nft, "NFTStatusChanged")
+        .withArgs(1, 1);
+
+      expect(await nft.getTokenStatus(1)).to.equal(1);
+    });
+
     it("Should not allow non-authorized addresses to set NFT status", async function () {
       await expect(nft.connect(addr2).setNFTStatus(1, 1)).to.be.revertedWith(
-        "NFT: Only owner, contract owner, auction contract or marketplace contract can set status"
+        "NFT: Not authorized"
       );
-    });
-  });
-
-  describe("Activities", function () {
-    it("Should add and retrieve activities correctly", async function () {
-      await nft
-        .connect(addr1)
-        .mint(addr1.address, "tokenURI", ethers.parseEther("1"), 1);
-
-      await nft.connect(addr1).setNFTStatus(1, 1); // Set status to SALE
-
-      const activities = await nft.getActivities(1);
-      expect(activities.length).to.equal(2); // Including the "Minted" activity
-      expect(activities[1].action).to.equal("Status Changed");
-      expect(activities[1].value).to.equal(1);
     });
   });
 
   describe("Price Updates", function () {
     beforeEach(async function () {
-      await nft
-        .connect(addr1)
-        .mint(addr1.address, "tokenURI", ethers.parseEther("1"), 1);
+      await nft.connect(addr1).mint("tokenURI", ethers.parseEther("1"), 1);
     });
 
     it("Should allow owner to set price", async function () {
@@ -177,15 +132,13 @@ describe("NFT", function () {
     it("Should not allow non-owners to update price", async function () {
       await expect(
         nft.connect(addr2).updatePrice(1, ethers.parseEther("2"))
-      ).to.be.revertedWith("NFT: Only owner can update price");
+      ).to.be.revertedWith("NFT: Not owner");
     });
   });
 
   describe("Collection", function () {
     it("Should set and retrieve collection correctly", async function () {
-      await nft
-        .connect(addr1)
-        .mint(addr1.address, "tokenURI", ethers.parseEther("1"), 42);
+      await nft.connect(addr1).mint("tokenURI", ethers.parseEther("1"), 42);
 
       const collectionId = await nft.getCollection(1);
       expect(collectionId).to.equal(42);
@@ -193,19 +146,61 @@ describe("NFT", function () {
 
     it("Should revert when querying collection for non-existent token", async function () {
       await expect(nft.getCollection(999)).to.be.revertedWith(
-        "NFT: Collection query for nonexistent token"
+        "NFT: Nonexistent token"
       );
     });
   });
 
   describe("Token Existence", function () {
     it("Should correctly report token existence", async function () {
-      await nft
-        .connect(addr1)
-        .mint(addr1.address, "tokenURI", ethers.parseEther("1"), 1);
+      await nft.connect(addr1).mint("tokenURI", ethers.parseEther("1"), 1);
 
       expect(await nft.exists(1)).to.be.true;
       expect(await nft.exists(2)).to.be.false;
+    });
+  });
+
+  describe("Created Tokens", function () {
+    it("Should correctly track and retrieve created tokens", async function () {
+      await nft.connect(addr1).mint("tokenURI1", ethers.parseEther("1"), 1);
+      await nft.connect(addr1).mint("tokenURI2", ethers.parseEther("2"), 1);
+
+      const createdTokens = await nft.getCreatedTokens(addr1.address);
+      expect(createdTokens.length).to.equal(2);
+      expect(createdTokens[0]).to.equal(1);
+      expect(createdTokens[1]).to.equal(2);
+    });
+  });
+
+  describe("Items Sold", function () {
+    it("Should correctly record and retrieve items sold", async function () {
+      await nft.connect(addr1).mint("tokenURI", ethers.parseEther("1"), 1);
+      await nft.connect(marketplaceContract).recordSale(addr1.address);
+
+      expect(await nft.getItemsSold(addr1.address)).to.equal(1);
+    });
+
+    it("Should only allow auction or marketplace contracts to record sales", async function () {
+      await expect(
+        nft.connect(addr2).recordSale(addr1.address)
+      ).to.be.revertedWith("NFT: Not authorized");
+    });
+  });
+
+  describe("Owned Tokens", function () {
+    it("Should correctly retrieve owned tokens", async function () {
+      await nft.connect(addr1).mint("tokenURI1", ethers.parseEther("1"), 1);
+      await nft.connect(addr1).mint("tokenURI2", ethers.parseEther("2"), 1);
+      await nft.connect(addr2).mint("tokenURI3", ethers.parseEther("3"), 2);
+
+      const addr1OwnedTokens = await nft.getOwnedTokens(addr1.address);
+      expect(addr1OwnedTokens.length).to.equal(2);
+      expect(addr1OwnedTokens[0]).to.equal(1);
+      expect(addr1OwnedTokens[1]).to.equal(2);
+
+      const addr2OwnedTokens = await nft.getOwnedTokens(addr2.address);
+      expect(addr2OwnedTokens.length).to.equal(1);
+      expect(addr2OwnedTokens[0]).to.equal(3);
     });
   });
 });

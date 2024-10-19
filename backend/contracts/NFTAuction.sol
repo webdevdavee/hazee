@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./NFT.sol";
-import "./NFTCreators.sol";
 
 contract NFTAuction is ReentrancyGuard, Ownable {
     using Math for uint256;
@@ -28,29 +27,62 @@ contract NFTAuction is ReentrancyGuard, Ownable {
         uint256 timestamp;
     }
 
+    // Custom Errors
+    error InvalidDuration();
+    error InvalidStartingPrice();
+    error InvalidReservePrice();
+    error NotTokenOwner();
+    error ContractNotApproved();
+    error TokenNotAvailable();
+    error AuctionNotFound();
+    error InvalidAuctionState();
+    error AuctionExpired();
+    error BidTooLow();
+    error BelowStartingPrice();
+    error NotSeller();
+    error BidsAlreadyPlaced();
+    error NoBidsFound();
+    error HighestBidderCannotWithdraw();
+    error TokenAlreadyHasAuction();
+
+    // Main storage
     mapping(uint256 => Auction) public auctions;
     mapping(uint256 => uint256) public tokenIdToAuctionId;
-    mapping(address => uint256) public userAuctionCount;
     mapping(uint256 => Bid[]) public auctionBids;
+
+    mapping(address => mapping(uint256 => bool)) public userBids; // user address => auctionId => has bid
+    mapping(address => uint256[]) private userAuctionBids; // user address => array of auction IDs they've bid on
+
     uint256 public auctionCount;
 
+    // Constants
     uint256 public constant MINIMUM_AUCTION_DURATION = 1 days;
     uint256 public constant MAXIMUM_AUCTION_DURATION = 30 days;
+    uint256 private constant FEE_DENOMINATOR = 10000;
+    uint256 private constant FEE_NUMERATOR = 250; // 2.5% fee
 
-    NFT public nftContract;
-    NFTCreators public creatorsContract;
+    NFT public immutable nftContract;
 
+    // Events
     event AuctionCreated(
-        uint256 auctionId,
-        address seller,
-        uint256 tokenId,
+        uint256 indexed auctionId,
+        address indexed seller,
+        uint256 indexed tokenId,
         uint256 startingPrice,
         uint256 reservePrice,
         uint256 endTime
     );
-    event BidPlaced(uint256 auctionId, address bidder, uint256 amount);
-    event AuctionEnded(uint256 auctionId, address winner, uint256 amount);
-    event AuctionCancelled(uint256 auctionId);
+    event BidPlaced(
+        uint256 indexed auctionId,
+        address indexed bidder,
+        uint256 amount
+    );
+    event AuctionEnded(
+        uint256 indexed auctionId,
+        address indexed winner,
+        uint256 amount
+    );
+    event AuctionCancelled(uint256 indexed auctionId);
     event AuctionExtended(uint256 indexed auctionId, uint256 newEndTime);
     event ReservePriceUpdated(
         uint256 indexed auctionId,
@@ -62,12 +94,8 @@ contract NFTAuction is ReentrancyGuard, Ownable {
         uint256 amount
     );
 
-    constructor(
-        address _nftContractAddress,
-        address _creatorsAddress
-    ) Ownable(msg.sender) {
+    constructor(address _nftContractAddress) Ownable(msg.sender) {
         nftContract = NFT(_nftContractAddress);
-        creatorsContract = NFTCreators(_creatorsAddress);
     }
 
     function createAuction(
@@ -76,31 +104,23 @@ contract NFTAuction is ReentrancyGuard, Ownable {
         uint256 _reservePrice,
         uint256 _duration
     ) external nonReentrant {
-        require(
-            _duration >= MINIMUM_AUCTION_DURATION &&
-                _duration <= MAXIMUM_AUCTION_DURATION,
-            "Invalid auction duration"
-        );
-        require(_startingPrice > 0, "Starting price must be greater than zero");
-        require(
-            _reservePrice >= _startingPrice,
-            "Reserve price must be greater than or equal to starting price"
-        );
+        if (
+            _duration < MINIMUM_AUCTION_DURATION ||
+            _duration > MAXIMUM_AUCTION_DURATION
+        ) revert InvalidDuration();
+        if (_startingPrice == 0) revert InvalidStartingPrice();
+        if (_reservePrice < _startingPrice) revert InvalidReservePrice();
+        if (nftContract.ownerOf(_tokenId) != msg.sender) revert NotTokenOwner();
+        if (!nftContract.isApprovedForAll(msg.sender, address(this)))
+            revert ContractNotApproved();
+        if (nftContract.getTokenStatus(_tokenId) != NFT.NFTStatus.NONE)
+            revert TokenNotAvailable();
+        if (tokenIdToAuctionId[_tokenId] != 0) revert TokenAlreadyHasAuction();
 
-        require(
-            nftContract.ownerOf(_tokenId) == msg.sender,
-            "You don't own this NFT"
-        );
-        require(
-            nftContract.isApprovedForAll(msg.sender, address(this)),
-            "Contract not approved"
-        );
-        require(
-            nftContract.getTokenStatus(_tokenId) == NFT.NFTStatus.NONE,
-            "NFT is already on sale or auction"
-        );
+        unchecked {
+            auctionCount++;
+        }
 
-        auctionCount++;
         uint256 endTime = block.timestamp + _duration;
 
         auctions[auctionCount] = Auction({
@@ -116,11 +136,6 @@ contract NFTAuction is ReentrancyGuard, Ownable {
         });
 
         tokenIdToAuctionId[_tokenId] = auctionCount;
-        userAuctionCount[msg.sender]++;
-
-        uint256 creatorId = creatorsContract.getCreatorIdByAddress(msg.sender);
-        creatorsContract.recordActivity(creatorId, "Auction Created", _tokenId);
-
         nftContract.setNFTStatus(_tokenId, NFT.NFTStatus.AUCTION);
 
         emit AuctionCreated(
@@ -133,26 +148,25 @@ contract NFTAuction is ReentrancyGuard, Ownable {
         );
     }
 
-    function placeBid(uint256 _tokenId) external payable nonReentrant {
+    function isNFTOnAuction(uint256 _tokenId) public view returns (bool) {
         uint256 auctionId = tokenIdToAuctionId[_tokenId];
-        require(
-            auctionId != 0 && auctions[auctionId].active,
-            "No active auction for this NFT"
-        );
+        if (auctionId == 0) return false;
 
         Auction storage auction = auctions[auctionId];
-        require(auction.active, "Auction is not active");
-        require(!auction.ended, "Auction has ended");
-        require(block.timestamp < auction.endTime, "Auction has expired");
-        require(
-            msg.value > auction.highestBid,
-            "Bid must be higher than current highest bid"
-        );
-        require(
-            msg.value >= auction.startingPrice,
-            "Bid must be at least the starting price"
-        );
+        return auction.active && !auction.ended;
+    }
 
+    function placeBid(uint256 _tokenId) external payable nonReentrant {
+        uint256 auctionId = tokenIdToAuctionId[_tokenId];
+        if (auctionId == 0) revert AuctionNotFound();
+
+        Auction storage auction = auctions[auctionId];
+        if (!auction.active || auction.ended) revert InvalidAuctionState();
+        if (block.timestamp >= auction.endTime) revert AuctionExpired();
+        if (msg.value <= auction.highestBid) revert BidTooLow();
+        if (msg.value < auction.startingPrice) revert BelowStartingPrice();
+
+        // Refund previous highest bidder
         if (auction.highestBidder != address(0)) {
             payable(auction.highestBidder).transfer(auction.highestBid);
         }
@@ -160,6 +174,7 @@ contract NFTAuction is ReentrancyGuard, Ownable {
         auction.highestBidder = msg.sender;
         auction.highestBid = msg.value;
 
+        // Record bid
         auctionBids[auctionId].push(
             Bid({
                 bidder: msg.sender,
@@ -168,26 +183,19 @@ contract NFTAuction is ReentrancyGuard, Ownable {
             })
         );
 
-        uint256 creatorId = creatorsContract.getCreatorIdByAddress(msg.sender);
-        nftContract._addActivity(auction.tokenId, "Bid Placed", msg.value);
-        creatorsContract.updateBid(creatorId, auctionId, msg.value);
-        creatorsContract.recordActivity(
-            creatorId,
-            "Bid Placed",
-            auction.tokenId
-        );
+        // Track user bids if first time bidding on this auction
+        if (!userBids[msg.sender][auctionId]) {
+            userBids[msg.sender][auctionId] = true;
+            userAuctionBids[msg.sender].push(auctionId);
+        }
 
         emit BidPlaced(auctionId, msg.sender, msg.value);
     }
 
     function endAuction(uint256 _auctionId) external nonReentrant {
         Auction storage auction = auctions[_auctionId];
-        require(auction.active, "Auction is not active");
-        require(!auction.ended, "Auction has already ended");
-        require(
-            block.timestamp >= auction.endTime,
-            "Auction has not yet ended"
-        );
+        if (!auction.active || auction.ended) revert InvalidAuctionState();
+        if (block.timestamp < auction.endTime) revert InvalidAuctionState();
 
         auction.ended = true;
         auction.active = false;
@@ -199,56 +207,22 @@ contract NFTAuction is ReentrancyGuard, Ownable {
                 auction.tokenId
             );
 
-            uint256 fee = calculateFee(auction.highestBid);
+            uint256 fee = (auction.highestBid * FEE_NUMERATOR) /
+                FEE_DENOMINATOR;
             uint256 sellerProceeds = auction.highestBid - fee;
 
             payable(auction.seller).transfer(sellerProceeds);
             payable(owner()).transfer(fee);
-
-            uint256 auctionSellerId = creatorsContract.getCreatorIdByAddress(
-                auction.seller
-            );
-            creatorsContract.updateItemsSold(auctionSellerId);
-
-            uint256 highestBidderId = creatorsContract.getCreatorIdByAddress(
-                auction.highestBidder
-            );
-            creatorsContract.recordActivity(
-                highestBidderId,
-                "Auction Won",
-                auction.tokenId
-            );
-            creatorsContract.recordActivity(
-                auctionSellerId,
-                "Auction Completed",
-                auction.tokenId
-            );
 
             emit AuctionEnded(
                 _auctionId,
                 auction.highestBidder,
                 auction.highestBid
             );
-
-            nftContract.setNFTStatus(auction.tokenId, NFT.NFTStatus.NONE);
-            nftContract._addActivity(
-                auction.tokenId,
-                "Sold in Auction",
-                auction.highestBid
-            );
         } else {
             if (auction.highestBidder != address(0)) {
                 payable(auction.highestBidder).transfer(auction.highestBid);
             }
-            uint256 auctionSellerId = creatorsContract.getCreatorIdByAddress(
-                auction.seller
-            );
-            creatorsContract.recordActivity(
-                auctionSellerId,
-                "Auction Ended (Reserve Not Met)",
-                auction.tokenId
-            );
-            nftContract.setNFTStatus(auction.tokenId, NFT.NFTStatus.NONE);
             emit AuctionCancelled(_auctionId);
         }
 
@@ -258,16 +232,9 @@ contract NFTAuction is ReentrancyGuard, Ownable {
 
     function cancelAuction(uint256 _auctionId) external nonReentrant {
         Auction storage auction = auctions[_auctionId];
-        require(
-            msg.sender == auction.seller,
-            "Only the seller can cancel the auction"
-        );
-        require(auction.active, "Auction is not active");
-        require(!auction.ended, "Auction has already ended");
-        require(
-            auction.highestBidder == address(0),
-            "Cannot cancel auction with bids"
-        );
+        if (msg.sender != auction.seller) revert NotSeller();
+        if (!auction.active || auction.ended) revert InvalidAuctionState();
+        if (auction.highestBidder != address(0)) revert BidsAlreadyPlaced();
 
         auction.ended = true;
         auction.active = false;
@@ -275,39 +242,52 @@ contract NFTAuction is ReentrancyGuard, Ownable {
         tokenIdToAuctionId[auction.tokenId] = 0;
         nftContract.setNFTStatus(auction.tokenId, NFT.NFTStatus.NONE);
 
-        uint256 creatorId = creatorsContract.getCreatorIdByAddress(msg.sender);
-        creatorsContract.recordActivity(
-            creatorId,
-            "Auction Cancelled",
-            auction.tokenId
-        );
-
-        nftContract.setNFTStatus(auction.tokenId, NFT.NFTStatus.NONE);
         emit AuctionCancelled(_auctionId);
     }
 
-    function getNFTDetails(
-        uint256 _tokenId
-    )
-        external
-        view
-        returns (
-            address owner,
-            uint256 price,
-            NFT.NFTStatus status,
-            uint256 collectionId
-        )
-    {
-        owner = nftContract.ownerOf(_tokenId);
-        price = nftContract.getPrice(_tokenId);
-        status = nftContract.getTokenStatus(_tokenId);
-        collectionId = nftContract.getCollection(_tokenId);
-        return (owner, price, status, collectionId);
+    function withdrawBid(uint256 _auctionId) external nonReentrant {
+        Auction storage auction = auctions[_auctionId];
+        if (!auction.active || auction.ended) revert InvalidAuctionState();
+        if (msg.sender == auction.highestBidder)
+            revert HighestBidderCannotWithdraw();
+
+        uint256 bidAmount;
+        uint256 bidsLength = auctionBids[_auctionId].length;
+
+        for (uint256 i; i < bidsLength; ) {
+            if (auctionBids[_auctionId][i].bidder == msg.sender) {
+                bidAmount = auctionBids[_auctionId][i].amount;
+                // Swap with last element and pop
+                auctionBids[_auctionId][i] = auctionBids[_auctionId][
+                    bidsLength - 1
+                ];
+                auctionBids[_auctionId].pop();
+                break;
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
+        if (bidAmount == 0) revert NoBidsFound();
+
+        payable(msg.sender).transfer(bidAmount);
+        emit BidWithdrawn(_auctionId, msg.sender, bidAmount);
     }
 
-    function isNFTOnAuction(uint256 _tokenId) public view returns (bool) {
+    // View functions
+    function getTokenBids(
+        uint256 _tokenId
+    ) external view returns (Bid[] memory) {
         uint256 auctionId = tokenIdToAuctionId[_tokenId];
-        return auctions[auctionId].active;
+        if (auctionId == 0) revert AuctionNotFound();
+        return auctionBids[auctionId];
+    }
+
+    function getUserBids(
+        address _user
+    ) external view returns (uint256[] memory) {
+        return userAuctionBids[_user];
     }
 
     function getAuction(
@@ -341,116 +321,28 @@ contract NFTAuction is ReentrancyGuard, Ownable {
         );
     }
 
-    function getUserAuctionCount(
-        address _user
-    ) external view returns (uint256) {
-        return userAuctionCount[_user];
-    }
-
-    function getAuctionBids(
-        uint256 _auctionId
-    ) external view returns (Bid[] memory) {
-        return auctionBids[_auctionId];
-    }
-
-    function calculateFee(uint256 _amount) internal pure returns (uint256) {
-        return Math.mulDiv(_amount, 250, 10000); // 2.5% fee
-    }
-
     function getActiveAuctions() external view returns (uint256[] memory) {
         uint256[] memory activeAuctionIds = new uint256[](auctionCount);
-        uint256 activeCount = 0;
+        uint256 activeCount;
 
-        for (uint256 i = 1; i <= auctionCount; i++) {
+        for (uint256 i = 1; i <= auctionCount; ) {
             if (auctions[i].active && !auctions[i].ended) {
                 activeAuctionIds[activeCount] = i;
-                activeCount++;
+                unchecked {
+                    ++activeCount;
+                }
+            }
+            unchecked {
+                ++i;
             }
         }
 
-        // Resize the array to remove empty slots
+        // Resize array
         assembly {
             mstore(activeAuctionIds, activeCount)
         }
 
         return activeAuctionIds;
-    }
-
-    function extendAuction(
-        uint256 _auctionId,
-        uint256 _additionalTime
-    ) external {
-        Auction storage auction = auctions[_auctionId];
-        require(
-            msg.sender == auction.seller,
-            "Only the seller can extend the auction"
-        );
-        require(
-            auction.active && !auction.ended,
-            "Auction is not active or has ended"
-        );
-        require(block.timestamp < auction.endTime, "Auction has already ended");
-
-        uint256 newEndTime = auction.endTime + _additionalTime;
-        require(
-            newEndTime - block.timestamp <= MAXIMUM_AUCTION_DURATION,
-            "Cannot extend beyond maximum duration"
-        );
-
-        auction.endTime = newEndTime;
-        emit AuctionExtended(_auctionId, newEndTime);
-    }
-
-    function updateReservePrice(
-        uint256 _auctionId,
-        uint256 _newReservePrice
-    ) external {
-        Auction storage auction = auctions[_auctionId];
-        require(
-            msg.sender == auction.seller,
-            "Only the seller can update the reserve price"
-        );
-        require(
-            auction.active && !auction.ended,
-            "Auction is not active or has ended"
-        );
-        require(
-            _newReservePrice >= auction.startingPrice,
-            "New reserve price must be at least the starting price"
-        );
-
-        auction.reservePrice = _newReservePrice;
-        emit ReservePriceUpdated(_auctionId, _newReservePrice);
-    }
-
-    function withdrawBid(uint256 _auctionId) external nonReentrant {
-        Auction storage auction = auctions[_auctionId];
-        require(
-            auction.active && !auction.ended,
-            "Auction is not active or has ended"
-        );
-        require(
-            msg.sender != auction.highestBidder,
-            "Highest bidder cannot withdraw their bid"
-        );
-
-        uint256 bidAmount = 0;
-        for (uint256 i = 0; i < auctionBids[_auctionId].length; i++) {
-            if (auctionBids[_auctionId][i].bidder == msg.sender) {
-                bidAmount = auctionBids[_auctionId][i].amount;
-                // Remove the bid from the array by replacing it with the last element and reducing the array length
-                auctionBids[_auctionId][i] = auctionBids[_auctionId][
-                    auctionBids[_auctionId].length - 1
-                ];
-                auctionBids[_auctionId].pop();
-                break;
-            }
-        }
-
-        require(bidAmount > 0, "No bids found for this bidder");
-
-        payable(msg.sender).transfer(bidAmount);
-        emit BidWithdrawn(_auctionId, msg.sender, bidAmount);
     }
 
     function onERC721Received(

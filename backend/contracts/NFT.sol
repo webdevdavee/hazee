@@ -3,13 +3,11 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./NFTCreators.sol";
-import "./NFTAuction.sol";
 
-contract NFT is ERC721URIStorage, Ownable {
+contract NFT is ERC721Enumerable, ERC721URIStorage, Ownable {
     uint256 private _tokenIds;
-    NFTCreators public creatorsContract;
     address public auctionContract;
     address public marketplaceContract;
 
@@ -20,141 +18,178 @@ contract NFT is ERC721URIStorage, Ownable {
         BOTH
     }
 
-    struct Activity {
-        string action;
-        uint256 value;
-        uint256 timestamp;
+    struct TokenInfo {
+        uint256 price;
+        uint256 collectionId;
+        NFTStatus status;
     }
 
-    mapping(uint256 => NFTStatus) private _tokenStatus;
-    mapping(uint256 => uint256) public tokenPrices;
-    mapping(uint256 => Activity[]) public nftActivities;
-    mapping(uint256 => uint256) public collection;
+    mapping(address => uint256[]) private _createdTokens;
+    mapping(address => uint256) private _itemsSold;
+    mapping(uint256 => TokenInfo) private _tokenInfo;
 
-    event NFTMinted(uint256 tokenId, address creator);
-    event NFTStatusChanged(uint256 tokenId, NFTStatus newStatus);
-    event NFTActivityAdded(uint256 tokenId, string action, uint256 value);
-    event PriceSet(uint256 tokenId, uint256 price);
-    event PriceUpdated(uint256 tokenId, uint256 newPrice);
+    // Events
+    event NFTMinted(uint256 indexed tokenId, address indexed creator);
+    event NFTStatusChanged(uint256 indexed tokenId, NFTStatus newStatus);
+    event PriceSet(uint256 indexed tokenId, uint256 price);
+    event PriceUpdated(uint256 indexed tokenId, uint256 newPrice);
+    event ItemSold(address indexed seller, uint256 indexed tokenId);
 
     constructor(
         string memory name,
         string memory symbol,
-        address _creatorsAddress,
         address _auctionContractAddress,
         address _marketplaceContractAddress
     ) ERC721(name, symbol) Ownable(msg.sender) {
-        creatorsContract = NFTCreators(_creatorsAddress);
         auctionContract = _auctionContractAddress;
         marketplaceContract = _marketplaceContractAddress;
+    }
+
+    // These overrides are necessary because ERC721Enumerable and ERC721URIStorage
+    // both modify some of the same base ERC721 functions
+    function _update(
+        address to,
+        uint256 tokenId,
+        address auth
+    ) internal override(ERC721, ERC721Enumerable) returns (address) {
+        return super._update(to, tokenId, auth);
+    }
+
+    function _increaseBalance(
+        address account,
+        uint128 value
+    ) internal override(ERC721, ERC721Enumerable) {
+        super._increaseBalance(account, value);
+    }
+
+    function tokenURI(
+        uint256 tokenId
+    ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+        return super.tokenURI(tokenId);
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC721Enumerable, ERC721URIStorage) returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 
     function exists(uint256 tokenId) public view returns (bool) {
         return _ownerOf(tokenId) != address(0);
     }
 
-    function setAuctionContract(address _auctionContract) external {
+    function getCurrentOwner(uint256 tokenId) public view returns (address) {
+        require(exists(tokenId), "NFT: Nonexistent token");
+        return ownerOf(tokenId);
+    }
+
+    function setAuctionContract(address _auctionContract) external onlyOwner {
         auctionContract = _auctionContract;
     }
 
     function mint(
-        address to,
-        string memory tokenURI,
+        string memory theTokenURI,
         uint256 price,
         uint256 _collectionId
     ) public returns (uint256) {
-        uint256 creatorId = creatorsContract.getCreatorIdByAddress(to);
-        require(creatorId != 0, "Creator not registered");
-
-        _tokenIds++;
+        unchecked {
+            _tokenIds++;
+        }
         uint256 newTokenId = _tokenIds;
-        _safeMint(to, newTokenId);
-        _setTokenURI(newTokenId, tokenURI);
 
-        tokenPrices[newTokenId] = price;
-        _tokenStatus[newTokenId] = NFTStatus.NONE;
-        collection[newTokenId] = _collectionId;
+        _safeMint(msg.sender, newTokenId);
+        _setTokenURI(newTokenId, theTokenURI);
 
-        _addActivity(newTokenId, "Minted", 0);
-        creatorsContract.addCreatedNFT(creatorId, newTokenId);
+        _tokenInfo[newTokenId] = TokenInfo({
+            price: price,
+            collectionId: _collectionId,
+            status: NFTStatus.NONE
+        });
 
-        emit NFTMinted(newTokenId, to);
+        _createdTokens[msg.sender].push(newTokenId);
+
+        emit NFTMinted(newTokenId, msg.sender);
         emit PriceSet(newTokenId, price);
 
         return newTokenId;
     }
 
     function setNFTStatus(uint256 tokenId, NFTStatus status) external {
-        require(exists(tokenId), "NFT: Status set for nonexistent token");
+        require(exists(tokenId), "NFT: Nonexistent token");
         require(
             msg.sender == ownerOf(tokenId) ||
                 msg.sender == owner() ||
                 msg.sender == auctionContract ||
                 msg.sender == marketplaceContract,
-            "NFT: Only owner, contract owner, auction contract or marketplace contract can set status"
+            "NFT: Not authorized"
         );
-        _tokenStatus[tokenId] = status;
-        _addActivity(tokenId, "Status Changed", uint256(status));
+        _tokenInfo[tokenId].status = status;
         emit NFTStatusChanged(tokenId, status);
     }
 
-    function _addActivity(
-        uint256 tokenId,
-        string memory action,
-        uint256 value
-    ) public {
-        uint256 timestamp = block.timestamp;
-        nftActivities[tokenId].push(Activity(action, value, timestamp));
-
-        uint256 creatorId = creatorsContract.getCreatorIdByAddress(
-            ownerOf(tokenId)
-        );
-        creatorsContract.recordActivity(creatorId, action, tokenId);
-
-        emit NFTActivityAdded(tokenId, action, value);
-    }
-
-    function getActivities(
-        uint256 tokenId
-    ) public view returns (Activity[] memory) {
-        require(exists(tokenId), "NFT: Activities query for nonexistent token");
-        return nftActivities[tokenId];
-    }
-
     function setPrice(uint256 tokenId, uint256 price) external {
-        require(exists(tokenId), "NFT: Price set for nonexistent token");
-        require(
-            msg.sender == ownerOf(tokenId),
-            "NFT: Only owner can set price"
-        );
-        tokenPrices[tokenId] = price;
-        _addActivity(tokenId, "Price Set", price);
+        require(exists(tokenId), "NFT: Nonexistent token");
+        require(msg.sender == ownerOf(tokenId), "NFT: Not owner");
+        _tokenInfo[tokenId].price = price;
         emit PriceSet(tokenId, price);
     }
 
     function updatePrice(uint256 tokenId, uint256 newPrice) external {
-        require(exists(tokenId), "NFT: Price update for nonexistent token");
-        require(
-            msg.sender == ownerOf(tokenId),
-            "NFT: Only owner can update price"
-        );
-        tokenPrices[tokenId] = newPrice;
-        _addActivity(tokenId, "Price Updated", newPrice);
+        require(exists(tokenId), "NFT: Nonexistent token");
+        require(msg.sender == ownerOf(tokenId), "NFT: Not owner");
+        _tokenInfo[tokenId].price = newPrice;
         emit PriceUpdated(tokenId, newPrice);
     }
 
+    function recordSale(address seller) external {
+        require(
+            msg.sender == auctionContract || msg.sender == marketplaceContract,
+            "NFT: Not authorized"
+        );
+        unchecked {
+            _itemsSold[seller]++;
+        }
+        emit ItemSold(seller, _itemsSold[seller]);
+    }
+
     function getPrice(uint256 tokenId) public view returns (uint256) {
-        require(exists(tokenId), "NFT: Price query for nonexistent token");
-        return tokenPrices[tokenId];
+        require(exists(tokenId), "NFT: Nonexistent token");
+        return _tokenInfo[tokenId].price;
     }
 
     function getCollection(uint256 tokenId) public view returns (uint256) {
-        require(exists(tokenId), "NFT: Collection query for nonexistent token");
-        return collection[tokenId];
+        require(exists(tokenId), "NFT: Nonexistent token");
+        return _tokenInfo[tokenId].collectionId;
     }
 
     function getTokenStatus(uint256 tokenId) public view returns (NFTStatus) {
-        require(exists(tokenId), "NFT: Status query for nonexistent token");
-        return _tokenStatus[tokenId];
+        require(exists(tokenId), "NFT: Nonexistent token");
+        return _tokenInfo[tokenId].status;
+    }
+
+    function getCreatedTokens(
+        address creator
+    ) public view returns (uint256[] memory) {
+        return _createdTokens[creator];
+    }
+
+    function getItemsSold(address seller) public view returns (uint256) {
+        return _itemsSold[seller];
+    }
+
+    function getOwnedTokens(
+        address owner
+    ) public view returns (uint256[] memory) {
+        uint256 balance = balanceOf(owner);
+        uint256[] memory tokens = new uint256[](balance);
+
+        for (uint256 i = 0; i < balance; ) {
+            tokens[i] = tokenOfOwnerByIndex(owner, i);
+            unchecked {
+                ++i;
+            }
+        }
+
+        return tokens;
     }
 }

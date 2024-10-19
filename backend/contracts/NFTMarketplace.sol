@@ -6,12 +6,10 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./INFTCollections.sol";
 import "./NFTAuction.sol";
 import "./NFT.sol";
-import "./NFTCreators.sol";
 
 contract NFTMarketplace is ReentrancyGuard {
-    NFTCreators public immutable i_creatorsContract;
-    NFTAuction public immutable i_auctionContract;
     INFTCollections public immutable i_collectionContract;
+    NFTAuction public immutable i_auctionContract;
     address public immutable i_feeRecipient;
 
     uint256 public constant PLATFORM_FEE_PERCENTAGE = 250; // 2.5%
@@ -29,36 +27,45 @@ contract NFTMarketplace is ReentrancyGuard {
 
     mapping(uint256 => Listing) public listings;
 
-    event NFTSold(
-        uint256 listingId,
-        address buyer,
-        address seller,
-        address nftContract,
-        uint256 tokenId,
-        uint256 price
-    );
+    // Custom errors
+    error PriceMustBeGreaterThanZero();
+    error NotNFTOwner();
+    error ContractNotApproved();
+    error NFTOnAuction();
+    error CollectionNotActive();
+    error NotSeller();
+    error ListingNotActive();
+    error InsufficientPayment();
+    error NFTUnavailableForPurchase();
+    error SellerNoLongerOwnsNFT();
+    error ListingNotFound();
 
     event NFTListed(
-        uint256 listingId,
-        address seller,
-        address nftContract,
+        uint256 indexed listingId,
+        address indexed seller,
+        address indexed nftContract,
         uint256 tokenId,
         uint256 price,
         NFT.NFTStatus saleType
     );
-
-    event ListingCancelled(uint256 listingId);
-    event ListingPriceUpdated(uint256 listingId, uint256 newPrice);
+    event NFTSold(
+        uint256 indexed listingId,
+        address indexed buyer,
+        address indexed seller,
+        address nftContract,
+        uint256 tokenId,
+        uint256 price
+    );
+    event ListingCancelled(uint256 indexed listingId);
+    event ListingPriceUpdated(uint256 indexed listingId, uint256 newPrice);
 
     constructor(
-        address _creatorsContractAddress,
-        address _auctionContractAddress,
-        address _collectionContractAddress
+        address _collectionContractAddress,
+        address _auctionContractAddress
     ) {
         i_feeRecipient = address(this);
-        i_creatorsContract = NFTCreators(_creatorsContractAddress);
-        i_auctionContract = NFTAuction(_auctionContractAddress);
         i_collectionContract = INFTCollections(_collectionContractAddress);
+        i_auctionContract = NFTAuction(_auctionContractAddress);
     }
 
     function listNFT(
@@ -66,20 +73,13 @@ contract NFTMarketplace is ReentrancyGuard {
         uint256 _tokenId,
         uint256 _price
     ) external nonReentrant {
-        require(_price > 0, "Price must be greater than zero");
+        if (_price == 0) revert PriceMustBeGreaterThanZero();
+
         IERC721 nftContract = IERC721(_nftContract);
-        require(
-            nftContract.ownerOf(_tokenId) == msg.sender,
-            "You don't own this NFT"
-        );
-        require(
-            nftContract.isApprovedForAll(msg.sender, address(this)),
-            "Contract not approved"
-        );
-        require(
-            !i_auctionContract.isNFTOnAuction(_tokenId),
-            "NFT is currently on auction"
-        );
+        if (nftContract.ownerOf(_tokenId) != msg.sender) revert NotNFTOwner();
+        if (!nftContract.isApprovedForAll(msg.sender, address(this)))
+            revert ContractNotApproved();
+        if (i_auctionContract.isNFTOnAuction(_tokenId)) revert NFTOnAuction();
 
         NFT NFTContract = NFT(_nftContract);
         uint256 collectionId = NFTContract.getCollection(_tokenId);
@@ -88,9 +88,12 @@ contract NFTMarketplace is ReentrancyGuard {
             memory collectionInfo = i_collectionContract.getCollectionInfo(
                 collectionId
             );
-        require(collectionInfo.isActive, "Collection does not exist");
+        if (!collectionInfo.isActive) revert CollectionNotActive();
 
-        listingCounter++;
+        unchecked {
+            listingCounter++;
+        }
+
         listings[listingCounter] = Listing({
             seller: msg.sender,
             nftContract: _nftContract,
@@ -101,12 +104,6 @@ contract NFTMarketplace is ReentrancyGuard {
         });
 
         NFTContract.setNFTStatus(_tokenId, NFT.NFTStatus.SALE);
-        NFTContract._addActivity(_tokenId, "Listed", _price);
-
-        uint256 creatorId = i_creatorsContract.getCreatorIdByAddress(
-            msg.sender
-        );
-        i_creatorsContract.recordActivity(creatorId, "NFT Listed", _tokenId);
 
         emit NFTListed(
             listingCounter,
@@ -120,8 +117,8 @@ contract NFTMarketplace is ReentrancyGuard {
 
     function cancelListing(uint256 _listingId) external nonReentrant {
         Listing storage listing = listings[_listingId];
-        require(listing.seller == msg.sender, "You're not the seller");
-        require(listing.isActive, "Listing is not active");
+        if (listing.seller != msg.sender) revert NotSeller();
+        if (!listing.isActive) revert ListingNotActive();
 
         listing.isActive = false;
         NFT(listing.nftContract).setNFTStatus(
@@ -129,73 +126,41 @@ contract NFTMarketplace is ReentrancyGuard {
             NFT.NFTStatus.NONE
         );
 
-        uint256 creatorId = i_creatorsContract.getCreatorIdByAddress(
-            msg.sender
-        );
-        i_creatorsContract.recordActivity(
-            creatorId,
-            "Listing Cancelled",
-            listing.tokenId
-        );
         emit ListingCancelled(_listingId);
-    }
-
-    function isNFTListed(
-        address _nftContract,
-        uint256 _tokenId
-    ) external view returns (bool) {
-        for (uint256 i = 1; i <= listingCounter; i++) {
-            if (
-                listings[i].nftContract == _nftContract &&
-                listings[i].tokenId == _tokenId &&
-                listings[i].isActive
-            ) {
-                return true;
-            }
-        }
-        return false;
     }
 
     function updateListingPrice(
         uint256 _listingId,
         uint256 _newPrice
     ) external nonReentrant {
+        if (_newPrice == 0) revert PriceMustBeGreaterThanZero();
+
         Listing storage listing = listings[_listingId];
-        require(listing.seller == msg.sender, "You're not the seller");
-        require(listing.isActive, "Listing is not active");
-        require(_newPrice > 0, "Price must be greater than zero");
+        if (listing.seller != msg.sender) revert NotSeller();
+        if (!listing.isActive) revert ListingNotActive();
 
         listing.price = _newPrice;
-
         NFT(listing.nftContract).updatePrice(listing.tokenId, _newPrice);
 
-        uint256 creatorId = i_creatorsContract.getCreatorIdByAddress(
-            msg.sender
-        );
-        i_creatorsContract.recordActivity(
-            creatorId,
-            "Listing Price Updated",
-            listing.tokenId
-        );
         emit ListingPriceUpdated(_listingId, _newPrice);
     }
 
     function buyNFT(uint256 _listingId) external payable nonReentrant {
         Listing storage listing = listings[_listingId];
-        require(listing.isActive, "Listing is not active");
-        require(msg.value >= listing.price, "Insufficient payment");
-        require(
-            listing.saleType == NFT.NFTStatus.SALE ||
-                listing.saleType == NFT.NFTStatus.BOTH,
-            "NFT is not available for direct purchase"
-        );
-        require(
-            !i_auctionContract.isNFTOnAuction(listing.tokenId),
-            "NFT is currently on auction"
-        );
+        if (!listing.isActive) revert ListingNotActive();
+        if (msg.value < listing.price) revert InsufficientPayment();
+        if (
+            listing.saleType != NFT.NFTStatus.SALE &&
+            listing.saleType != NFT.NFTStatus.BOTH
+        ) revert NFTUnavailableForPurchase();
+        if (i_auctionContract.isNFTOnAuction(listing.tokenId))
+            revert NFTOnAuction();
+
+        IERC721 nftContract = IERC721(listing.nftContract);
+        if (nftContract.ownerOf(listing.tokenId) != listing.seller)
+            revert SellerNoLongerOwnsNFT();
 
         listing.isActive = false;
-        IERC721 nftContract = IERC721(listing.nftContract);
 
         uint256 platformFee = (listing.price * PLATFORM_FEE_PERCENTAGE) / 10000;
         uint256 royaltyFee = 0;
@@ -212,11 +177,6 @@ contract NFTMarketplace is ReentrancyGuard {
 
         uint256 sellerProceeds = listing.price - platformFee - royaltyFee;
 
-        require(
-            nftContract.ownerOf(listing.tokenId) == listing.seller,
-            "Seller no longer owns the NFT"
-        );
-
         // Transfer NFT first to prevent reentrancy
         nftContract.safeTransferFrom(
             listing.seller,
@@ -231,28 +191,7 @@ contract NFTMarketplace is ReentrancyGuard {
         }
         payable(listing.seller).transfer(sellerProceeds);
 
-        nft._addActivity(listing.tokenId, "Sold", listing.price);
         nft.setNFTStatus(listing.tokenId, NFT.NFTStatus.NONE);
-
-        uint256 listingSellerId = i_creatorsContract.getCreatorIdByAddress(
-            listing.seller
-        );
-        i_creatorsContract.updateItemsSold(listingSellerId);
-
-        uint256 buyerId = i_creatorsContract.getCreatorIdByAddress(msg.sender);
-        i_creatorsContract.recordActivity(
-            buyerId,
-            "NFT Purchased",
-            listing.tokenId
-        );
-        i_creatorsContract.addOwnedNFT(buyerId, listing.tokenId);
-        i_creatorsContract.removeOwnedNFT(listingSellerId, listing.tokenId);
-
-        i_creatorsContract.recordActivity(
-            listingSellerId,
-            "NFT Sold",
-            listing.tokenId
-        );
 
         emit NFTSold(
             _listingId,
@@ -302,14 +241,15 @@ contract NFTMarketplace is ReentrancyGuard {
         uint256[] memory activeListings = new uint256[](_limit);
         uint256 count = 0;
 
-        for (
-            uint256 i = _offset + 1;
-            i <= listingCounter && count < _limit;
-            i++
-        ) {
+        for (uint256 i = _offset + 1; i <= listingCounter && count < _limit; ) {
             if (listings[i].isActive) {
                 activeListings[count] = i;
-                count++;
+                unchecked {
+                    ++count;
+                }
+            }
+            unchecked {
+                ++i;
             }
         }
 
@@ -319,5 +259,24 @@ contract NFTMarketplace is ReentrancyGuard {
         }
 
         return activeListings;
+    }
+
+    function isNFTListed(
+        address _nftContract,
+        uint256 _tokenId
+    ) external view returns (bool) {
+        for (uint256 i = 1; i <= listingCounter; ) {
+            if (
+                listings[i].nftContract == _nftContract &&
+                listings[i].tokenId == _tokenId &&
+                listings[i].isActive
+            ) {
+                return true;
+            }
+            unchecked {
+                ++i;
+            }
+        }
+        return false;
     }
 }

@@ -2,28 +2,22 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 import {
   NFTAuction,
-  NFTAuction__factory,
   NFT,
-  NFTCreators,
-  NFTCreators__factory,
   NFT__factory,
+  NFTAuction__factory,
 } from "../../typechain-types";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 
 describe("NFTAuction", function () {
-  let nftAuctionFactory: NFTAuction__factory;
   let nftAuction: NFTAuction;
-  let nftFactory: NFT__factory;
   let nft: NFT;
-  let nftCreatorsFactory: NFTCreators__factory;
-  let nftCreators: NFTCreators;
-  let owner: SignerWithAddress;
-  let seller: SignerWithAddress;
-  let bidder1: SignerWithAddress;
-  let bidder2: SignerWithAddress;
-  let fakeAuctionAddress: SignerWithAddress;
-  let fakeMarketplaceAddress: SignerWithAddress;
+  let owner: HardhatEthersSigner;
+  let seller: HardhatEthersSigner;
+  let bidder1: HardhatEthersSigner;
+  let bidder2: HardhatEthersSigner;
+  let fakeAuctionAddress: HardhatEthersSigner;
+  let fakeMarketplaceAddress: HardhatEthersSigner;
 
   const TOKEN_ID = 1;
   const STARTING_PRICE = ethers.parseEther("1");
@@ -40,49 +34,32 @@ describe("NFTAuction", function () {
       fakeMarketplaceAddress,
     ] = await ethers.getSigners();
 
-    // Deploy NFTCreators
-    nftCreatorsFactory = (await ethers.getContractFactory(
-      "NFTCreators"
-    )) as unknown as NFTCreators__factory;
-    nftCreators = await nftCreatorsFactory.deploy();
-
     // Deploy NFT
-    nftFactory = (await ethers.getContractFactory(
+    const NFTFactory = (await ethers.getContractFactory(
       "NFT"
     )) as unknown as NFT__factory;
-    nft = await nftFactory.deploy(
+    nft = await NFTFactory.deploy(
       "TestNFT",
       "TNFT",
-      await nftCreators.getAddress(),
-      fakeAuctionAddress, // Dummy address before actual address can be inputted
-      fakeMarketplaceAddress // Dummy marketplace address
+      await fakeAuctionAddress.getAddress(),
+      await fakeMarketplaceAddress.getAddress()
     );
 
     // Deploy NFTAuction
-    nftAuctionFactory = (await ethers.getContractFactory(
+    const NFTAuctionFactory = (await ethers.getContractFactory(
       "NFTAuction"
     )) as unknown as NFTAuction__factory;
-    nftAuction = await nftAuctionFactory.deploy(
-      await nft.getAddress(),
-      await nftCreators.getAddress()
-    );
+    nftAuction = await NFTAuctionFactory.deploy(await nft.getAddress());
 
     // Update NFT with correct NFTAuction address
     await nft.setAuctionContract(await nftAuction.getAddress());
-
-    // Register creators
-    await nftCreators.connect(seller).registerCreator();
-    await nftCreators.connect(bidder1).registerCreator();
-    await nftCreators.connect(bidder2).registerCreator();
 
     // Mint an NFT for the seller
     const tokenURI = "https://example.com/token/1";
     const price = ethers.parseEther("1");
     const collectionId = 1;
 
-    await nft
-      .connect(seller)
-      .mint(seller.address, tokenURI, price, collectionId);
+    await nft.connect(seller).mint(tokenURI, price, collectionId);
 
     // Approve NFTAuction contract
     await nft
@@ -92,17 +69,11 @@ describe("NFTAuction", function () {
 
   describe("Deployment", function () {
     it("Should set the right owner", async function () {
-      expect(await nftAuction.owner()).to.equal(owner.address);
+      expect(await nftAuction.owner()).to.equal(await owner.getAddress());
     });
 
     it("Should set the correct NFT contract address", async function () {
       expect(await nftAuction.nftContract()).to.equal(await nft.getAddress());
-    });
-
-    it("Should set the correct NFTCreators contract address", async function () {
-      expect(await nftAuction.creatorsContract()).to.equal(
-        await nftCreators.getAddress()
-      );
     });
   });
 
@@ -120,16 +91,16 @@ describe("NFTAuction", function () {
       )
         .to.emit(nftAuction, "AuctionCreated")
         .withArgs(
-          1,
-          seller.address,
+          1n,
+          await seller.getAddress(),
           TOKEN_ID,
           STARTING_PRICE,
           RESERVE_PRICE,
           (await time.latest()) + AUCTION_DURATION
         );
 
-      const auction = await nftAuction.getAuction(1);
-      expect(auction.seller).to.equal(seller.address);
+      const auction = await nftAuction.getAuction(1n);
+      expect(auction.seller).to.equal(await seller.getAddress());
       expect(auction.tokenId).to.equal(TOKEN_ID);
       expect(auction.startingPrice).to.equal(STARTING_PRICE);
       expect(auction.reservePrice).to.equal(RESERVE_PRICE);
@@ -146,16 +117,15 @@ describe("NFTAuction", function () {
             RESERVE_PRICE,
             AUCTION_DURATION
           )
-      ).to.be.revertedWith("You don't own this NFT");
+      ).to.be.revertedWithCustomError(nftAuction, "NotTokenOwner");
     });
 
     it("Should fail to create an auction with invalid duration", async function () {
       await expect(
         nftAuction
           .connect(seller)
-          .createAuction(TOKEN_ID, STARTING_PRICE, RESERVE_PRICE, 60)
-      ) // 1 minute
-        .to.be.revertedWith("Invalid auction duration");
+          .createAuction(TOKEN_ID, STARTING_PRICE, RESERVE_PRICE, 60n)
+      ).to.be.revertedWithCustomError(nftAuction, "InvalidDuration");
     });
   });
 
@@ -178,7 +148,7 @@ describe("NFTAuction", function () {
           .placeBid(TOKEN_ID, { value: ethers.parseEther("1.5") })
       )
         .to.emit(nftAuction, "BidPlaced")
-        .withArgs(1, bidder1.address, ethers.parseEther("1.5"));
+        .withArgs(1n, await bidder1.getAddress(), ethers.parseEther("1.5"));
     });
 
     it("Should fail to place a bid lower than the starting price", async function () {
@@ -186,7 +156,7 @@ describe("NFTAuction", function () {
         nftAuction
           .connect(bidder1)
           .placeBid(TOKEN_ID, { value: ethers.parseEther("0.5") })
-      ).to.be.revertedWith("Bid must be at least the starting price");
+      ).to.be.revertedWithCustomError(nftAuction, "BelowStartingPrice");
     });
 
     it("Should fail to place a bid lower than the current highest bid", async function () {
@@ -197,7 +167,7 @@ describe("NFTAuction", function () {
         nftAuction
           .connect(bidder2)
           .placeBid(TOKEN_ID, { value: ethers.parseEther("1.4") })
-      ).to.be.revertedWith("Bid must be higher than current highest bid");
+      ).to.be.revertedWithCustomError(nftAuction, "BidTooLow");
     });
   });
 
@@ -218,11 +188,11 @@ describe("NFTAuction", function () {
         .connect(bidder1)
         .placeBid(TOKEN_ID, { value: ethers.parseEther("2.5") });
       await time.increase(AUCTION_DURATION + 1);
-      await expect(nftAuction.endAuction(1))
+      await expect(nftAuction.endAuction(1n))
         .to.emit(nftAuction, "AuctionEnded")
-        .withArgs(1, bidder1.address, ethers.parseEther("2.5"));
+        .withArgs(1n, await bidder1.getAddress(), ethers.parseEther("2.5"));
 
-      expect(await nft.ownerOf(TOKEN_ID)).to.equal(bidder1.address);
+      expect(await nft.ownerOf(TOKEN_ID)).to.equal(await bidder1.getAddress());
     });
 
     it("Should refund the highest bidder when reserve price is not met", async function () {
@@ -232,19 +202,20 @@ describe("NFTAuction", function () {
       await time.increase(AUCTION_DURATION + 1);
 
       const bidderBalanceBefore = await ethers.provider.getBalance(
-        bidder1.address
+        await bidder1.getAddress()
       );
-      await nftAuction.endAuction(1);
+      await nftAuction.endAuction(1n);
       const bidderBalanceAfter = await ethers.provider.getBalance(
-        bidder1.address
+        await bidder1.getAddress()
       );
 
       expect(bidderBalanceAfter).to.be.gt(bidderBalanceBefore);
     });
 
     it("Should fail to end an auction before its end time", async function () {
-      await expect(nftAuction.endAuction(1)).to.be.revertedWith(
-        "Auction has not yet ended"
+      await expect(nftAuction.endAuction(1n)).to.be.revertedWithCustomError(
+        nftAuction,
+        "InvalidAuctionState"
       );
     });
   });
@@ -262,11 +233,11 @@ describe("NFTAuction", function () {
     });
 
     it("Should cancel an auction successfully", async function () {
-      await expect(nftAuction.connect(seller).cancelAuction(1))
+      await expect(nftAuction.connect(seller).cancelAuction(1n))
         .to.emit(nftAuction, "AuctionCancelled")
-        .withArgs(1);
+        .withArgs(1n);
 
-      const auction = await nftAuction.getAuction(1);
+      const auction = await nftAuction.getAuction(1n);
       expect(auction.active).to.be.false;
       expect(auction.ended).to.be.true;
     });
@@ -276,14 +247,14 @@ describe("NFTAuction", function () {
         .connect(bidder1)
         .placeBid(TOKEN_ID, { value: ethers.parseEther("1.5") });
       await expect(
-        nftAuction.connect(seller).cancelAuction(1)
-      ).to.be.revertedWith("Cannot cancel auction with bids");
+        nftAuction.connect(seller).cancelAuction(1n)
+      ).to.be.revertedWithCustomError(nftAuction, "BidsAlreadyPlaced");
     });
 
     it("Should fail to cancel an auction by non-seller", async function () {
       await expect(
-        nftAuction.connect(bidder1).cancelAuction(1)
-      ).to.be.revertedWith("Only the seller can cancel the auction");
+        nftAuction.connect(bidder1).cancelAuction(1n)
+      ).to.be.revertedWithCustomError(nftAuction, "NotSeller");
     });
   });
 
@@ -300,15 +271,11 @@ describe("NFTAuction", function () {
     });
 
     it("Should return correct auction details", async function () {
-      const auction = await nftAuction.getAuction(1);
-      expect(auction.seller).to.equal(seller.address);
+      const auction = await nftAuction.getAuction(1n);
+      expect(auction.seller).to.equal(await seller.getAddress());
       expect(auction.tokenId).to.equal(TOKEN_ID);
       expect(auction.startingPrice).to.equal(STARTING_PRICE);
       expect(auction.reservePrice).to.equal(RESERVE_PRICE);
-    });
-
-    it("Should return correct user auction count", async function () {
-      expect(await nftAuction.getUserAuctionCount(seller.address)).to.equal(1);
     });
 
     it("Should return correct auction bids", async function () {
@@ -319,76 +286,10 @@ describe("NFTAuction", function () {
         .connect(bidder2)
         .placeBid(TOKEN_ID, { value: ethers.parseEther("2.0") });
 
-      const bids = await nftAuction.getAuctionBids(1);
+      const bids = await nftAuction.getTokenBids(TOKEN_ID);
       expect(bids.length).to.equal(2);
-      expect(bids[0].bidder).to.equal(bidder1.address);
-      expect(bids[1].bidder).to.equal(bidder2.address);
-    });
-  });
-
-  describe("Extending an auction", function () {
-    beforeEach(async function () {
-      await nftAuction
-        .connect(seller)
-        .createAuction(
-          TOKEN_ID,
-          STARTING_PRICE,
-          RESERVE_PRICE,
-          AUCTION_DURATION
-        );
-    });
-
-    it("Should extend an auction successfully", async function () {
-      const additionalTime = 24 * 60 * 60; // 1 day
-      await expect(
-        nftAuction.connect(seller).extendAuction(1, additionalTime)
-      ).to.emit(nftAuction, "AuctionExtended");
-
-      const auction = await nftAuction.getAuction(1);
-      expect(auction.endTime).to.be.gt(
-        (await time.latest()) + AUCTION_DURATION
-      );
-    });
-
-    it("Should fail to extend an auction beyond maximum duration", async function () {
-      const additionalTime = 31 * 24 * 60 * 60; // 31 days
-      await expect(
-        nftAuction.connect(seller).extendAuction(1, additionalTime)
-      ).to.be.revertedWith("Cannot extend beyond maximum duration");
-    });
-  });
-
-  describe("Updating reserve price", function () {
-    beforeEach(async function () {
-      await nftAuction
-        .connect(seller)
-        .createAuction(
-          TOKEN_ID,
-          STARTING_PRICE,
-          RESERVE_PRICE,
-          AUCTION_DURATION
-        );
-    });
-
-    it("Should update reserve price successfully", async function () {
-      const newReservePrice = ethers.parseEther("3");
-      await expect(
-        nftAuction.connect(seller).updateReservePrice(1, newReservePrice)
-      )
-        .to.emit(nftAuction, "ReservePriceUpdated")
-        .withArgs(1, newReservePrice);
-
-      const auction = await nftAuction.getAuction(1);
-      expect(auction.reservePrice).to.equal(newReservePrice);
-    });
-
-    it("Should fail to update reserve price below starting price", async function () {
-      const newReservePrice = ethers.parseEther("0.5");
-      await expect(
-        nftAuction.connect(seller).updateReservePrice(1, newReservePrice)
-      ).to.be.revertedWith(
-        "New reserve price must be at least the starting price"
-      );
+      expect(bids[0].bidder).to.equal(await bidder1.getAddress());
+      expect(bids[1].bidder).to.equal(await bidder2.getAddress());
     });
   });
 
@@ -412,22 +313,25 @@ describe("NFTAuction", function () {
 
     it("Should allow a non-highest bidder to withdraw their bid", async function () {
       const bidderBalanceBefore = await ethers.provider.getBalance(
-        bidder1.address
+        await bidder1.getAddress()
       );
-      await expect(nftAuction.connect(bidder1).withdrawBid(1))
+      await expect(nftAuction.connect(bidder1).withdrawBid(1n))
         .to.emit(nftAuction, "BidWithdrawn")
-        .withArgs(1, bidder1.address, ethers.parseEther("1.5"));
+        .withArgs(1n, await bidder1.getAddress(), ethers.parseEther("1.5"));
 
       const bidderBalanceAfter = await ethers.provider.getBalance(
-        bidder1.address
+        await bidder1.getAddress()
       );
       expect(bidderBalanceAfter).to.be.gt(bidderBalanceBefore);
     });
 
     it("Should not allow the highest bidder to withdraw their bid", async function () {
       await expect(
-        nftAuction.connect(bidder2).withdrawBid(1)
-      ).to.be.revertedWith("Highest bidder cannot withdraw their bid");
+        nftAuction.connect(bidder2).withdrawBid(1n)
+      ).to.be.revertedWithCustomError(
+        nftAuction,
+        "HighestBidderCannotWithdraw"
+      );
     });
   });
 
@@ -435,7 +339,7 @@ describe("NFTAuction", function () {
     beforeEach(async function () {
       const tokenURI = "https://example.com/token/1";
       const price = ethers.parseEther("1");
-      const collectionId = 1;
+      const collectionId = 1n;
 
       // Create multiple auctions
       await nftAuction
@@ -447,29 +351,27 @@ describe("NFTAuction", function () {
           AUCTION_DURATION
         );
 
-      await nft
-        .connect(seller)
-        .mint(seller.address, tokenURI, price, collectionId);
+      await nft.connect(seller).mint(tokenURI, price, collectionId);
 
       await nftAuction
         .connect(seller)
-        .createAuction(2, STARTING_PRICE, RESERVE_PRICE, AUCTION_DURATION);
+        .createAuction(2n, STARTING_PRICE, RESERVE_PRICE, AUCTION_DURATION);
     });
 
     it("Should return all active auctions", async function () {
       const activeAuctions = await nftAuction.getActiveAuctions();
       expect(activeAuctions.length).to.equal(2);
-      expect(activeAuctions[0]).to.equal(1);
-      expect(activeAuctions[1]).to.equal(2);
+      expect(activeAuctions[0]).to.equal(1n);
+      expect(activeAuctions[1]).to.equal(2n);
     });
 
     it("Should not include ended auctions", async function () {
       await time.increase(AUCTION_DURATION + 1);
-      await nftAuction.endAuction(1);
+      await nftAuction.endAuction(1n);
 
       const activeAuctions = await nftAuction.getActiveAuctions();
       expect(activeAuctions.length).to.equal(1);
-      expect(activeAuctions[0]).to.equal(2);
+      expect(activeAuctions[0]).to.equal(2n);
     });
   });
 
@@ -503,15 +405,13 @@ describe("NFTAuction", function () {
         .placeBid(TOKEN_ID, { value: ethers.parseEther("2.5") });
 
       await time.increase(AUCTION_DURATION + 1);
-      await nftAuction.endAuction(1);
+      await nftAuction.endAuction(1n);
 
       const nftStatus = await nft.getTokenStatus(TOKEN_ID);
       expect(nftStatus).to.equal(0); // 0 represents NFT.NFTStatus.NONE
     });
-  });
 
-  describe("Creator activity recording", function () {
-    it("Should record creator activity when creating an auction", async function () {
+    it("Should update NFT status when cancelling an auction", async function () {
       await nftAuction
         .connect(seller)
         .createAuction(
@@ -521,10 +421,70 @@ describe("NFTAuction", function () {
           AUCTION_DURATION
         );
 
-      const sellerId = await nftCreators.getCreatorIdByAddress(seller.address);
+      await nftAuction.connect(seller).cancelAuction(1n);
+
+      const nftStatus = await nft.getTokenStatus(TOKEN_ID);
+      expect(nftStatus).to.equal(0); // 0 represents NFT.NFTStatus.NONE
+    });
+  });
+
+  describe("User bids", function () {
+    beforeEach(async function () {
+      await nftAuction
+        .connect(seller)
+        .createAuction(
+          TOKEN_ID,
+          STARTING_PRICE,
+          RESERVE_PRICE,
+          AUCTION_DURATION
+        );
     });
 
-    it("Should record creator activity when placing a bid", async function () {
+    it("Should correctly track user bids", async function () {
+      await nftAuction
+        .connect(bidder1)
+        .placeBid(TOKEN_ID, { value: ethers.parseEther("1.5") });
+
+      await nftAuction
+        .connect(bidder2)
+        .placeBid(TOKEN_ID, { value: ethers.parseEther("2.0") });
+
+      const bidder1Bids = await nftAuction.getUserBids(
+        await bidder1.getAddress()
+      );
+      const bidder2Bids = await nftAuction.getUserBids(
+        await bidder2.getAddress()
+      );
+
+      expect(bidder1Bids.length).to.equal(1);
+      expect(bidder1Bids[0]).to.equal(1n);
+      expect(bidder2Bids.length).to.equal(1);
+      expect(bidder2Bids[0]).to.equal(1n);
+    });
+
+    it("Should not duplicate user bids for multiple bids on the same auction", async function () {
+      await nftAuction
+        .connect(bidder1)
+        .placeBid(TOKEN_ID, { value: ethers.parseEther("1.5") });
+
+      await nftAuction
+        .connect(bidder1)
+        .placeBid(TOKEN_ID, { value: ethers.parseEther("2.0") });
+
+      const bidder1Bids = await nftAuction.getUserBids(
+        await bidder1.getAddress()
+      );
+
+      expect(bidder1Bids.length).to.equal(1);
+      expect(bidder1Bids[0]).to.equal(1n);
+    });
+  });
+
+  describe("Auction fees", function () {
+    const BID_AMOUNT = ethers.parseEther("3");
+    const EXPECTED_FEE = (BID_AMOUNT * 250n) / 10000n; // 2.5% fee
+
+    beforeEach(async function () {
       await nftAuction
         .connect(seller)
         .createAuction(
@@ -536,9 +496,59 @@ describe("NFTAuction", function () {
 
       await nftAuction
         .connect(bidder1)
-        .placeBid(TOKEN_ID, { value: ethers.parseEther("1.5") });
+        .placeBid(TOKEN_ID, { value: BID_AMOUNT });
 
-      const bidderId = await nftCreators.getCreatorIdByAddress(bidder1.address);
+      await time.increase(AUCTION_DURATION + 1);
+    });
+
+    it("Should transfer the correct fee to the contract owner", async function () {
+      const ownerBalanceBefore = await ethers.provider.getBalance(
+        await owner.getAddress()
+      );
+
+      await nftAuction.endAuction(1n);
+
+      const ownerBalanceAfter = await ethers.provider.getBalance(
+        await owner.getAddress()
+      );
+      const ownerBalanceDiff = ownerBalanceAfter - ownerBalanceBefore;
+
+      expect(ownerBalanceDiff).to.be.closeTo(
+        EXPECTED_FEE,
+        ethers.parseEther("0.01")
+      );
+    });
+
+    it("Should transfer the correct amount to the seller", async function () {
+      const sellerBalanceBefore = await ethers.provider.getBalance(
+        await seller.getAddress()
+      );
+
+      await nftAuction.endAuction(1n);
+
+      const sellerBalanceAfter = await ethers.provider.getBalance(
+        await seller.getAddress()
+      );
+      const sellerBalanceDiff = sellerBalanceAfter - sellerBalanceBefore;
+
+      const expectedSellerAmount = BID_AMOUNT - EXPECTED_FEE;
+      expect(sellerBalanceDiff).to.be.closeTo(
+        expectedSellerAmount,
+        ethers.parseEther("0.01")
+      );
+    });
+  });
+
+  describe("ERC721 token receive", function () {
+    it("Should implement onERC721Received", async function () {
+      const onERC721ReceivedSelector = "0x150b7a02";
+      const result = await nftAuction.onERC721Received(
+        ethers.ZeroAddress,
+        ethers.ZeroAddress,
+        0n,
+        "0x"
+      );
+      expect(result).to.equal(onERC721ReceivedSelector);
     });
   });
 });

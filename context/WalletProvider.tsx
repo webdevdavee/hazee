@@ -80,36 +80,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Save user's wallet address in MongoDB database
         await updateUserData({ walletAddress: userAddress });
-
-        const creatorContract = new ethers.Contract(
-          NFTCreatorsContractAddress,
-          creatorsContractABI,
-          signer
-        );
-
-        try {
-          const isRegistered = await creatorContract.isAddressRegistered(
-            userAddress
-          );
-          if (!isRegistered) {
-            console.log("Registering as a creator...");
-            const tx = await creatorContract.registerCreator();
-            await tx.wait();
-            showToast("Registration successful", "success");
-          } else {
-            showToast("Already registered as a creator", "info");
-          }
-        } catch (checkError: any) {
-          console.error("Error during contract interaction:", checkError);
-          if (checkError.message.includes("nonce too high")) {
-            showToast(
-              "Please reset your MetaMask account and try again",
-              "error"
-            );
-          } else {
-            showToast("Error during creator registration", "error");
-          }
-        }
       } else {
         showToast(
           "Please install MetaMask or another Ethereum wallet",

@@ -3,97 +3,60 @@ import { ethers } from "hardhat";
 import {
   NFT,
   NFT__factory,
-  NFTAuction,
-  NFTAuction__factory,
   NFTCollections,
   NFTCollections__factory,
-  NFTCreators,
-  NFTCreators__factory,
+  NFTAuction,
+  NFTAuction__factory,
   NFTMarketplace,
   NFTMarketplace__factory,
 } from "../../typechain-types";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 
 describe("NFTCollections", function () {
-  let nftAuction: NFTAuction;
   let nftCollections: NFTCollections;
-  let nftCreators: NFTCreators;
+  let nftAuction: NFTAuction;
   let nftMarketplace: NFTMarketplace;
-  let nftMarketplaceFactory: NFTMarketplace__factory;
-  let owner: SignerWithAddress;
-  let addr1: SignerWithAddress;
-  let addr2: SignerWithAddress;
-  let nftContractAddress: SignerWithAddress;
-  let feeRecipient: SignerWithAddress;
-  let dummyAddress: SignerWithAddress;
+  let owner: HardhatEthersSigner;
+  let addr1: HardhatEthersSigner;
+  let addr2: HardhatEthersSigner;
+  let nftContractAddress: HardhatEthersSigner;
 
   const TWELVE_HOURS = 12 * 60 * 60;
   const ONE_WEEK = 7 * 24 * 60 * 60;
 
   beforeEach(async function () {
-    [owner, addr1, addr2, nftContractAddress, feeRecipient, dummyAddress] =
-      await ethers.getSigners();
+    [owner, addr1, addr2] = await ethers.getSigners();
 
-    // Deploy NFTCreators
-    const nftCreatorsFactory = (await ethers.getContractFactory(
-      "NFTCreators"
-    )) as unknown as NFTCreators__factory;
-    nftCreators = await nftCreatorsFactory.deploy();
-
-    // Deploy NFTAuction
-    const nftAuctionFactory = (await ethers.getContractFactory(
+    const NFTAuctionFactory = (await ethers.getContractFactory(
       "NFTAuction"
     )) as unknown as NFTAuction__factory;
-    nftAuction = await nftAuctionFactory.deploy(
-      nftContractAddress,
-      await nftCreators.getAddress()
-    );
+    nftAuction = await NFTAuctionFactory.deploy(nftContractAddress);
 
-    // Deploy NFTCollections
-    const nftCollectionsFactory = (await ethers.getContractFactory(
+    const NFTCollectionsFactory = (await ethers.getContractFactory(
       "NFTCollections"
     )) as unknown as NFTCollections__factory;
-    nftCollections = await nftCollectionsFactory.deploy(
-      await nftCreators.getAddress()
-    );
+    nftCollections = await NFTCollectionsFactory.deploy();
 
-    nftMarketplaceFactory = (await ethers.getContractFactory(
+    const NFTMarketplaceFactory = (await ethers.getContractFactory(
       "NFTMarketplace"
     )) as unknown as NFTMarketplace__factory;
-    nftMarketplace = await nftMarketplaceFactory.deploy(
-      await nftCreators.getAddress(),
-      await nftAuction.getAddress(),
-      await nftCollections.getAddress()
+    nftMarketplace = await NFTMarketplaceFactory.deploy(
+      await nftCollections.getAddress(),
+      await nftAuction.getAddress()
     );
-
-    // Register creators
-    await nftCreators.connect(owner).registerCreator();
-    await nftCreators.connect(addr1).registerCreator();
-    await nftCreators.connect(addr2).registerCreator();
   });
 
   describe("Collection Creation", function () {
     it("should create a new collection", async function () {
       const tx = await nftCollections.createCollection(
-        "Test Collection",
         100,
         1000,
         ethers.parseEther("0.1")
       );
+      await expect(tx).to.emit(nftCollections, "CollectionAdded");
 
-      await expect(tx)
-        .to.emit(nftCollections, "CollectionAdded")
-        .withArgs(
-          1,
-          await nftCollections.getAddress(),
-          owner.address,
-          "Test Collection"
-        );
-
-      // Verify collection details
       const collectionInfo = await nftCollections.getCollectionInfo(1);
-      expect(collectionInfo.name).to.equal("Test Collection");
       expect(collectionInfo.maxSupply).to.equal(100);
       expect(collectionInfo.royaltyPercentage).to.equal(1000);
       expect(collectionInfo.floorPrice).to.equal(ethers.parseEther("0.1"));
@@ -101,12 +64,7 @@ describe("NFTCollections", function () {
 
     it("should not allow royalty percentage over 40%", async function () {
       await expect(
-        nftCollections.createCollection(
-          "Invalid Collection",
-          100,
-          4100,
-          ethers.parseEther("0.1")
-        )
+        nftCollections.createCollection(100, 4100, ethers.parseEther("0.1"))
       ).to.be.revertedWithCustomError(
         nftCollections,
         "RoyaltyPercentageTooHigh"
@@ -115,15 +73,22 @@ describe("NFTCollections", function () {
   });
 
   describe("NFT Minting", function () {
-    const collectionId = 1;
+    let collectionId = 1;
 
     beforeEach(async function () {
-      await nftCollections.createCollection(
-        "Mint Test Collection",
+      const tx = await nftCollections.createCollection(
         10,
         1000,
         ethers.parseEther("0.1")
       );
+      await expect(tx)
+        .to.emit(nftCollections, "CollectionAdded")
+        .withArgs(
+          1,
+          await nftCollections.getAddress(),
+          owner.address,
+          "Test Collection"
+        );
     });
 
     it("should mint an NFT", async function () {
@@ -132,12 +97,8 @@ describe("NFTCollections", function () {
         ethers.parseEther("0.2"),
         "ipfs://testURI"
       );
+      await expect(tx).to.emit(nftCollections, "NFTMinted");
 
-      await expect(tx)
-        .to.emit(nftCollections, "NFTMinted")
-        .withArgs(1, 1, owner.address);
-
-      // Verify minted NFT count
       const collectionInfo = await nftCollections.getCollectionInfo(
         collectionId
       );
@@ -167,14 +128,12 @@ describe("NFTCollections", function () {
     let collectionId = 1;
 
     beforeEach(async function () {
-      await nftCollections.createCollection(
-        "Offer Test Collection",
+      const tx = await nftCollections.createCollection(
         10,
         1000,
         ethers.parseEther("0.1")
       );
 
-      // Mint some NFTs
       for (let i = 0; i < 5; i++) {
         await nftCollections.mintNFT(
           collectionId,
@@ -195,10 +154,6 @@ describe("NFTCollections", function () {
           value: offerAmount,
         });
 
-      // Get the current block timestamp
-      const block = await ethers.provider.getBlock("latest");
-      const expirationTime = block!.timestamp + duration;
-
       await expect(tx)
         .to.emit(nftCollections, "CollectionOfferPlaced")
         .withArgs(
@@ -206,7 +161,7 @@ describe("NFTCollections", function () {
           addr1.address,
           offerAmount,
           nftCount,
-          expirationTime
+          (await time.latest()) + duration
         );
     });
 
@@ -241,17 +196,20 @@ describe("NFTCollections", function () {
           value: offerAmount,
         });
 
-      const tokenIds = [1, 2]; // Assuming these are the first two minted NFTs
+      const tokenIds = [1n, 2n];
 
-      // Verify ownership transfer
-      const nftAddress = (await nftCollections.getCollectionInfo(collectionId))
-        .nftContract;
-      const nftContract = (await ethers.getContractAt(
-        "NFT",
-        nftAddress
-      )) as unknown as NFT;
+      const collectionInfo = await nftCollections.getCollectionInfo(
+        collectionId
+      );
+      const nftContract = NFT__factory.connect(
+        collectionInfo.nftContract,
+        owner
+      );
 
-      await nftContract.setApprovalForAll(nftCollections.getAddress(), true);
+      await nftContract.setApprovalForAll(
+        await nftCollections.getAddress(),
+        true
+      );
 
       const acceptTx = await nftCollections.acceptCollectionOffer(
         collectionId,
@@ -278,8 +236,7 @@ describe("NFTCollections", function () {
     let collectionId = 1;
 
     beforeEach(async function () {
-      await nftCollections.createCollection(
-        "Management Test Collection",
+      const tx = await nftCollections.createCollection(
         10,
         1000,
         ethers.parseEther("0.1")
@@ -297,7 +254,6 @@ describe("NFTCollections", function () {
         .to.emit(nftCollections, "FloorPriceUpdated")
         .withArgs(collectionId, newFloorPrice);
 
-      // Verify updated floor price
       const collectionInfo = await nftCollections.getCollectionInfo(
         collectionId
       );
@@ -305,7 +261,7 @@ describe("NFTCollections", function () {
     });
 
     it("should update royalty percentage", async function () {
-      const newRoyaltyPercentage = 2000; // 20%
+      const newRoyaltyPercentage = 2000;
       const tx = await nftCollections.updateRoyaltyPercentage(
         collectionId,
         newRoyaltyPercentage
@@ -315,7 +271,6 @@ describe("NFTCollections", function () {
         .to.emit(nftCollections, "RoyaltyPercentageUpdated")
         .withArgs(collectionId, newRoyaltyPercentage);
 
-      // Verify updated royalty percentage
       const collectionInfo = await nftCollections.getCollectionInfo(
         collectionId
       );
@@ -323,7 +278,7 @@ describe("NFTCollections", function () {
     });
 
     it("should not allow updating royalty percentage above 40%", async function () {
-      const invalidRoyaltyPercentage = 4100; // 41%
+      const invalidRoyaltyPercentage = 4100;
       await expect(
         nftCollections.updateRoyaltyPercentage(
           collectionId,
@@ -336,41 +291,11 @@ describe("NFTCollections", function () {
     });
   });
 
-  describe("Collection Querying", function () {
-    beforeEach(async function () {
-      // Create multiple collections
-      for (let i = 0; i < 5; i++) {
-        await nftCollections.createCollection(
-          `Test Collection ${i}`,
-          100,
-          1000,
-          ethers.parseEther("0.1")
-        );
-      }
-    });
-
-    it("should get collections with pagination", async function () {
-      const collections = await nftCollections.getCollections(0, 3);
-      expect(collections.length).to.equal(3);
-      expect(collections[0].name).to.equal("Test Collection 0");
-      expect(collections[2].name).to.equal("Test Collection 2");
-    });
-
-    it("should get collection info", async function () {
-      const collectionInfo = await nftCollections.getCollectionInfo(1);
-      expect(collectionInfo.name).to.equal("Test Collection 0");
-      expect(collectionInfo.maxSupply).to.equal(100);
-      expect(collectionInfo.royaltyPercentage).to.equal(1000);
-      expect(collectionInfo.floorPrice).to.equal(ethers.parseEther("0.1"));
-    });
-  });
-
   describe("Ownership and Permissions", function () {
     let collectionId = 1;
 
     beforeEach(async function () {
-      await nftCollections.createCollection(
-        "Ownership Test Collection",
+      const tx = await nftCollections.createCollection(
         10,
         1000,
         ethers.parseEther("0.1")
@@ -382,10 +307,7 @@ describe("NFTCollections", function () {
         nftCollections
           .connect(addr1)
           .mintNFT(collectionId, ethers.parseEther("0.2"), "ipfs://testURI")
-      ).to.be.revertedWithCustomError(
-        nftCollections,
-        "OnlyCurrentOwnerAllowed"
-      );
+      ).to.be.revertedWithCustomError(nftCollections, "Unauthorized");
     });
 
     it("should not allow non-owners to update floor price", async function () {
@@ -393,10 +315,7 @@ describe("NFTCollections", function () {
         nftCollections
           .connect(addr1)
           .updateFloorPrice(collectionId, ethers.parseEther("0.2"))
-      ).to.be.revertedWithCustomError(
-        nftCollections,
-        "OnlyCurrentOwnerAllowed"
-      );
+      ).to.be.revertedWithCustomError(nftCollections, "Unauthorized");
     });
 
     it("should not allow non-owners to update royalty percentage", async function () {
@@ -404,10 +323,7 @@ describe("NFTCollections", function () {
         nftCollections
           .connect(addr1)
           .updateRoyaltyPercentage(collectionId, 2000)
-      ).to.be.revertedWithCustomError(
-        nftCollections,
-        "OnlyCurrentOwnerAllowed"
-      );
+      ).to.be.revertedWithCustomError(nftCollections, "Unauthorized");
     });
   });
 
@@ -415,14 +331,12 @@ describe("NFTCollections", function () {
     let collectionId = 1;
 
     beforeEach(async function () {
-      await nftCollections.createCollection(
-        "Edge Case Test Collection",
+      const tx = await nftCollections.createCollection(
         10,
         1000,
         ethers.parseEther("0.1")
       );
 
-      // Mint one NFT
       await nftCollections.mintNFT(
         collectionId,
         ethers.parseEther("0.1"),
@@ -453,50 +367,44 @@ describe("NFTCollections", function () {
     });
 
     it("should not allow accepting an offer with incorrect number of tokens", async function () {
-      // Place an offer
       await nftCollections
         .connect(addr1)
         .placeCollectionOffer(collectionId, 1, TWELVE_HOURS, {
           value: ethers.parseEther("0.2"),
         });
 
-      // Try to accept with incorrect number of tokens
       await expect(
         nftCollections.acceptCollectionOffer(
           collectionId,
-          [1, 2],
+          [1n, 2n],
           addr1.address
         )
       ).to.be.revertedWithCustomError(nftCollections, "InvalidNumberOfTokens");
     });
 
     it("should not allow accepting an expired offer", async function () {
-      // Place an offer
       await nftCollections
         .connect(addr1)
         .placeCollectionOffer(collectionId, 1, TWELVE_HOURS, {
           value: ethers.parseEther("0.1"),
         });
 
-      // Mint an NFT
       await nftCollections.mintNFT(
         collectionId,
         ethers.parseEther("0.1"),
         "ipfs://test1"
       );
 
-      // Fast forward time
       await time.increase(TWELVE_HOURS + 1);
 
-      // Try to accept the expired offer
       await expect(
-        nftCollections.acceptCollectionOffer(collectionId, [1], addr1.address)
+        nftCollections.acceptCollectionOffer(collectionId, [1n], addr1.address)
       ).to.be.revertedWithCustomError(nftCollections, "OfferExpired");
     });
 
     it("should not allow placing an offer with invalid duration", async function () {
       const offerAmount = ethers.parseEther("0.2");
-      const invalidDuration = TWELVE_HOURS - 1; // Just below the minimum duration
+      const invalidDuration = TWELVE_HOURS - 1;
       await expect(
         nftCollections
           .connect(addr1)
@@ -516,32 +424,148 @@ describe("NFTCollections", function () {
     });
 
     it("should not allow accepting an offer for tokens not owned by the accepter", async function () {
-      // Place an offer
       await nftCollections
         .connect(addr1)
         .placeCollectionOffer(collectionId, 1, TWELVE_HOURS, {
           value: ethers.parseEther("0.2"),
         });
 
-      // Try to accept the offer with a token owned by the contract creator (owner)
       await expect(
         nftCollections
           .connect(addr2)
-          .acceptCollectionOffer(collectionId, [1], addr1.address)
+          .acceptCollectionOffer(collectionId, [1n], addr1.address)
       ).to.be.revertedWithCustomError(nftCollections, "NotTokenOwner");
     });
 
-    it("should not allow getting collections with invalid offset", async function () {
-      await expect(
-        nftCollections.getCollections(100, 10) // Assuming there are fewer than 100 collections
-      ).to.be.revertedWithCustomError(nftCollections, "OffsetOutOfBounds");
-    });
-
     it("should not allow getting info for an invalid collection ID", async function () {
-      const invalidCollectionId = 1000; // Assuming this ID doesn't exist
+      const invalidCollectionId = 1000n;
       await expect(
         nftCollections.getCollectionInfo(invalidCollectionId)
       ).to.be.revertedWithCustomError(nftCollections, "InvalidCollectionID");
+    });
+  });
+
+  describe("View Functions", function () {
+    let collectionId = 1;
+
+    beforeEach(async function () {
+      const tx = await nftCollections.createCollection(
+        10,
+        1000,
+        ethers.parseEther("0.1")
+      );
+    });
+
+    it("should return user created collections", async function () {
+      const userCollections = await nftCollections.getUserCreatedCollections(
+        owner.address
+      );
+      expect(userCollections).to.deep.equal([collectionId]);
+    });
+
+    it("should return user collection offers", async function () {
+      await nftCollections
+        .connect(addr1)
+        .placeCollectionOffer(collectionId, 1, TWELVE_HOURS, {
+          value: ethers.parseEther("0.1"),
+        });
+      const userOffers = await nftCollections.getUserCollectionOffers(
+        addr1.address
+      );
+      expect(userOffers).to.deep.equal([collectionId]);
+    });
+
+    it("should return correct collection info", async function () {
+      const collectionInfo = await nftCollections.getCollectionInfo(
+        collectionId
+      );
+      expect(collectionInfo.creator).to.equal(owner.address);
+      expect(collectionInfo.maxSupply).to.equal(10);
+      expect(collectionInfo.royaltyPercentage).to.equal(1000);
+      expect(collectionInfo.floorPrice).to.equal(ethers.parseEther("0.1"));
+      expect(collectionInfo.isActive).to.be.true;
+    });
+  });
+
+  describe("Integration with NFT Contract", function () {
+    let collectionId = 1;
+    let nftContract: NFT;
+
+    beforeEach(async function () {
+      const tx = await nftCollections.createCollection(
+        10,
+        1000,
+        ethers.parseEther("0.1")
+      );
+
+      const collectionInfo = await nftCollections.getCollectionInfo(
+        collectionId
+      );
+      nftContract = NFT__factory.connect(collectionInfo.nftContract, owner);
+    });
+
+    it("should mint NFT with correct metadata", async function () {
+      const tokenURI = "ipfs://test1";
+      const price = ethers.parseEther("0.2");
+      await nftCollections.mintNFT(collectionId, price, tokenURI);
+
+      expect(await nftContract.tokenURI(1)).to.equal(tokenURI);
+      expect(await nftContract.getPrice(1)).to.equal(price);
+    });
+
+    it("should transfer NFT ownership when accepting offer", async function () {
+      await nftCollections.mintNFT(
+        collectionId,
+        ethers.parseEther("0.1"),
+        "ipfs://test1"
+      );
+      await nftCollections
+        .connect(addr1)
+        .placeCollectionOffer(collectionId, 1, TWELVE_HOURS, {
+          value: ethers.parseEther("0.1"),
+        });
+
+      await nftContract.setApprovalForAll(
+        await nftCollections.getAddress(),
+        true
+      );
+      await nftCollections.acceptCollectionOffer(
+        collectionId,
+        [1n],
+        addr1.address
+      );
+
+      expect(await nftContract.ownerOf(1)).to.equal(addr1.address);
+    });
+  });
+
+  describe("Gas Usage", function () {
+    it("should have reasonable gas costs for collection creation", async function () {
+      const tx = await nftCollections.createCollection(
+        100,
+        1000,
+        ethers.parseEther("0.1")
+      );
+      const receipt = await tx.wait();
+      expect(receipt?.gasUsed).to.be.lessThan(3000000);
+    });
+
+    it("should have reasonable gas costs for NFT minting", async function () {
+      const createTx = await nftCollections.createCollection(
+        10,
+        1000,
+        ethers.parseEther("0.1")
+      );
+
+      const collectionId = 1;
+
+      const mintTx = await nftCollections.mintNFT(
+        collectionId,
+        ethers.parseEther("0.2"),
+        "ipfs://testURI"
+      );
+      const mintReceipt = await mintTx.wait();
+      expect(mintReceipt?.gasUsed).to.be.lessThan(300000);
     });
   });
 });
