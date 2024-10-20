@@ -10,17 +10,18 @@ import {
   NFT,
   NFT__factory,
 } from "../../typechain-types";
-import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("NFTMarketplace", function () {
   let nftAuction: NFTAuction;
   let nft: NFT;
   let nftCollections: NFTCollections;
   let nftMarketplace: NFTMarketplace;
-  let owner: SignerWithAddress;
-  let seller: SignerWithAddress;
-  let buyer: SignerWithAddress;
-  let creator: SignerWithAddress;
+  let owner: HardhatEthersSigner;
+  let seller: HardhatEthersSigner;
+  let buyer: HardhatEthersSigner;
+  let creator: HardhatEthersSigner;
+  let fakeContractAddress: HardhatEthersSigner;
 
   const PLATFORM_FEE_PERCENTAGE = 250; // 2.5%
   const INITIAL_PRICE = ethers.parseEther("1");
@@ -30,18 +31,20 @@ describe("NFTMarketplace", function () {
   const AUCTION_DURATION = 7 * 24 * 60 * 60; // 7 days
 
   beforeEach(async function () {
-    [owner, seller, buyer, creator] = await ethers.getSigners();
-
-    const NFTCollectionsFactory = (await ethers.getContractFactory(
-      "NFTCollections"
-    )) as unknown as NFTCollections__factory;
-    nftCollections = await NFTCollectionsFactory.deploy();
+    [owner, seller, buyer, creator, fakeContractAddress] =
+      await ethers.getSigners();
 
     const NFTAuctionFactory = (await ethers.getContractFactory(
       "NFTAuction"
     )) as unknown as NFTAuction__factory;
-    nftAuction = await NFTAuctionFactory.deploy(
-      await nftCollections.getAddress()
+    nftAuction = await NFTAuctionFactory.deploy(fakeContractAddress);
+
+    const NFTCollectionsFactory = (await ethers.getContractFactory(
+      "NFTCollections"
+    )) as unknown as NFTCollections__factory;
+    nftCollections = await NFTCollectionsFactory.deploy(
+      nftAuction,
+      fakeContractAddress
     );
 
     const NFTMarketplaceFactory = (await ethers.getContractFactory(

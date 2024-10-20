@@ -96,10 +96,12 @@ contract NFTCollections is Ownable, ReentrancyGuard {
     error OffsetOutOfBounds();
     error Unauthorized();
 
-    constructor() Ownable(msg.sender) {}
-
-    function setAuctionContract(address _auctionContract) external onlyOwner {
+    constructor(
+        address _auctionContract,
+        address _marketplaceContract
+    ) Ownable(msg.sender) {
         auctionContract = _auctionContract;
+        marketplaceContract = _marketplaceContract;
     }
 
     function setMarketplaceContract(

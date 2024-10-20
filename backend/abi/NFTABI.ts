@@ -834,6 +834,19 @@ export const nftContractABI = [
   {
     inputs: [
       {
+        internalType: "address",
+        name: "_marketplaceContractAddress",
+        type: "address",
+      },
+    ],
+    name: "setMarketplaceContract",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "uint256",
         name: "tokenId",
         type: "uint256",

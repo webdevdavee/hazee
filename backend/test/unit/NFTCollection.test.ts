@@ -20,23 +20,28 @@ describe("NFTCollections", function () {
   let owner: HardhatEthersSigner;
   let addr1: HardhatEthersSigner;
   let addr2: HardhatEthersSigner;
-  let nftContractAddress: HardhatEthersSigner;
+  let fakeNftContractAddress: HardhatEthersSigner;
+  let fakeContractAddress: HardhatEthersSigner;
 
   const TWELVE_HOURS = 12 * 60 * 60;
   const ONE_WEEK = 7 * 24 * 60 * 60;
 
   beforeEach(async function () {
-    [owner, addr1, addr2, nftContractAddress] = await ethers.getSigners();
+    [owner, addr1, addr2, fakeNftContractAddress, fakeContractAddress] =
+      await ethers.getSigners();
 
     const NFTAuctionFactory = (await ethers.getContractFactory(
       "NFTAuction"
     )) as unknown as NFTAuction__factory;
-    nftAuction = await NFTAuctionFactory.deploy(nftContractAddress.address);
+    nftAuction = await NFTAuctionFactory.deploy(fakeNftContractAddress.address);
 
     const NFTCollectionsFactory = (await ethers.getContractFactory(
       "NFTCollections"
     )) as unknown as NFTCollections__factory;
-    nftCollections = await NFTCollectionsFactory.deploy();
+    nftCollections = await NFTCollectionsFactory.deploy(
+      await nftAuction.getAddress(),
+      fakeContractAddress
+    );
 
     const NFTMarketplaceFactory = (await ethers.getContractFactory(
       "NFTMarketplace"

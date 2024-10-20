@@ -45,6 +45,16 @@ contract NFT is ERC721Enumerable, ERC721URIStorage, Ownable {
         marketplaceContract = _marketplaceContractAddress;
     }
 
+    function setMarketplaceContract(
+        address _marketplaceContractAddress
+    ) external onlyOwner {
+        marketplaceContract = _marketplaceContractAddress;
+    }
+
+    function setAuctionContract(address _auctionContract) external onlyOwner {
+        auctionContract = _auctionContract;
+    }
+
     // These overrides are necessary because ERC721Enumerable and ERC721URIStorage
     // both modify some of the same base ERC721 functions
     function _update(
@@ -81,10 +91,6 @@ contract NFT is ERC721Enumerable, ERC721URIStorage, Ownable {
     function getCurrentOwner(uint256 tokenId) public view returns (address) {
         require(exists(tokenId), "NFT: Nonexistent token");
         return ownerOf(tokenId);
-    }
-
-    function setAuctionContract(address _auctionContract) external onlyOwner {
-        auctionContract = _auctionContract;
     }
 
     function mint(

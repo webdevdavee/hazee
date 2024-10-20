@@ -1,6 +1,17 @@
 export const collectionsContractABI = [
   {
-    inputs: [],
+    inputs: [
+      {
+        internalType: "address",
+        name: "_auctionContract",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "_marketplaceContract",
+        type: "address",
+      },
+    ],
     stateMutability: "nonpayable",
     type: "constructor",
   },
@@ -534,19 +545,6 @@ export const collectionsContractABI = [
   {
     inputs: [],
     name: "renounceOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_auctionContract",
-        type: "address",
-      },
-    ],
-    name: "setAuctionContract",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
