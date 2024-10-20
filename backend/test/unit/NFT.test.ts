@@ -51,7 +51,9 @@ describe("NFT", function () {
       const price = ethers.parseEther("1");
       const collectionId = 1;
 
-      await expect(nft.connect(addr1).mint(tokenURI, price, collectionId))
+      await expect(
+        nft.connect(addr1).mint(addr1, tokenURI, price, collectionId)
+      )
         .to.emit(nft, "NFTMinted")
         .withArgs(1, addr1.address);
 
@@ -64,7 +66,9 @@ describe("NFT", function () {
 
   describe("NFT Status", function () {
     beforeEach(async function () {
-      await nft.connect(addr1).mint("tokenURI", ethers.parseEther("1"), 1);
+      await nft
+        .connect(addr1)
+        .mint(addr1, "tokenURI", ethers.parseEther("1"), 1);
     });
 
     it("Should allow owner to set NFT status", async function () {
@@ -108,7 +112,9 @@ describe("NFT", function () {
 
   describe("Price Updates", function () {
     beforeEach(async function () {
-      await nft.connect(addr1).mint("tokenURI", ethers.parseEther("1"), 1);
+      await nft
+        .connect(addr1)
+        .mint(addr1, "tokenURI", ethers.parseEther("1"), 1);
     });
 
     it("Should allow owner to set price", async function () {
@@ -138,7 +144,9 @@ describe("NFT", function () {
 
   describe("Collection", function () {
     it("Should set and retrieve collection correctly", async function () {
-      await nft.connect(addr1).mint("tokenURI", ethers.parseEther("1"), 42);
+      await nft
+        .connect(addr1)
+        .mint(addr1, "tokenURI", ethers.parseEther("1"), 42);
 
       const collectionId = await nft.getCollection(1);
       expect(collectionId).to.equal(42);
@@ -153,7 +161,9 @@ describe("NFT", function () {
 
   describe("Token Existence", function () {
     it("Should correctly report token existence", async function () {
-      await nft.connect(addr1).mint("tokenURI", ethers.parseEther("1"), 1);
+      await nft
+        .connect(addr1)
+        .mint(addr1, "tokenURI", ethers.parseEther("1"), 1);
 
       expect(await nft.exists(1)).to.be.true;
       expect(await nft.exists(2)).to.be.false;
@@ -162,8 +172,12 @@ describe("NFT", function () {
 
   describe("Created Tokens", function () {
     it("Should correctly track and retrieve created tokens", async function () {
-      await nft.connect(addr1).mint("tokenURI1", ethers.parseEther("1"), 1);
-      await nft.connect(addr1).mint("tokenURI2", ethers.parseEther("2"), 1);
+      await nft
+        .connect(addr1)
+        .mint(addr1, "tokenURI1", ethers.parseEther("1"), 1);
+      await nft
+        .connect(addr1)
+        .mint(addr1, "tokenURI2", ethers.parseEther("2"), 1);
 
       const createdTokens = await nft.getCreatedTokens(addr1.address);
       expect(createdTokens.length).to.equal(2);
@@ -174,7 +188,9 @@ describe("NFT", function () {
 
   describe("Items Sold", function () {
     it("Should correctly record and retrieve items sold", async function () {
-      await nft.connect(addr1).mint("tokenURI", ethers.parseEther("1"), 1);
+      await nft
+        .connect(addr1)
+        .mint(addr1, "tokenURI", ethers.parseEther("1"), 1);
       await nft.connect(marketplaceContract).recordSale(addr1.address);
 
       expect(await nft.getItemsSold(addr1.address)).to.equal(1);
@@ -189,9 +205,15 @@ describe("NFT", function () {
 
   describe("Owned Tokens", function () {
     it("Should correctly retrieve owned tokens", async function () {
-      await nft.connect(addr1).mint("tokenURI1", ethers.parseEther("1"), 1);
-      await nft.connect(addr1).mint("tokenURI2", ethers.parseEther("2"), 1);
-      await nft.connect(addr2).mint("tokenURI3", ethers.parseEther("3"), 2);
+      await nft
+        .connect(addr1)
+        .mint(addr1, "tokenURI1", ethers.parseEther("1"), 1);
+      await nft
+        .connect(addr1)
+        .mint(addr1, "tokenURI2", ethers.parseEther("2"), 1);
+      await nft
+        .connect(addr2)
+        .mint(addr2, "tokenURI3", ethers.parseEther("3"), 2);
 
       const addr1OwnedTokens = await nft.getOwnedTokens(addr1.address);
       expect(addr1OwnedTokens.length).to.equal(2);

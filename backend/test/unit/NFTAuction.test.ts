@@ -59,7 +59,7 @@ describe("NFTAuction", function () {
     const price = ethers.parseEther("1");
     const collectionId = 1;
 
-    await nft.connect(seller).mint(tokenURI, price, collectionId);
+    await nft.connect(seller).mint(seller, tokenURI, price, collectionId);
 
     // Approve NFTAuction contract
     await nft
@@ -351,7 +351,7 @@ describe("NFTAuction", function () {
           AUCTION_DURATION
         );
 
-      await nft.connect(seller).mint(tokenURI, price, collectionId);
+      await nft.connect(seller).mint(seller, tokenURI, price, collectionId);
 
       await nftAuction
         .connect(seller)

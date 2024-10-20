@@ -138,11 +138,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
 
         userCreatedCollections[msg.sender].push(newCollectionId);
 
-        emit CollectionAdded(
-            newCollectionId,
-            address(newNFTContract),
-            msg.sender
-        );
+        emit CollectionAdded(newCollectionId, address(this), msg.sender);
 
         return newCollectionId;
     }
@@ -159,7 +155,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         if (msg.sender != collection.creator) revert Unauthorized();
 
         NFT nft = NFT(collection.nftContract);
-        uint256 tokenId = nft.mint(tokenURI, price, _collectionId);
+        uint256 tokenId = nft.mint(msg.sender, tokenURI, price, _collectionId);
 
         unchecked {
             collection.mintedSupply++;

@@ -88,6 +88,7 @@ contract NFT is ERC721Enumerable, ERC721URIStorage, Ownable {
     }
 
     function mint(
+        address to,
         string memory theTokenURI,
         uint256 price,
         uint256 _collectionId
@@ -97,7 +98,7 @@ contract NFT is ERC721Enumerable, ERC721URIStorage, Ownable {
         }
         uint256 newTokenId = _tokenIds;
 
-        _safeMint(msg.sender, newTokenId);
+        _safeMint(to, newTokenId);
         _setTokenURI(newTokenId, theTokenURI);
 
         _tokenInfo[newTokenId] = TokenInfo({
@@ -106,9 +107,9 @@ contract NFT is ERC721Enumerable, ERC721URIStorage, Ownable {
             status: NFTStatus.NONE
         });
 
-        _createdTokens[msg.sender].push(newTokenId);
+        _createdTokens[to].push(newTokenId);
 
-        emit NFTMinted(newTokenId, msg.sender);
+        emit NFTMinted(newTokenId, to);
         emit PriceSet(newTokenId, price);
 
         return newTokenId;

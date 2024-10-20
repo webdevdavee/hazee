@@ -68,7 +68,9 @@ describe("NFTMarketplace", function () {
       .createCollection(100, COLLECTION_ROYALTY, ethers.parseEther("0.1"));
 
     // Mint an NFT for the seller
-    await nft.connect(seller).mint("tokenURI", ethers.parseEther("1"), 1);
+    await nft
+      .connect(seller)
+      .mint(seller, "tokenURI", ethers.parseEther("1"), 1);
   });
 
   describe("listNFT", function () {
@@ -76,6 +78,10 @@ describe("NFTMarketplace", function () {
       await nft
         .connect(seller)
         .setApprovalForAll(await nftMarketplace.getAddress(), true);
+
+      await nft
+        .connect(seller)
+        .mint(seller, "tokenURI", ethers.parseEther("1"), 1);
 
       await expect(
         nftMarketplace
@@ -357,7 +363,9 @@ describe("NFTMarketplace", function () {
 
       // Create multiple listings
       for (let i = 1; i <= 5; i++) {
-        await nft.connect(seller).mint("tokenURI", ethers.parseEther("1"), 1);
+        await nft
+          .connect(seller)
+          .mint(seller, "tokenURI", ethers.parseEther("1"), 1);
         await nftMarketplace
           .connect(seller)
           .listNFT(await nft.getAddress(), i, INITIAL_PRICE);
@@ -447,7 +455,7 @@ describe("NFTMarketplace", function () {
 
       // Create multiple listings
       for (let i = 1; i <= 3; i++) {
-        await nft.connect(seller).mint("tokenURI", INITIAL_PRICE, 1);
+        await nft.connect(seller).mint(seller, "tokenURI", INITIAL_PRICE, 1);
         await nftMarketplace
           .connect(seller)
           .listNFT(await nft.getAddress(), i, INITIAL_PRICE);
