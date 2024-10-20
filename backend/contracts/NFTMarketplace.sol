@@ -266,6 +266,76 @@ contract NFTMarketplace is ReentrancyGuard {
         return activeListings;
     }
 
+    function getCollectionListings(
+        uint256 _collectionId
+    ) external view returns (uint256[] memory) {
+        uint256[] memory collectionListings = new uint256[](listingCounter);
+        uint256 count = 0;
+
+        for (uint256 i = 1; i <= listingCounter; ) {
+            if (
+                listings[i].isActive &&
+                listings[i].collectionId == _collectionId
+            ) {
+                collectionListings[count] = i;
+                unchecked {
+                    ++count;
+                }
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
+        // Resize the array to remove empty slots
+        assembly {
+            mstore(collectionListings, count)
+        }
+
+        return collectionListings;
+    }
+
+    function getCreatorListings(
+        address _creator
+    ) external view returns (uint256[] memory) {
+        NFT nftContract;
+        uint256[] memory creatorListings = new uint256[](listingCounter);
+        uint256 count = 0;
+
+        for (uint256 i = 1; i <= listingCounter; ) {
+            if (listings[i].isActive) {
+                nftContract = NFT(listings[i].nftContract);
+                uint256[] memory createdTokens = nftContract.getCreatedTokens(
+                    _creator
+                );
+
+                // Check if the listed token was created by this creator
+                for (uint256 j = 0; j < createdTokens.length; ) {
+                    if (createdTokens[j] == listings[i].tokenId) {
+                        creatorListings[count] = i;
+                        unchecked {
+                            ++count;
+                        }
+                        break;
+                    }
+                    unchecked {
+                        ++j;
+                    }
+                }
+            }
+            unchecked {
+                ++i;
+            }
+        }
+
+        // Resize the array to remove empty slots
+        assembly {
+            mstore(creatorListings, count)
+        }
+
+        return creatorListings;
+    }
+
     function isNFTListed(
         address _nftContract,
         uint256 _tokenId

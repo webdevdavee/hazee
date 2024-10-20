@@ -410,6 +410,201 @@ describe("NFTMarketplace", function () {
     });
   });
 
+  describe("getCollectionListings", function () {
+    beforeEach(async function () {
+      await nft
+        .connect(seller)
+        .setApprovalForAll(await nftMarketplace.getAddress(), true);
+
+      // Create multiple listings for different collections
+      // First collection (ID: 1)
+      for (let i = 1; i <= 3; i++) {
+        await nft
+          .connect(seller)
+          .mint(seller.address, "tokenURI", INITIAL_PRICE, COLLECTION_ID);
+        await nftMarketplace
+          .connect(seller)
+          .listNFT(await nft.getAddress(), i, INITIAL_PRICE);
+      }
+
+      // Create a second collection
+      await nftCollections
+        .connect(creator)
+        .createCollection(100, COLLECTION_ROYALTY, ethers.parseEther("0.1"));
+
+      // Second collection (ID: 2)
+      for (let i = 4; i <= 5; i++) {
+        await nft
+          .connect(seller)
+          .mint(seller.address, "tokenURI", INITIAL_PRICE, 2);
+        await nftMarketplace
+          .connect(seller)
+          .listNFT(await nft.getAddress(), i, INITIAL_PRICE);
+      }
+    });
+
+    it("should return all active listings for a specific collection", async function () {
+      const collectionListings = await nftMarketplace.getCollectionListings(
+        COLLECTION_ID
+      );
+      expect(collectionListings.length).to.equal(3);
+
+      // Verify each listing belongs to the correct collection
+      for (const listingId of collectionListings) {
+        const listing = await nftMarketplace.listings(listingId);
+        expect(listing.collectionId).to.equal(COLLECTION_ID);
+        expect(listing.isActive).to.be.true;
+      }
+    });
+
+    it("should not include cancelled listings in collection listings", async function () {
+      // Cancel one listing from collection 1
+      await nftMarketplace.connect(seller).cancelListing(2);
+
+      const collectionListings = await nftMarketplace.getCollectionListings(
+        COLLECTION_ID
+      );
+      expect(collectionListings.length).to.equal(2);
+      expect(collectionListings).to.not.include(2);
+    });
+
+    it("should return empty array for collection with no listings", async function () {
+      // Create a new collection with no listings
+      await nftCollections
+        .connect(creator)
+        .createCollection(100, COLLECTION_ROYALTY, ethers.parseEther("0.1"));
+
+      const collectionListings = await nftMarketplace.getCollectionListings(3);
+      expect(collectionListings.length).to.equal(0);
+    });
+
+    it("should return correct listings after multiple operations", async function () {
+      // Cancel a listing
+      await nftMarketplace.connect(seller).cancelListing(1);
+
+      // Buy a listing
+      await nftMarketplace.connect(buyer).buyNFT(2, { value: INITIAL_PRICE });
+
+      // Create a new listing
+      await nft
+        .connect(seller)
+        .mint(seller.address, "tokenURI", INITIAL_PRICE, COLLECTION_ID);
+      await nftMarketplace
+        .connect(seller)
+        .listNFT(await nft.getAddress(), 6, INITIAL_PRICE);
+
+      const collectionListings = await nftMarketplace.getCollectionListings(
+        COLLECTION_ID
+      );
+      expect(collectionListings.length).to.equal(2);
+      expect(collectionListings).to.include(3);
+      expect(collectionListings).to.include(6);
+    });
+  });
+
+  describe("getCreatorListings", function () {
+    beforeEach(async function () {
+      await nft
+        .connect(seller)
+        .setApprovalForAll(await nftMarketplace.getAddress(), true);
+
+      // Create NFTs by creator
+      for (let i = 1; i <= 3; i++) {
+        await nft
+          .connect(creator)
+          .mint(seller.address, "tokenURI", INITIAL_PRICE, COLLECTION_ID);
+        await nftMarketplace
+          .connect(seller)
+          .listNFT(await nft.getAddress(), i, INITIAL_PRICE);
+      }
+
+      // Create NFTs by seller (different creator)
+      for (let i = 4; i <= 5; i++) {
+        await nft
+          .connect(seller)
+          .mint(seller.address, "tokenURI", INITIAL_PRICE, COLLECTION_ID);
+        await nftMarketplace
+          .connect(seller)
+          .listNFT(await nft.getAddress(), i, INITIAL_PRICE);
+      }
+    });
+
+    it("should return all active listings for a specific creator", async function () {
+      const creatorListings = await nftMarketplace.getCreatorListings(
+        creator.address
+      );
+      expect(creatorListings.length).to.equal(3);
+
+      // Verify each listing was created by the creator
+      for (const listingId of creatorListings) {
+        const listing = await nftMarketplace.listings(listingId);
+        const nftContract = NFT__factory.connect(listing.nftContract, owner);
+        const createdTokens = await nftContract.getCreatedTokens(
+          creator.address
+        );
+        expect(createdTokens).to.include(listing.tokenId);
+      }
+    });
+
+    it("should not include cancelled listings in creator listings", async function () {
+      // Cancel one listing from creator's NFTs
+      await nftMarketplace.connect(seller).cancelListing(2);
+
+      const creatorListings = await nftMarketplace.getCreatorListings(
+        creator.address
+      );
+      expect(creatorListings.length).to.equal(2);
+      expect(creatorListings).to.not.include(2);
+    });
+
+    it("should return empty array for creator with no listings", async function () {
+      const creatorListings = await nftMarketplace.getCreatorListings(
+        buyer.address
+      );
+      expect(creatorListings.length).to.equal(0);
+    });
+
+    it("should return correct listings after multiple operations", async function () {
+      // Cancel a listing
+      await nftMarketplace.connect(seller).cancelListing(1);
+
+      // Buy a listing
+      await nftMarketplace.connect(buyer).buyNFT(2, { value: INITIAL_PRICE });
+
+      // Create and list a new NFT by creator
+      await nft
+        .connect(creator)
+        .mint(seller.address, "tokenURI", INITIAL_PRICE, COLLECTION_ID);
+      await nftMarketplace
+        .connect(seller)
+        .listNFT(await nft.getAddress(), 6, INITIAL_PRICE);
+
+      const creatorListings = await nftMarketplace.getCreatorListings(
+        creator.address
+      );
+      expect(creatorListings.length).to.equal(2);
+      expect(creatorListings).to.include(3);
+      expect(creatorListings).to.include(6);
+    });
+
+    it("should handle multiple creators correctly", async function () {
+      const creatorListings = await nftMarketplace.getCreatorListings(
+        creator.address
+      );
+      const sellerListings = await nftMarketplace.getCreatorListings(
+        seller.address
+      );
+
+      expect(creatorListings.length).to.equal(3);
+      expect(sellerListings.length).to.equal(2);
+
+      // Verify no overlap between creator and seller listings
+      for (const listingId of creatorListings) {
+        expect(sellerListings).to.not.include(listingId);
+      }
+    });
+  });
+
   describe("isNFTListed", function () {
     it("should return true for a listed NFT", async function () {
       await nft

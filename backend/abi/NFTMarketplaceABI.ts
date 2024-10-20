@@ -272,6 +272,44 @@ export const marketplaceContractABI = [
     inputs: [
       {
         internalType: "uint256",
+        name: "_collectionId",
+        type: "uint256",
+      },
+    ],
+    name: "getCollectionListings",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "",
+        type: "uint256[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_creator",
+        type: "address",
+      },
+    ],
+    name: "getCreatorListings",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "",
+        type: "uint256[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
         name: "_listingId",
         type: "uint256",
       },

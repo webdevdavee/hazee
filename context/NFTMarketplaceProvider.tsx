@@ -24,7 +24,8 @@ interface NFTMarketplaceContextType {
   isContractReady: boolean;
   getActiveListings: (offset: number, limit: number) => Promise<void>;
   getListingDetails: (listingId: number) => Promise<NFTListing | null>;
-  getUserListings: (userAddress: string) => Promise<NFTListing[]>;
+  getCreatorListings: (creatorAddress: string) => Promise<NFTListing[]>;
+  getCollectionListings: (collectionId: number) => Promise<NFTListing[]>;
   refreshListings: () => Promise<void>;
   listNFT: (
     nftContract: string,
@@ -209,8 +210,8 @@ export const NFTMarketplaceProvider: React.FC<NFTMarketplaceProviderProps> = ({
     }
   };
 
-  const getUserListings = async (
-    userAddress: string
+  const getCreatorListings = async (
+    creatorAddress: string
   ): Promise<NFTListing[]> => {
     if (!contract || !isContractReady) {
       showToast(
@@ -221,23 +222,58 @@ export const NFTMarketplaceProvider: React.FC<NFTMarketplaceProviderProps> = ({
     }
 
     try {
-      const listingCounter = await contract.listingCounter();
-      const userListings: NFTListing[] = [];
+      const creatorListingIds = await contract.getCreatorListings(
+        creatorAddress
+      );
 
-      for (let i = 1; i <= listingCounter; i++) {
-        const listing = await getListingDetails(i);
-        if (
-          listing &&
-          listing.seller.toLowerCase() === userAddress.toLowerCase()
-        ) {
-          userListings.push(listing);
+      const listingPromises = creatorListingIds.map(
+        async (listingId: number) => {
+          return await getListingDetails(listingId);
         }
-      }
+      );
 
-      return userListings;
+      const listingsData = (await Promise.all(listingPromises)).filter(
+        (listing): listing is NFTListing => listing !== null
+      );
+
+      return listingsData;
     } catch (error) {
-      console.error("Error fetching user listings:", error);
-      showToast("Failed to fetch user listings", "error");
+      console.error("Error fetching creator listings:", error);
+      showToast("Failed to fetch creator listings", "error");
+      return [];
+    }
+  };
+
+  const getCollectionListings = async (
+    collectionId: number
+  ): Promise<NFTListing[]> => {
+    if (!contract || !isContractReady) {
+      showToast(
+        "Contract not initialized. Please ensure your wallet is connected.",
+        "error"
+      );
+      return [];
+    }
+
+    try {
+      const collectionListingIds = await contract.getCollectionListings(
+        collectionId
+      );
+
+      const listingPromises = collectionListingIds.map(
+        async (listingId: number) => {
+          return await getListingDetails(listingId);
+        }
+      );
+
+      const listingsData = (await Promise.all(listingPromises)).filter(
+        (listing): listing is NFTListing => listing !== null
+      );
+
+      return listingsData;
+    } catch (error) {
+      console.error("Error fetching collection listings:", error);
+      showToast("Failed to fetch collection listings", "error");
       return [];
     }
   };
@@ -369,7 +405,8 @@ export const NFTMarketplaceProvider: React.FC<NFTMarketplaceProviderProps> = ({
     isContractReady,
     getActiveListings,
     getListingDetails,
-    getUserListings,
+    getCreatorListings,
+    getCollectionListings,
     refreshListings,
     listNFT,
     cancelListing,
