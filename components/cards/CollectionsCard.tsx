@@ -31,10 +31,10 @@ const CollectionsCard: React.FC<Props> = ({ collectionId }) => {
     const fetchMintedTokenDetails = async () => {
       try {
         const tokens = await getMintedNFTs(collectionId);
-        if (!tokens || !tokens.tokenIds) return;
+        if (!tokens) return;
 
         const mintedTokensDetails = await Promise.all(
-          tokens.tokenIds.map(async (id) => {
+          tokens.map(async (id) => {
             const tokenWithDetail = await getListingDetails(id);
             return tokenWithDetail; // This may include nulls
           })

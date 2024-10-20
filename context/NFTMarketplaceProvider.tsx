@@ -165,6 +165,7 @@ export const NFTMarketplaceProvider: React.FC<NFTMarketplaceProviderProps> = ({
         nftContract: listing.nftContract,
         tokenId: Number(listing.tokenId),
         price: ethers.formatEther(listing.price),
+        collectionId: Number(listing.collectionId),
         isActive: listing.isActive,
         saleType: Number(listing.saleType),
         ...metadata,

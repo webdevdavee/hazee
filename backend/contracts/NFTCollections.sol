@@ -40,6 +40,7 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         private collectionOffers;
     mapping(address => uint256[]) private userCreatedCollections;
     mapping(address => uint256[]) private userOfferCollections;
+    mapping(uint256 => uint256[]) private mintedTokens;
     uint256 public collectionCounter;
 
     // Events
@@ -163,8 +164,19 @@ contract NFTCollections is Ownable, ReentrancyGuard {
             collection.mintedSupply++;
         }
 
+        mintedTokens[_collectionId].push(tokenId);
+
         emit NFTMinted(_collectionId, tokenId, msg.sender);
         return tokenId;
+    }
+
+    function getMintedNFTs(
+        uint256 _collectionId
+    ) public view returns (uint256[] memory) {
+        if (_collectionId == 0 || _collectionId > collectionCounter) {
+            revert InvalidCollectionID();
+        }
+        return mintedTokens[_collectionId];
     }
 
     function updateFloorPrice(

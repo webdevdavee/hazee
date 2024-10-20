@@ -83,7 +83,7 @@ const Collections = () => {
           {visibleCollections && visibleCollections.length > 0 ? (
             visibleCollections.map((collection) => (
               <CollectionsCard
-                key={collection.name}
+                key={collection.collectionId}
                 collectionId={collection.collectionId}
               />
             ))

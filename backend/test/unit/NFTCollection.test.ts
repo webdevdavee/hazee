@@ -117,6 +117,127 @@ describe("NFTCollections", function () {
     });
   });
 
+  describe("Minted NFTs Tracking", function () {
+    let collectionId = 1;
+
+    beforeEach(async function () {
+      await nftCollections.createCollection(10, 1000, ethers.parseEther("0.1"));
+    });
+
+    it("should return empty array for collection with no minted NFTs", async function () {
+      const mintedNFTs = await nftCollections.getMintedNFTs(collectionId);
+      expect(mintedNFTs).to.deep.equal([]);
+    });
+
+    it("should correctly track minted NFTs in a collection", async function () {
+      // Mint multiple NFTs
+      for (let i = 0; i < 3; i++) {
+        await nftCollections.mintNFT(
+          collectionId,
+          ethers.parseEther("0.2"),
+          `ipfs://testURI${i}`
+        );
+      }
+
+      const mintedNFTs = await nftCollections.getMintedNFTs(collectionId);
+
+      // Convert BigInts to numbers for comparison
+      const mintedNFTsAsNumbers = mintedNFTs.map((id) => Number(id));
+      expect(mintedNFTsAsNumbers).to.deep.equal([1, 2, 3]);
+    });
+
+    it("should track NFTs across multiple collections correctly", async function () {
+      // Create second collection
+      await nftCollections.createCollection(10, 1000, ethers.parseEther("0.1"));
+      const secondCollectionId = 2;
+
+      // Mint NFTs in first collection
+      await nftCollections.mintNFT(
+        collectionId,
+        ethers.parseEther("0.2"),
+        "ipfs://testURI1"
+      );
+      await nftCollections.mintNFT(
+        collectionId,
+        ethers.parseEther("0.2"),
+        "ipfs://testURI2"
+      );
+
+      // Mint NFTs in second collection
+      await nftCollections.mintNFT(
+        secondCollectionId,
+        ethers.parseEther("0.2"),
+        "ipfs://testURI3"
+      );
+
+      const firstCollectionNFTs = await nftCollections.getMintedNFTs(
+        collectionId
+      );
+      const secondCollectionNFTs = await nftCollections.getMintedNFTs(
+        secondCollectionId
+      );
+
+      expect(firstCollectionNFTs.map((id) => Number(id))).to.deep.equal([1, 2]);
+      expect(secondCollectionNFTs.map((id) => Number(id))).to.deep.equal([1]);
+    });
+
+    it("should return correct token IDs after multiple mints and collection operations", async function () {
+      // Mint some NFTs
+      await nftCollections.mintNFT(
+        collectionId,
+        ethers.parseEther("0.2"),
+        "ipfs://testURI1"
+      );
+      await nftCollections.mintNFT(
+        collectionId,
+        ethers.parseEther("0.2"),
+        "ipfs://testURI2"
+      );
+
+      // Make an offer and accept it to ensure it doesn't affect tracking
+      await nftCollections
+        .connect(addr1)
+        .placeCollectionOffer(collectionId, 1, TWELVE_HOURS, {
+          value: ethers.parseEther("0.2"),
+        });
+
+      const collectionInfo = await nftCollections.getCollectionInfo(
+        collectionId
+      );
+      const nftContract = NFT__factory.connect(
+        collectionInfo.nftContract,
+        owner
+      );
+      await nftContract.setApprovalForAll(
+        await nftCollections.getAddress(),
+        true
+      );
+
+      await nftCollections.acceptCollectionOffer(
+        collectionId,
+        [1n],
+        addr1.address
+      );
+
+      // Mint another NFT after transfer
+      await nftCollections.mintNFT(
+        collectionId,
+        ethers.parseEther("0.2"),
+        "ipfs://testURI3"
+      );
+
+      const mintedNFTs = await nftCollections.getMintedNFTs(collectionId);
+      expect(mintedNFTs.map((id) => Number(id))).to.deep.equal([1, 2, 3]);
+    });
+
+    it("should revert when querying invalid collection ID", async function () {
+      const invalidCollectionId = 999;
+      await expect(
+        nftCollections.getMintedNFTs(invalidCollectionId)
+      ).to.be.revertedWithCustomError(nftCollections, "InvalidCollectionID");
+    });
+  });
+
   describe("Collection Offers", function () {
     let collectionId = 1;
 

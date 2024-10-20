@@ -142,6 +142,12 @@ export const marketplaceContractABI = [
       },
       {
         indexed: false,
+        internalType: "uint256",
+        name: "collectionId",
+        type: "uint256",
+      },
+      {
+        indexed: false,
         internalType: "enum NFT.NFTStatus",
         name: "saleType",
         type: "uint8",
@@ -187,6 +193,12 @@ export const marketplaceContractABI = [
         indexed: false,
         internalType: "uint256",
         name: "price",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "collectionId",
         type: "uint256",
       },
     ],
@@ -284,6 +296,11 @@ export const marketplaceContractABI = [
       {
         internalType: "uint256",
         name: "price",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "collectionId",
         type: "uint256",
       },
       {
@@ -427,6 +444,11 @@ export const marketplaceContractABI = [
       {
         internalType: "uint256",
         name: "price",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "collectionId",
         type: "uint256",
       },
       {

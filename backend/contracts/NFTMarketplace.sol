@@ -21,6 +21,7 @@ contract NFTMarketplace is ReentrancyGuard {
         address nftContract;
         uint256 tokenId;
         uint256 price;
+        uint256 collectionId;
         bool isActive;
         NFT.NFTStatus saleType;
     }
@@ -46,6 +47,7 @@ contract NFTMarketplace is ReentrancyGuard {
         address indexed nftContract,
         uint256 tokenId,
         uint256 price,
+        uint256 collectionId,
         NFT.NFTStatus saleType
     );
     event NFTSold(
@@ -54,7 +56,8 @@ contract NFTMarketplace is ReentrancyGuard {
         address indexed seller,
         address nftContract,
         uint256 tokenId,
-        uint256 price
+        uint256 price,
+        uint256 collectionId
     );
     event ListingCancelled(uint256 indexed listingId);
     event ListingPriceUpdated(uint256 indexed listingId, uint256 newPrice);
@@ -99,6 +102,7 @@ contract NFTMarketplace is ReentrancyGuard {
             nftContract: _nftContract,
             tokenId: _tokenId,
             price: _price,
+            collectionId: collectionId,
             isActive: true,
             saleType: NFT.NFTStatus.SALE
         });
@@ -111,6 +115,7 @@ contract NFTMarketplace is ReentrancyGuard {
             _nftContract,
             _tokenId,
             _price,
+            collectionId,
             NFT.NFTStatus.SALE
         );
     }
@@ -165,33 +170,31 @@ contract NFTMarketplace is ReentrancyGuard {
         uint256 platformFee = (listing.price * PLATFORM_FEE_PERCENTAGE) / 10000;
         uint256 royaltyFee = 0;
 
-        NFT nft = NFT(listing.nftContract);
-        uint256 collectionId = nft.getCollection(listing.tokenId);
-
         INFTCollections.CollectionInfo
             memory collectionInfo = i_collectionContract.getCollectionInfo(
-                collectionId
+                listing.collectionId
             );
 
         royaltyFee = (listing.price * collectionInfo.royaltyPercentage) / 10000;
 
         uint256 sellerProceeds = listing.price - platformFee - royaltyFee;
 
-        // Transfer NFT first to prevent reentrancy
         nftContract.safeTransferFrom(
             listing.seller,
             msg.sender,
             listing.tokenId
         );
 
-        // Transfer funds
         payable(i_feeRecipient).transfer(platformFee);
         if (royaltyFee > 0) {
             payable(collectionInfo.creator).transfer(royaltyFee);
         }
         payable(listing.seller).transfer(sellerProceeds);
 
-        nft.setNFTStatus(listing.tokenId, NFT.NFTStatus.NONE);
+        NFT(listing.nftContract).setNFTStatus(
+            listing.tokenId,
+            NFT.NFTStatus.NONE
+        );
 
         emit NFTSold(
             _listingId,
@@ -199,10 +202,10 @@ contract NFTMarketplace is ReentrancyGuard {
             listing.seller,
             listing.nftContract,
             listing.tokenId,
-            listing.price
+            listing.price,
+            listing.collectionId
         );
 
-        // Refund excess payment
         uint256 excess = msg.value - listing.price;
         if (excess > 0) {
             payable(msg.sender).transfer(excess);
@@ -219,6 +222,7 @@ contract NFTMarketplace is ReentrancyGuard {
             address nftContract,
             uint256 tokenId,
             uint256 price,
+            uint256 collectionId,
             bool isActive,
             NFT.NFTStatus saleType
         )
@@ -229,6 +233,7 @@ contract NFTMarketplace is ReentrancyGuard {
             listing.nftContract,
             listing.tokenId,
             listing.price,
+            listing.collectionId,
             listing.isActive,
             listing.saleType
         );

@@ -10,12 +10,10 @@ type sampleNft = {
 };
 
 type Collection = {
-  id: number;
+  collectionId: number;
   name: string;
-  by: string;
-  volume: string;
-  floor: string;
-  src: string[];
+  imageUrl: string;
+  coverPhoto: string;
 };
 
 type User = {
@@ -59,6 +57,7 @@ interface NFTListing {
   nftContract: string;
   tokenId: number;
   price: string;
+  collectionId: number;
   isActive: boolean;
   saleType: number;
   // Additional metadata from NFT contract
@@ -89,14 +88,10 @@ interface Bid {
 interface CollectionInfo {
   collectionId: number;
   creator: string;
-  currentOwner: string;
-  name: string;
   nftContract: string;
   maxSupply: number;
   mintedSupply: number;
   royaltyPercentage: number;
   floorPrice: string;
-  owners: number;
   isActive: boolean;
-  imageUrl?: string;
 }

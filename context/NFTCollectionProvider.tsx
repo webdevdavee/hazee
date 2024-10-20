@@ -11,17 +11,6 @@ import { NFTCollectionsContractAddress } from "../backend/constants";
 import { useToast } from "./ToastProvider";
 import { useWallet } from "./WalletProvider";
 
-interface CollectionInfo {
-  collectionId: number;
-  creator: string;
-  nftContract: string;
-  maxSupply: number;
-  mintedSupply: number;
-  royaltyPercentage: number;
-  floorPrice: string;
-  isActive: boolean;
-}
-
 interface NFTCollectionsContextType {
   contract: ethers.Contract | null;
   collections: CollectionInfo[];
@@ -37,6 +26,7 @@ interface NFTCollectionsContextType {
   getCollectionDetails: (
     collectionId: number
   ) => Promise<CollectionInfo | null>;
+  getMintedNFTs: (collectionId: number) => Promise<number[] | null>;
   createCollection: (
     maxSupply: number,
     royaltyPercentage: number,
@@ -271,6 +261,27 @@ export const NFTCollectionsProvider: React.FC<NFTCollectionsProviderProps> = ({
     }
   };
 
+  const getMintedNFTs = async (
+    collectionId: number
+  ): Promise<number[] | null> => {
+    if (!contract || !isContractReady) {
+      showToast(
+        "Contract not initialized. Please ensure your wallet is connected.",
+        "error"
+      );
+      return null;
+    }
+
+    try {
+      const mintedTokens = await contract.getMintedNFTs(collectionId);
+      return mintedTokens.map((id: bigint) => Number(id));
+    } catch (error) {
+      console.error("Error fetching minted NFTs:", error);
+      showToast("Failed to fetch minted NFTs", "error");
+      return null;
+    }
+  };
+
   const updateFloorPrice = async (
     collectionId: number,
     newFloorPrice: string
@@ -458,6 +469,7 @@ export const NFTCollectionsProvider: React.FC<NFTCollectionsProviderProps> = ({
     getCollectionDetails,
     createCollection,
     mintNFT,
+    getMintedNFTs,
     updateFloorPrice,
     updateRoyaltyPercentage,
     placeCollectionOffer,
