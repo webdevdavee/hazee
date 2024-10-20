@@ -3,17 +3,12 @@ export const marketplaceContractABI = [
     inputs: [
       {
         internalType: "address",
-        name: "_creatorsContractAddress",
+        name: "_collectionContractAddress",
         type: "address",
       },
       {
         internalType: "address",
         name: "_auctionContractAddress",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "_collectionContractAddress",
         type: "address",
       },
     ],
@@ -22,14 +17,69 @@ export const marketplaceContractABI = [
   },
   {
     inputs: [],
+    name: "CollectionNotActive",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ContractNotApproved",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InsufficientPayment",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ListingNotActive",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ListingNotFound",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "NFTOnAuction",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "NFTUnavailableForPurchase",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "NotNFTOwner",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "NotSeller",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "PriceMustBeGreaterThanZero",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "ReentrancyGuardReentrantCall",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "SellerNoLongerOwnsNFT",
     type: "error",
   },
   {
     anonymous: false,
     inputs: [
       {
-        indexed: false,
+        indexed: true,
         internalType: "uint256",
         name: "listingId",
         type: "uint256",
@@ -42,7 +92,7 @@ export const marketplaceContractABI = [
     anonymous: false,
     inputs: [
       {
-        indexed: false,
+        indexed: true,
         internalType: "uint256",
         name: "listingId",
         type: "uint256",
@@ -61,19 +111,19 @@ export const marketplaceContractABI = [
     anonymous: false,
     inputs: [
       {
-        indexed: false,
+        indexed: true,
         internalType: "uint256",
         name: "listingId",
         type: "uint256",
       },
       {
-        indexed: false,
+        indexed: true,
         internalType: "address",
         name: "seller",
         type: "address",
       },
       {
-        indexed: false,
+        indexed: true,
         internalType: "address",
         name: "nftContract",
         type: "address",
@@ -104,19 +154,19 @@ export const marketplaceContractABI = [
     anonymous: false,
     inputs: [
       {
-        indexed: false,
+        indexed: true,
         internalType: "uint256",
         name: "listingId",
         type: "uint256",
       },
       {
-        indexed: false,
+        indexed: true,
         internalType: "address",
         name: "buyer",
         type: "address",
       },
       {
-        indexed: false,
+        indexed: true,
         internalType: "address",
         name: "seller",
         type: "address",
@@ -269,19 +319,6 @@ export const marketplaceContractABI = [
     outputs: [
       {
         internalType: "contract INFTCollections",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "i_creatorsContract",
-    outputs: [
-      {
-        internalType: "contract NFTCreators",
         name: "",
         type: "address",
       },

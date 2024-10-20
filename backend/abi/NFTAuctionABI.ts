@@ -6,18 +6,78 @@ export const auctionContractABI = [
         name: "_nftContractAddress",
         type: "address",
       },
-      {
-        internalType: "address",
-        name: "_creatorsAddress",
-        type: "address",
-      },
     ],
     stateMutability: "nonpayable",
     type: "constructor",
   },
   {
     inputs: [],
-    name: "MathOverflowedMulDiv",
+    name: "AuctionExpired",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "AuctionNotFound",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "BelowStartingPrice",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "BidTooLow",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "BidsAlreadyPlaced",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ContractNotApproved",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "HighestBidderCannotWithdraw",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidAuctionState",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidDuration",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidReservePrice",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidStartingPrice",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "NoBidsFound",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "NotSeller",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "NotTokenOwner",
     type: "error",
   },
   {
@@ -48,10 +108,20 @@ export const auctionContractABI = [
     type: "error",
   },
   {
+    inputs: [],
+    name: "TokenAlreadyHasAuction",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "TokenNotAvailable",
+    type: "error",
+  },
+  {
     anonymous: false,
     inputs: [
       {
-        indexed: false,
+        indexed: true,
         internalType: "uint256",
         name: "auctionId",
         type: "uint256",
@@ -64,19 +134,19 @@ export const auctionContractABI = [
     anonymous: false,
     inputs: [
       {
-        indexed: false,
+        indexed: true,
         internalType: "uint256",
         name: "auctionId",
         type: "uint256",
       },
       {
-        indexed: false,
+        indexed: true,
         internalType: "address",
         name: "seller",
         type: "address",
       },
       {
-        indexed: false,
+        indexed: true,
         internalType: "uint256",
         name: "tokenId",
         type: "uint256",
@@ -107,13 +177,13 @@ export const auctionContractABI = [
     anonymous: false,
     inputs: [
       {
-        indexed: false,
+        indexed: true,
         internalType: "uint256",
         name: "auctionId",
         type: "uint256",
       },
       {
-        indexed: false,
+        indexed: true,
         internalType: "address",
         name: "winner",
         type: "address",
@@ -151,13 +221,13 @@ export const auctionContractABI = [
     anonymous: false,
     inputs: [
       {
-        indexed: false,
+        indexed: true,
         internalType: "uint256",
         name: "auctionId",
         type: "uint256",
       },
       {
-        indexed: false,
+        indexed: true,
         internalType: "address",
         name: "bidder",
         type: "address",
@@ -409,19 +479,6 @@ export const auctionContractABI = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "creatorsContract",
-    outputs: [
-      {
-        internalType: "contract NFTCreators",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [
       {
         internalType: "uint256",
@@ -430,24 +487,6 @@ export const auctionContractABI = [
       },
     ],
     name: "endAuction",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_auctionId",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_additionalTime",
-        type: "uint256",
-      },
-    ],
-    name: "extendAuction",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -528,11 +567,11 @@ export const auctionContractABI = [
     inputs: [
       {
         internalType: "uint256",
-        name: "_auctionId",
+        name: "_tokenId",
         type: "uint256",
       },
     ],
-    name: "getAuctionBids",
+    name: "getTokenBids",
     outputs: [
       {
         components: [
@@ -563,51 +602,17 @@ export const auctionContractABI = [
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "_tokenId",
-        type: "uint256",
-      },
-    ],
-    name: "getNFTDetails",
-    outputs: [
-      {
-        internalType: "address",
-        name: "owner",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "price",
-        type: "uint256",
-      },
-      {
-        internalType: "enum NFT.NFTStatus",
-        name: "status",
-        type: "uint8",
-      },
-      {
-        internalType: "uint256",
-        name: "collectionId",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         internalType: "address",
         name: "_user",
         type: "address",
       },
     ],
-    name: "getUserAuctionCount",
+    name: "getUserBids",
     outputs: [
       {
-        internalType: "uint256",
+        internalType: "uint256[]",
         name: "",
-        type: "uint256",
+        type: "uint256[]",
       },
     ],
     stateMutability: "view",
@@ -747,35 +752,22 @@ export const auctionContractABI = [
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "_auctionId",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_newReservePrice",
-        type: "uint256",
-      },
-    ],
-    name: "updateReservePrice",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         internalType: "address",
         name: "",
         type: "address",
       },
-    ],
-    name: "userAuctionCount",
-    outputs: [
       {
         internalType: "uint256",
         name: "",
         type: "uint256",
+      },
+    ],
+    name: "userBids",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
       },
     ],
     stateMutability: "view",

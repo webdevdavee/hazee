@@ -4,7 +4,6 @@ import "./globals.css";
 import Overlay from "@/components/layout/Overlay";
 import { WalletProvider } from "@/context/WalletProvider";
 import { ToastProvider } from "@/context/ToastProvider";
-import { NFTCreatorsProvider } from "@/context/NFTCreatorProvider";
 import { NFTMarketplaceProvider } from "@/context/NFTMarketplaceProvider";
 import { NFTAuctionProvider } from "@/context/NFTAuctionProvider";
 import { NFTCollectionsProvider } from "@/context/NFTCollectionProvider";
@@ -29,16 +28,14 @@ export default function RootLayout({
       <body className={dm_sans.className}>
         <ToastProvider>
           <WalletProvider>
-            <NFTCreatorsProvider>
-              <NFTMarketplaceProvider>
-                <NFTAuctionProvider>
-                  <NFTCollectionsProvider>
-                    <Overlay />
-                    {children}
-                  </NFTCollectionsProvider>
-                </NFTAuctionProvider>
-              </NFTMarketplaceProvider>
-            </NFTCreatorsProvider>
+            <NFTMarketplaceProvider>
+              <NFTAuctionProvider>
+                <NFTCollectionsProvider>
+                  <Overlay />
+                  {children}
+                </NFTCollectionsProvider>
+              </NFTAuctionProvider>
+            </NFTMarketplaceProvider>
           </WalletProvider>
         </ToastProvider>
       </body>

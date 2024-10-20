@@ -1,12 +1,6 @@
 export const collectionsContractABI = [
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_creatorsAddress",
-        type: "address",
-      },
-    ],
+    inputs: [],
     stateMutability: "nonpayable",
     type: "constructor",
   },
@@ -66,11 +60,6 @@ export const collectionsContractABI = [
     type: "error",
   },
   {
-    inputs: [],
-    name: "OnlyCurrentOwnerAllowed",
-    type: "error",
-  },
-  {
     inputs: [
       {
         internalType: "address",
@@ -103,6 +92,11 @@ export const collectionsContractABI = [
     type: "error",
   },
   {
+    inputs: [],
+    name: "Unauthorized",
+    type: "error",
+  },
+  {
     anonymous: false,
     inputs: [
       {
@@ -122,12 +116,6 @@ export const collectionsContractABI = [
         internalType: "address",
         name: "creator",
         type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "string",
-        name: "name",
-        type: "string",
       },
     ],
     name: "CollectionAdded",
@@ -315,10 +303,6 @@ export const collectionsContractABI = [
     type: "event",
   },
   {
-    stateMutability: "payable",
-    type: "fallback",
-  },
-  {
     inputs: [
       {
         internalType: "uint256",
@@ -356,11 +340,6 @@ export const collectionsContractABI = [
   },
   {
     inputs: [
-      {
-        internalType: "string",
-        name: "_name",
-        type: "string",
-      },
       {
         internalType: "uint256",
         name: "_maxSupply",
@@ -401,19 +380,14 @@ export const collectionsContractABI = [
       {
         components: [
           {
+            internalType: "uint256",
+            name: "collectionId",
+            type: "uint256",
+          },
+          {
             internalType: "address",
             name: "creator",
             type: "address",
-          },
-          {
-            internalType: "address",
-            name: "currentOwner",
-            type: "address",
-          },
-          {
-            internalType: "string",
-            name: "name",
-            type: "string",
           },
           {
             internalType: "address",
@@ -438,11 +412,6 @@ export const collectionsContractABI = [
           {
             internalType: "uint256",
             name: "floorPrice",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "owners",
             type: "uint256",
           },
           {
@@ -462,74 +431,17 @@ export const collectionsContractABI = [
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "_offset",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_limit",
-        type: "uint256",
+        internalType: "address",
+        name: "user",
+        type: "address",
       },
     ],
-    name: "getCollections",
+    name: "getUserCollectionOffers",
     outputs: [
       {
-        components: [
-          {
-            internalType: "address",
-            name: "creator",
-            type: "address",
-          },
-          {
-            internalType: "address",
-            name: "currentOwner",
-            type: "address",
-          },
-          {
-            internalType: "string",
-            name: "name",
-            type: "string",
-          },
-          {
-            internalType: "address",
-            name: "nftContract",
-            type: "address",
-          },
-          {
-            internalType: "uint256",
-            name: "maxSupply",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "mintedSupply",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "royaltyPercentage",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "floorPrice",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "owners",
-            type: "uint256",
-          },
-          {
-            internalType: "bool",
-            name: "isActive",
-            type: "bool",
-          },
-        ],
-        internalType: "struct NFTCollections.CollectionInfo[]",
+        internalType: "uint256[]",
         name: "",
-        type: "tuple[]",
+        type: "uint256[]",
       },
     ],
     stateMutability: "view",
@@ -538,12 +450,12 @@ export const collectionsContractABI = [
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "_collectionId",
-        type: "uint256",
+        internalType: "address",
+        name: "user",
+        type: "address",
       },
     ],
-    name: "getMintedNFTs",
+    name: "getUserCreatedCollections",
     outputs: [
       {
         internalType: "uint256[]",

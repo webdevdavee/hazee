@@ -67,12 +67,6 @@ interface NFTListing {
   imageUrl?: string;
 }
 
-interface Bid {
-  bidder: string;
-  amount: string;
-  timestamp: number;
-}
-
 interface AuctionDetails {
   seller: string;
   tokenId: number;
@@ -84,6 +78,12 @@ interface AuctionDetails {
   ended: boolean;
   active: boolean;
   bids: Bid[];
+}
+
+interface Bid {
+  bidder: string;
+  amount: string;
+  timestamp: number;
 }
 
 interface CollectionInfo {

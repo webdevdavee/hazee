@@ -1,5 +1,3 @@
-"use client";
-
 import React, {
   createContext,
   useContext,
@@ -12,6 +10,17 @@ import { collectionsContractABI } from "@/backend/abi/NFTCollectionsABI";
 import { NFTCollectionsContractAddress } from "../backend/constants";
 import { useToast } from "./ToastProvider";
 import { useWallet } from "./WalletProvider";
+
+interface CollectionInfo {
+  collectionId: number;
+  creator: string;
+  nftContract: string;
+  maxSupply: number;
+  mintedSupply: number;
+  royaltyPercentage: number;
+  floorPrice: string;
+  isActive: boolean;
+}
 
 interface NFTCollectionsContextType {
   contract: ethers.Contract | null;
@@ -29,7 +38,6 @@ interface NFTCollectionsContextType {
     collectionId: number
   ) => Promise<CollectionInfo | null>;
   createCollection: (
-    name: string,
     maxSupply: number,
     royaltyPercentage: number,
     floorPrice: string
@@ -39,9 +47,6 @@ interface NFTCollectionsContextType {
     price: string,
     tokenURI: string
   ) => Promise<{ tokenId: number; collectionId: number } | null>;
-  getMintedNFTs: (
-    collectionId: number
-  ) => Promise<{ collectionId: number; tokenIds: number[] } | null>;
   updateFloorPrice: (
     collectionId: number,
     newFloorPrice: string
@@ -53,8 +58,7 @@ interface NFTCollectionsContextType {
   placeCollectionOffer: (
     collectionId: number,
     nftCount: number,
-    duration: number,
-    offerAmount: string
+    duration: number
   ) => Promise<{ collectionId: number; success: boolean }>;
   withdrawCollectionOffer: (
     collectionId: number
@@ -64,6 +68,8 @@ interface NFTCollectionsContextType {
     tokenIds: number[],
     offerer: string
   ) => Promise<{ collectionId: number; success: boolean }>;
+  getUserCreatedCollections: (user: string) => Promise<number[] | null>;
+  getUserCollectionOffers: (user: string) => Promise<number[] | null>;
 }
 
 const NFTCollectionsContext = createContext<
@@ -158,9 +164,12 @@ export const NFTCollectionsProvider: React.FC<NFTCollectionsProviderProps> = ({
       }));
       setCollections(formattedCollections);
 
-      const totalCollectionCount = contract.getTotalCollectionsCount();
+      const totalCollectionCount = await contract.collectionCounter();
 
-      return formattedCollections;
+      return {
+        collections: formattedCollections,
+        totalCollectionsCount: Number(totalCollectionCount),
+      };
     } catch (error) {
       console.error("Error fetching collections:", error);
       showToast("Failed to fetch collections", "error");
@@ -195,7 +204,6 @@ export const NFTCollectionsProvider: React.FC<NFTCollectionsProviderProps> = ({
   };
 
   const createCollection = async (
-    name: string,
     maxSupply: number,
     royaltyPercentage: number,
     floorPrice: string
@@ -210,7 +218,6 @@ export const NFTCollectionsProvider: React.FC<NFTCollectionsProviderProps> = ({
 
     try {
       const tx = await contract.createCollection(
-        name,
         maxSupply,
         royaltyPercentage,
         ethers.parseEther(floorPrice)
@@ -260,30 +267,6 @@ export const NFTCollectionsProvider: React.FC<NFTCollectionsProviderProps> = ({
     } catch (error) {
       console.error("Error minting NFT:", error);
       showToast("Failed to mint NFT", "error");
-      return null;
-    }
-  };
-
-  const getMintedNFTs = async (
-    collectionId: number
-  ): Promise<{ collectionId: number; tokenIds: number[] } | null> => {
-    if (!contract || !isContractReady) {
-      showToast(
-        "Contract not initialized. Please ensure your wallet is connected.",
-        "error"
-      );
-      return null;
-    }
-
-    try {
-      const tokenIds = await contract.getMintedNFTs(collectionId);
-      return {
-        collectionId,
-        tokenIds: tokenIds.map((id: bigint) => Number(id)),
-      };
-    } catch (error) {
-      console.error("Error fetching minted NFTs:", error);
-      showToast("Failed to fetch minted NFTs", "error");
       return null;
     }
   };
@@ -345,8 +328,7 @@ export const NFTCollectionsProvider: React.FC<NFTCollectionsProviderProps> = ({
   const placeCollectionOffer = async (
     collectionId: number,
     nftCount: number,
-    duration: number,
-    offerAmount: string
+    duration: number
   ): Promise<{ collectionId: number; success: boolean }> => {
     if (!contract || !isContractReady) {
       showToast(
@@ -361,7 +343,7 @@ export const NFTCollectionsProvider: React.FC<NFTCollectionsProviderProps> = ({
         collectionId,
         nftCount,
         duration,
-        { value: ethers.parseEther(offerAmount) }
+        { value: ethers.parseEther("0.1") } // You may want to adjust this value or make it dynamic
       );
       await tx.wait();
       showToast("Collection offer placed successfully!", "success");
@@ -425,6 +407,48 @@ export const NFTCollectionsProvider: React.FC<NFTCollectionsProviderProps> = ({
     }
   };
 
+  const getUserCreatedCollections = async (
+    user: string
+  ): Promise<number[] | null> => {
+    if (!contract || !isContractReady) {
+      showToast(
+        "Contract not initialized. Please ensure your wallet is connected.",
+        "error"
+      );
+      return null;
+    }
+
+    try {
+      const collections = await contract.getUserCreatedCollections(user);
+      return collections.map((id: bigint) => Number(id));
+    } catch (error) {
+      console.error("Error fetching user created collections:", error);
+      showToast("Failed to fetch user created collections", "error");
+      return null;
+    }
+  };
+
+  const getUserCollectionOffers = async (
+    user: string
+  ): Promise<number[] | null> => {
+    if (!contract || !isContractReady) {
+      showToast(
+        "Contract not initialized. Please ensure your wallet is connected.",
+        "error"
+      );
+      return null;
+    }
+
+    try {
+      const offers = await contract.getUserCollectionOffers(user);
+      return offers.map((id: bigint) => Number(id));
+    } catch (error) {
+      console.error("Error fetching user collection offers:", error);
+      showToast("Failed to fetch user collection offers", "error");
+      return null;
+    }
+  };
+
   const value = {
     contract,
     collections,
@@ -434,12 +458,13 @@ export const NFTCollectionsProvider: React.FC<NFTCollectionsProviderProps> = ({
     getCollectionDetails,
     createCollection,
     mintNFT,
-    getMintedNFTs,
     updateFloorPrice,
     updateRoyaltyPercentage,
     placeCollectionOffer,
     withdrawCollectionOffer,
     acceptCollectionOffer,
+    getUserCreatedCollections,
+    getUserCollectionOffers,
   };
 
   return (

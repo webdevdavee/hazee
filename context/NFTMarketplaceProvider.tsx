@@ -26,6 +26,15 @@ interface NFTMarketplaceContextType {
   getListingDetails: (listingId: number) => Promise<NFTListing | null>;
   getUserListings: (userAddress: string) => Promise<NFTListing[]>;
   refreshListings: () => Promise<void>;
+  listNFT: (
+    nftContract: string,
+    tokenId: number,
+    price: string
+  ) => Promise<void>;
+  cancelListing: (listingId: number) => Promise<void>;
+  updateListingPrice: (listingId: number, newPrice: string) => Promise<void>;
+  buyNFT: (listingId: number, price: string) => Promise<void>;
+  isNFTListed: (nftContract: string, tokenId: number) => Promise<boolean>;
 }
 
 const NFTMarketplaceContext = createContext<
@@ -238,6 +247,120 @@ export const NFTMarketplaceProvider: React.FC<NFTMarketplaceProviderProps> = ({
     }
   };
 
+  const listNFT = async (
+    nftContract: string,
+    tokenId: number,
+    price: string
+  ) => {
+    if (!contract || !isContractReady) {
+      showToast(
+        "Contract not initialized. Please ensure your wallet is connected.",
+        "error"
+      );
+      return;
+    }
+
+    try {
+      const tx = await contract.listNFT(
+        nftContract,
+        tokenId,
+        ethers.parseEther(price)
+      );
+      await tx.wait();
+      showToast("NFT listed successfully", "success");
+      await refreshListings();
+    } catch (error) {
+      console.error("Error listing NFT:", error);
+      showToast("Failed to list NFT", "error");
+    }
+  };
+
+  const cancelListing = async (listingId: number) => {
+    if (!contract || !isContractReady) {
+      showToast(
+        "Contract not initialized. Please ensure your wallet is connected.",
+        "error"
+      );
+      return;
+    }
+
+    try {
+      const tx = await contract.cancelListing(listingId);
+      await tx.wait();
+      showToast("Listing cancelled successfully", "success");
+      await refreshListings();
+    } catch (error) {
+      console.error("Error cancelling listing:", error);
+      showToast("Failed to cancel listing", "error");
+    }
+  };
+
+  const updateListingPrice = async (listingId: number, newPrice: string) => {
+    if (!contract || !isContractReady) {
+      showToast(
+        "Contract not initialized. Please ensure your wallet is connected.",
+        "error"
+      );
+      return;
+    }
+
+    try {
+      const tx = await contract.updateListingPrice(
+        listingId,
+        ethers.parseEther(newPrice)
+      );
+      await tx.wait();
+      showToast("Listing price updated successfully", "success");
+      await refreshListings();
+    } catch (error) {
+      console.error("Error updating listing price:", error);
+      showToast("Failed to update listing price", "error");
+    }
+  };
+
+  const buyNFT = async (listingId: number, price: string) => {
+    if (!contract || !isContractReady) {
+      showToast(
+        "Contract not initialized. Please ensure your wallet is connected.",
+        "error"
+      );
+      return;
+    }
+
+    try {
+      const tx = await contract.buyNFT(listingId, {
+        value: ethers.parseEther(price),
+      });
+      await tx.wait();
+      showToast("NFT purchased successfully", "success");
+      await refreshListings();
+    } catch (error) {
+      console.error("Error buying NFT:", error);
+      showToast("Failed to buy NFT", "error");
+    }
+  };
+
+  const isNFTListed = async (
+    nftContract: string,
+    tokenId: number
+  ): Promise<boolean> => {
+    if (!contract || !isContractReady) {
+      showToast(
+        "Contract not initialized. Please ensure your wallet is connected.",
+        "error"
+      );
+      return false;
+    }
+
+    try {
+      return await contract.isNFTListed(nftContract, tokenId);
+    } catch (error) {
+      console.error("Error checking if NFT is listed:", error);
+      showToast("Failed to check if NFT is listed", "error");
+      return false;
+    }
+  };
+
   const value = {
     contract,
     listings,
@@ -247,6 +370,11 @@ export const NFTMarketplaceProvider: React.FC<NFTMarketplaceProviderProps> = ({
     getListingDetails,
     getUserListings,
     refreshListings,
+    listNFT,
+    cancelListing,
+    updateListingPrice,
+    buyNFT,
+    isNFTListed,
   };
 
   return (

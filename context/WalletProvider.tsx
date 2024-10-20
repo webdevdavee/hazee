@@ -3,9 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { truncateAddress } from "@/libs/utils";
-import { NFTCreatorsContractAddress } from "../backend/constants";
 import { useToast } from "./ToastProvider";
-import { creatorsContractABI } from "@/backend/abi/NFTCreatorsABI";
 import { updateUserData } from "@/database/actions/user.action";
 
 declare global {

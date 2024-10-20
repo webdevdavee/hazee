@@ -13,11 +13,6 @@ export const nftContractABI = [
       },
       {
         internalType: "address",
-        name: "_creatorsAddress",
-        type: "address",
-      },
-      {
-        internalType: "address",
         name: "_auctionContractAddress",
         type: "address",
       },
@@ -29,6 +24,11 @@ export const nftContractABI = [
     ],
     stateMutability: "nonpayable",
     type: "constructor",
+  },
+  {
+    inputs: [],
+    name: "ERC721EnumerableForbiddenBatchMint",
+    type: "error",
   },
   {
     inputs: [
@@ -140,6 +140,22 @@ export const nftContractABI = [
         name: "owner",
         type: "address",
       },
+      {
+        internalType: "uint256",
+        name: "index",
+        type: "uint256",
+      },
+    ],
+    name: "ERC721OutOfBoundsIndex",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
     ],
     name: "OwnableInvalidOwner",
     type: "error",
@@ -228,6 +244,25 @@ export const nftContractABI = [
     anonymous: false,
     inputs: [
       {
+        indexed: true,
+        internalType: "address",
+        name: "seller",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "tokenId",
+        type: "uint256",
+      },
+    ],
+    name: "ItemSold",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: false,
         internalType: "uint256",
         name: "_tokenId",
@@ -241,38 +276,13 @@ export const nftContractABI = [
     anonymous: false,
     inputs: [
       {
-        indexed: false,
+        indexed: true,
         internalType: "uint256",
         name: "tokenId",
         type: "uint256",
       },
       {
-        indexed: false,
-        internalType: "string",
-        name: "action",
-        type: "string",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "value",
-        type: "uint256",
-      },
-    ],
-    name: "NFTActivityAdded",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "tokenId",
-        type: "uint256",
-      },
-      {
-        indexed: false,
+        indexed: true,
         internalType: "address",
         name: "creator",
         type: "address",
@@ -285,7 +295,7 @@ export const nftContractABI = [
     anonymous: false,
     inputs: [
       {
-        indexed: false,
+        indexed: true,
         internalType: "uint256",
         name: "tokenId",
         type: "uint256",
@@ -323,7 +333,7 @@ export const nftContractABI = [
     anonymous: false,
     inputs: [
       {
-        indexed: false,
+        indexed: true,
         internalType: "uint256",
         name: "tokenId",
         type: "uint256",
@@ -342,7 +352,7 @@ export const nftContractABI = [
     anonymous: false,
     inputs: [
       {
-        indexed: false,
+        indexed: true,
         internalType: "uint256",
         name: "tokenId",
         type: "uint256",
@@ -381,29 +391,6 @@ export const nftContractABI = [
     ],
     name: "Transfer",
     type: "event",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "tokenId",
-        type: "uint256",
-      },
-      {
-        internalType: "string",
-        name: "action",
-        type: "string",
-      },
-      {
-        internalType: "uint256",
-        name: "value",
-        type: "uint256",
-      },
-    ],
-    name: "_addActivity",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
   },
   {
     inputs: [
@@ -459,38 +446,6 @@ export const nftContractABI = [
     inputs: [
       {
         internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    name: "collection",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "creatorsContract",
-    outputs: [
-      {
-        internalType: "contract NFTCreators",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
         name: "tokenId",
         type: "uint256",
       },
@@ -501,42 +456,6 @@ export const nftContractABI = [
         internalType: "bool",
         name: "",
         type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "tokenId",
-        type: "uint256",
-      },
-    ],
-    name: "getActivities",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "string",
-            name: "action",
-            type: "string",
-          },
-          {
-            internalType: "uint256",
-            name: "value",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "timestamp",
-            type: "uint256",
-          },
-        ],
-        internalType: "struct NFT.Activity[]",
-        name: "",
-        type: "tuple[]",
       },
     ],
     stateMutability: "view",
@@ -575,6 +494,82 @@ export const nftContractABI = [
         internalType: "uint256",
         name: "",
         type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "creator",
+        type: "address",
+      },
+    ],
+    name: "getCreatedTokens",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "",
+        type: "uint256[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "tokenId",
+        type: "uint256",
+      },
+    ],
+    name: "getCurrentOwner",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "seller",
+        type: "address",
+      },
+    ],
+    name: "getItemsSold",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
+    ],
+    name: "getOwnedTokens",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "",
+        type: "uint256[]",
       },
     ],
     stateMutability: "view",
@@ -664,7 +659,7 @@ export const nftContractABI = [
       },
       {
         internalType: "string",
-        name: "tokenURI",
+        name: "theTokenURI",
         type: "string",
       },
       {
@@ -703,40 +698,6 @@ export const nftContractABI = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    name: "nftActivities",
-    outputs: [
-      {
-        internalType: "string",
-        name: "action",
-        type: "string",
-      },
-      {
-        internalType: "uint256",
-        name: "value",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "timestamp",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [],
     name: "owner",
     outputs: [
@@ -766,6 +727,19 @@ export const nftContractABI = [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "seller",
+        type: "address",
+      },
+    ],
+    name: "recordSale",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -929,11 +903,35 @@ export const nftContractABI = [
     inputs: [
       {
         internalType: "uint256",
+        name: "index",
+        type: "uint256",
+      },
+    ],
+    name: "tokenByIndex",
+    outputs: [
+      {
+        internalType: "uint256",
         name: "",
         type: "uint256",
       },
     ],
-    name: "tokenPrices",
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "index",
+        type: "uint256",
+      },
+    ],
+    name: "tokenOfOwnerByIndex",
     outputs: [
       {
         internalType: "uint256",
@@ -958,6 +956,19 @@ export const nftContractABI = [
         internalType: "string",
         name: "",
         type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "totalSupply",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
       },
     ],
     stateMutability: "view",
