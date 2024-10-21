@@ -4,17 +4,17 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { useNFTCollections } from "@/context/NFTCollectionProvider";
 import { useNFTMarketplace } from "@/context/NFTMarketplaceProvider";
+import { getSingleCollection } from "@/database/actions/collection.action";
 
 type Props = {
   collectionId: number;
 };
 
 const CollectionsCard: React.FC<Props> = ({ collectionId }) => {
-  const { getListingDetails } = useNFTMarketplace();
-  const { getCollectionDetails, getMintedNFTs, isContractReady } =
-    useNFTCollections();
+  const { getCollectionListings } = useNFTMarketplace();
+  const { getCollectionDetails, isContractReady } = useNFTCollections();
   const [collection, setCollection] = React.useState<CollectionInfo | null>();
-  const [mintedTokens, setMintedTokens] = React.useState<NFTListing[]>([]);
+  const [listedTokens, setListedTokens] = React.useState<NFTListing[]>([]);
 
   React.useEffect(() => {
     if (!isContractReady) return;
@@ -22,37 +22,38 @@ const CollectionsCard: React.FC<Props> = ({ collectionId }) => {
     const fetchCollectionDetails = async () => {
       try {
         const collection = await getCollectionDetails(collectionId);
-        setCollection(collection);
+        const extraMetadata = await getSingleCollection(collectionId);
+        if (collection && extraMetadata) {
+          setCollection({
+            ...collection,
+            name: extraMetadata.name,
+            imageUrl: extraMetadata.imageUrl,
+            coverPhoto: extraMetadata.coverPhoto,
+          });
+        }
       } catch (error) {
         console.error("Error fetching collection details:", error);
       }
     };
 
-    const fetchMintedTokenDetails = async () => {
+    const fetchListedTokenDetails = async () => {
       try {
-        const tokens = await getMintedNFTs(collectionId);
+        const tokens = await getCollectionListings(collectionId);
         if (!tokens) return;
 
-        const mintedTokensDetails = await Promise.all(
-          tokens.map(async (id) => {
-            const tokenWithDetail = await getListingDetails(id);
-            return tokenWithDetail; // This may include nulls
-          })
-        );
-
         // Filter out any null values before updating state
-        setMintedTokens(mintedTokensDetails.filter((token) => token !== null));
+        setListedTokens(tokens.filter((token) => token !== null));
       } catch (error) {
-        console.error("Error fetching minted token details:", error);
+        console.error("Error fetching listed token details:", error);
       }
     };
 
     // Clear previous data before fetching new one if collectionId changes
-    setMintedTokens([]);
+    setListedTokens([]);
     setCollection(null);
 
     fetchCollectionDetails();
-    fetchMintedTokenDetails();
+    fetchListedTokenDetails();
   }, [isContractReady, collectionId]);
 
   return (
@@ -66,13 +67,13 @@ const CollectionsCard: React.FC<Props> = ({ collectionId }) => {
         <section className="bg-secondary p-1 relative">
           <div className="relative rounded-xl overflow-hidden">
             <div className="grid grid-cols-2 gap-2">
-              {mintedTokens?.map((token) => (
+              {listedTokens?.map((token) => (
                 <div
                   key={token.tokenId}
                   className="w-full aspect-square relative"
                 >
                   <Image
-                    src={token.imageUrl as string}
+                    src={token.imageUrl || "/default-avatar.webp"}
                     fill
                     quality={100}
                     priority
@@ -86,7 +87,7 @@ const CollectionsCard: React.FC<Props> = ({ collectionId }) => {
             <div className="flex flex-col gap-3 bg-secondary p-3">
               <div className="flex flex-col justify-between gap-1">
                 <div className="flex flex-col">
-                  <p className="text-sm text-gray-400">@Hazee</p>
+                  <p className="text-sm text-gray-400">{collection?.creator}</p>
                   <p className="font-medium">{collection?.name}</p>
                 </div>
                 <div className="flex items-center justify-between">

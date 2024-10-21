@@ -41,7 +41,7 @@ const Auctions = () => {
                   <NftCard
                     key={`${listing.listingId}-${index}`}
                     type="list"
-                    data={listing.listingId}
+                    token={listing}
                   />
                 </div>
               ))

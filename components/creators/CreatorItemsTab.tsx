@@ -3,28 +3,39 @@ import { motion, AnimatePresence } from "framer-motion";
 import Button from "../ui/Button";
 import NftCard from "../cards/NftCard";
 import CollectionsCard from "../cards/CollectionsCard";
-import { useNFTCreators } from "@/context/NFTCreatorProvider";
+import { useNFT } from "@/context/NFTProvider";
 
 type Props = {
   urlWalletAddress: string;
 };
 
 const CreatorItemsTab: React.FC<Props> = ({ urlWalletAddress }) => {
-  const { getUserInfo, currentUser, isContractReady } = useNFTCreators();
+  const { getOwnedTokens, getCreatedTokens, getItemsSold, isContractReady } =
+    useNFT();
+  const [createdTokens, setCreatedTokens] = React.useState<
+    TokenInfo[] | null
+  >();
+  const [ownedTokens, setOwnedTokens] = React.useState<TokenInfo[] | null>();
+  const [sold, setSold] = React.useState<number | null>(0);
 
   React.useEffect(() => {
     if (isContractReady && urlWalletAddress) {
-      getUserInfo(urlWalletAddress);
+      const fetchTokens = async () => {
+        const fetchedCreatedTokens = await getCreatedTokens(urlWalletAddress);
+        const fetchedOwnedTokens = await getOwnedTokens(urlWalletAddress);
+        const fetchedItemsSold = await getItemsSold(urlWalletAddress);
+
+        if (fetchedCreatedTokens) setCreatedTokens(fetchedCreatedTokens);
+        if (fetchedOwnedTokens) setOwnedTokens(fetchedOwnedTokens);
+        if (fetchedItemsSold) setSold(fetchedItemsSold);
+      };
+
+      fetchTokens();
     }
   }, [urlWalletAddress, isContractReady]);
 
   const [tab, setTab] = React.useState("Created");
-  const tabs = [
-    "Created",
-    "Owned",
-    "Collections",
-    `Sold: ${currentUser?.itemsSold}`,
-  ];
+  const tabs = ["Created", "Owned", "Collections", `Sold: ${sold}`];
 
   const handleSelectTabs = (tab: string) => {
     if (tab.includes("Sold:")) return;
@@ -43,13 +54,12 @@ const CreatorItemsTab: React.FC<Props> = ({ urlWalletAddress }) => {
         return (
           <div>
             <div className="mt-4 grid grid-cols-4 gap-6">
-              {currentUser?.createdNFTs &&
-              currentUser?.createdNFTs.length > 0 ? (
-                currentUser?.createdNFTs.map((tokenId, index) => (
+              {createdTokens && createdTokens.length > 0 ? (
+                createdTokens.map((token, index) => (
                   <NftCard
-                    key={`${tokenId}-${index}`}
+                    key={`${token.tokenId}-${index}`}
                     type="list"
-                    data={tokenId}
+                    token={token}
                   />
                 ))
               ) : (
@@ -62,12 +72,12 @@ const CreatorItemsTab: React.FC<Props> = ({ urlWalletAddress }) => {
         return (
           <div>
             <div className="mt-4 grid grid-cols-4 gap-6">
-              {currentUser?.ownedNFTs && currentUser?.ownedNFTs.length > 0 ? (
-                currentUser?.ownedNFTs.map((tokenId, index) => (
+              {ownedTokens && ownedTokens.length > 0 ? (
+                ownedTokens.map((token, index) => (
                   <NftCard
-                    key={`${tokenId}-${index}`}
+                    key={`${token.tokenId}-${index}`}
                     type="list"
-                    data={tokenId}
+                    token={token}
                   />
                 ))
               ) : (

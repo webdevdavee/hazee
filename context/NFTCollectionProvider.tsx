@@ -1,3 +1,5 @@
+"use client";
+
 import React, {
   createContext,
   useContext,
@@ -147,18 +149,34 @@ export const NFTCollectionsProvider: React.FC<NFTCollectionsProviderProps> = ({
 
     setIsLoading(true);
     try {
-      const collectionsData = await contract.getCollections(offset, limit);
+      // First get the total count to handle offset appropriately
+      const totalCollectionCount = await contract.collectionCounter();
+      const totalCount = Number(totalCollectionCount);
+
+      // If there are no collections, return early
+      if (totalCount === 0) {
+        return {
+          collections: [],
+          totalCollectionsCount: 0,
+        };
+      }
+
+      // Adjust offset if needed
+      const adjustedOffset = offset >= totalCount ? totalCount - 1 : offset;
+
+      const collectionsData = await contract.getCollections(
+        adjustedOffset,
+        limit
+      );
       const formattedCollections = collectionsData.map((collection: any) => ({
         ...collection,
         floorPrice: ethers.formatEther(collection.floorPrice),
       }));
       setCollections(formattedCollections);
 
-      const totalCollectionCount = await contract.collectionCounter();
-
       return {
         collections: formattedCollections,
-        totalCollectionsCount: Number(totalCollectionCount),
+        totalCollectionsCount: totalCount,
       };
     } catch (error) {
       console.error("Error fetching collections:", error);

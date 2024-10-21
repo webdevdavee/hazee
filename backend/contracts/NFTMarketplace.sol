@@ -82,7 +82,8 @@ contract NFTMarketplace is ReentrancyGuard {
         if (nftContract.ownerOf(_tokenId) != msg.sender) revert NotNFTOwner();
         if (!nftContract.isApprovedForAll(msg.sender, address(this)))
             revert ContractNotApproved();
-        if (i_auctionContract.isNFTOnAuction(_tokenId)) revert NFTOnAuction();
+        (bool isOnAuction, ) = i_auctionContract.isNFTOnAuction(_tokenId);
+        if (isOnAuction) revert NFTOnAuction();
 
         NFT NFTContract = NFT(_nftContract);
         uint256 collectionId = NFTContract.getCollection(_tokenId);
@@ -158,8 +159,10 @@ contract NFTMarketplace is ReentrancyGuard {
             listing.saleType != NFT.NFTStatus.SALE &&
             listing.saleType != NFT.NFTStatus.BOTH
         ) revert NFTUnavailableForPurchase();
-        if (i_auctionContract.isNFTOnAuction(listing.tokenId))
-            revert NFTOnAuction();
+        (bool isOnAuction, ) = i_auctionContract.isNFTOnAuction(
+            listing.tokenId
+        );
+        if (isOnAuction) revert NFTOnAuction();
 
         IERC721 nftContract = IERC721(listing.nftContract);
         if (nftContract.ownerOf(listing.tokenId) != listing.seller)

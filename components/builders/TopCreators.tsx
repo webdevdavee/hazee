@@ -2,36 +2,31 @@
 
 import { IoIosArrowDropright, IoIosArrowDropleft } from "react-icons/io";
 import { motion, AnimatePresence } from "framer-motion";
-import { creators } from "@/constants";
 import CreatorsCard from "../cards/CreatorsCard";
-import { useNFTCreators } from "@/context/NFTCreatorProvider";
 import React from "react";
+import { getUsers } from "@/database/actions/user.action";
 
 const TopCreators = () => {
-  const { getAllCreators, getCreatorCount, isContractReady } = useNFTCreators();
-  const [creators, setCreators] = React.useState<Creator[]>([]);
+  const [creators, setCreators] = React.useState<User[]>([]);
   const [currentSlide, setCurrentSlide] = React.useState(0);
   const [offset, setOffset] = React.useState(0);
   const limit = 4;
   const [totalSlides, setTotalSlides] = React.useState(0);
 
   React.useEffect(() => {
-    if (!isContractReady) return;
-
-    const fetchCreatorsDetails = async () => {
+    const fetchCreators = async () => {
       try {
-        const fetchedCreators = await getAllCreators();
-        console.log(fetchedCreators);
-        setCreators(fetchedCreators || []);
-        const totalCreatorsCount = await getCreatorCount();
-        setTotalSlides(Math.ceil(totalCreatorsCount || limit / limit));
+        const fetchedCreators = await getUsers(offset, limit);
+        console.log(fetchedCreators.users);
+        setCreators(fetchedCreators.users || []);
+        setTotalSlides(Math.ceil(fetchedCreators.totalPages || limit / limit));
       } catch (error) {
         console.error("Error fetching creators details:", error);
       }
     };
 
-    fetchCreatorsDetails();
-  }, [isContractReady, limit, offset]);
+    fetchCreators();
+  }, [limit, offset]);
 
   const loadNextCreators = () => {
     if (currentSlide < totalSlides) {
@@ -82,7 +77,7 @@ const TopCreators = () => {
         >
           {visibleCreators && visibleCreators.length > 0 ? (
             visibleCreators.map((creator) => (
-              <CreatorsCard key={creator.creatorId} creator={creator} />
+              <CreatorsCard key={creator._id} creator={creator} />
             ))
           ) : (
             <h3 className="my-16 text-center w-full">No data to show yet</h3>

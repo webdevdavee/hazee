@@ -13,6 +13,10 @@ import { NFTAuctionContractAddress } from "../backend/constants";
 import { useToast } from "./ToastProvider";
 import { useWallet } from "./WalletProvider";
 
+interface NFTAuctionStatus {
+  isOnAuction: boolean;
+  auctionId: number;
+}
 interface NFTAuctionContextType {
   contract: ethers.Contract | null;
   isLoading: boolean;
@@ -26,7 +30,7 @@ interface NFTAuctionContextType {
   getAuctionDetails: (auctionId: number) => Promise<AuctionDetails | null>;
   getActiveAuctions: () => Promise<number[]>;
   placeBid: (tokenId: number) => Promise<boolean>;
-  isNFTOnAuction: (tokenId: number) => Promise<boolean>;
+  isNFTOnAuction: (tokenId: number) => Promise<NFTAuctionStatus>;
   endAuction: (auctionId: number) => Promise<boolean>;
   cancelAuction: (auctionId: number) => Promise<boolean>;
   withdrawBid: (auctionId: number) => Promise<boolean>;
@@ -205,13 +209,19 @@ export const NFTAuctionProvider: React.FC<NFTAuctionProviderProps> = ({
     }
   };
 
-  const isNFTOnAuction = async (tokenId: number): Promise<boolean> => {
-    if (!contract || !isContractReady) return false;
+  const isNFTOnAuction = async (tokenId: number): Promise<NFTAuctionStatus> => {
+    if (!contract || !isContractReady)
+      return { isOnAuction: false, auctionId: 0 };
+
     try {
-      return await contract.isNFTOnAuction(tokenId);
+      const [isOnAuction, auctionId] = await contract.isNFTOnAuction(tokenId);
+      return {
+        isOnAuction,
+        auctionId: Number(auctionId),
+      };
     } catch (error) {
       console.error("Error checking auction status:", error);
-      return false;
+      return { isOnAuction: false, auctionId: 0 };
     }
   };
 

@@ -19,7 +19,9 @@ export const createCollection = async (
   }
 };
 
-export const getSingleCollection = async (collectionId: number) => {
+export const getSingleCollection = async (
+  collectionId: number
+): Promise<Collection | null> => {
   try {
     await connectToDatabase();
     const collection: Collection | null = await Collection.findOne({

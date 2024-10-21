@@ -40,7 +40,9 @@ export const updateUserData = async (
   }
 };
 
-export const getUserByWalletAddress = async (walletAddress: string) => {
+export const getUserByWalletAddress = async (
+  walletAddress: string
+): Promise<User | null> => {
   try {
     await connectToDatabase();
     const user = await User.findOne({ walletAddress });

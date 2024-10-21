@@ -443,6 +443,72 @@ export const collectionsContractABI = [
     inputs: [
       {
         internalType: "uint256",
+        name: "_offset",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_limit",
+        type: "uint256",
+      },
+    ],
+    name: "getCollections",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "collectionId",
+            type: "uint256",
+          },
+          {
+            internalType: "address",
+            name: "creator",
+            type: "address",
+          },
+          {
+            internalType: "address",
+            name: "nftContract",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "maxSupply",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "mintedSupply",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "royaltyPercentage",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "floorPrice",
+            type: "uint256",
+          },
+          {
+            internalType: "bool",
+            name: "isActive",
+            type: "bool",
+          },
+        ],
+        internalType: "struct NFTCollections.CollectionInfo[]",
+        name: "",
+        type: "tuple[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
         name: "_collectionId",
         type: "uint256",
       },

@@ -2,7 +2,7 @@
 
 import useCopyToClipboard from "@/hooks/useCopyToClipboard";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import React from "react";
 import { FaLink } from "react-icons/fa";
 import { IoCopyOutline } from "react-icons/io5";
@@ -14,12 +14,11 @@ import { useWallet } from "@/context/WalletProvider";
 
 type Props = {
   urlWalletAddress: string;
-  userDetails: User;
+  userDetails: User | null;
 };
 
 const CreatorDetails: React.FC<Props> = ({ urlWalletAddress, userDetails }) => {
   const pathname = usePathname();
-  const router = useRouter();
   const { walletAddress } = useWallet();
 
   const { copyToClipboard: copyAddress, copyStatus: copyAddressStatus } =

@@ -148,12 +148,14 @@ contract NFTAuction is ReentrancyGuard, Ownable {
         );
     }
 
-    function isNFTOnAuction(uint256 _tokenId) public view returns (bool) {
+    function isNFTOnAuction(
+        uint256 _tokenId
+    ) public view returns (bool, uint256) {
         uint256 auctionId = tokenIdToAuctionId[_tokenId];
-        if (auctionId == 0) return false;
+        if (auctionId == 0) return (false, 0);
 
         Auction storage auction = auctions[auctionId];
-        return auction.active && !auction.ended;
+        return (auction.active && !auction.ended, auctionId);
     }
 
     function placeBid(uint256 _tokenId) external payable nonReentrant {

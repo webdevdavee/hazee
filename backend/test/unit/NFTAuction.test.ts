@@ -129,6 +129,121 @@ describe("NFTAuction", function () {
     });
   });
 
+  describe("isNFTOnAuction", function () {
+    it("Should return false for non-existent auction", async function () {
+      const [isOnAuction, auctionId] = await nftAuction.isNFTOnAuction(
+        TOKEN_ID
+      );
+      expect(isOnAuction).to.be.false;
+      expect(auctionId).to.equal(0);
+    });
+
+    it("Should return true for active auction", async function () {
+      // Create auction
+      await nftAuction
+        .connect(seller)
+        .createAuction(
+          TOKEN_ID,
+          STARTING_PRICE,
+          RESERVE_PRICE,
+          AUCTION_DURATION
+        );
+
+      const [isOnAuction, auctionId] = await nftAuction.isNFTOnAuction(
+        TOKEN_ID
+      );
+      expect(isOnAuction).to.be.true;
+      expect(auctionId).to.equal(1);
+    });
+
+    it("Should return false for ended auction", async function () {
+      // Create and end auction
+      await nftAuction
+        .connect(seller)
+        .createAuction(
+          TOKEN_ID,
+          STARTING_PRICE,
+          RESERVE_PRICE,
+          AUCTION_DURATION
+        );
+
+      await nftAuction
+        .connect(bidder1)
+        .placeBid(TOKEN_ID, { value: ethers.parseEther("2.5") });
+
+      await time.increase(AUCTION_DURATION + 1);
+      await nftAuction.endAuction(1);
+
+      const [isOnAuction, auctionId] = await nftAuction.isNFTOnAuction(
+        TOKEN_ID
+      );
+      expect(isOnAuction).to.be.false;
+      // Since tokenIdToAuctionId is cleared after auction ends
+      expect(auctionId).to.equal(0);
+    });
+
+    it("Should return false for cancelled auction", async function () {
+      // Create and cancel auction
+      await nftAuction
+        .connect(seller)
+        .createAuction(
+          TOKEN_ID,
+          STARTING_PRICE,
+          RESERVE_PRICE,
+          AUCTION_DURATION
+        );
+
+      await nftAuction.connect(seller).cancelAuction(1);
+
+      const [isOnAuction, auctionId] = await nftAuction.isNFTOnAuction(
+        TOKEN_ID
+      );
+      expect(isOnAuction).to.be.false;
+      // Since tokenIdToAuctionId is cleared after auction is cancelled
+      expect(auctionId).to.equal(0);
+    });
+
+    it("Should handle multiple auctions for the same token sequentially", async function () {
+      // Create first auction
+      await nftAuction
+        .connect(seller)
+        .createAuction(
+          TOKEN_ID,
+          STARTING_PRICE,
+          RESERVE_PRICE,
+          AUCTION_DURATION
+        );
+
+      // End first auction
+      await nftAuction
+        .connect(bidder1)
+        .placeBid(TOKEN_ID, { value: ethers.parseEther("2.5") });
+      await time.increase(AUCTION_DURATION + 1);
+      await nftAuction.endAuction(1);
+
+      // NFT is now owned by bidder1, need to approve auction contract
+      await nft
+        .connect(bidder1)
+        .setApprovalForAll(await nftAuction.getAddress(), true);
+
+      // Create second auction
+      await nftAuction
+        .connect(bidder1)
+        .createAuction(
+          TOKEN_ID,
+          STARTING_PRICE,
+          RESERVE_PRICE,
+          AUCTION_DURATION
+        );
+
+      const [isOnAuction, auctionId] = await nftAuction.isNFTOnAuction(
+        TOKEN_ID
+      );
+      expect(isOnAuction).to.be.true;
+      expect(auctionId).to.equal(2);
+    });
+  });
+
   describe("Placing bids", function () {
     beforeEach(async function () {
       await nftAuction

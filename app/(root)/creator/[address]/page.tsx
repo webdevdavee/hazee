@@ -14,14 +14,14 @@ type Params = {
 export async function generateMetadata({
   params: { address },
 }: Params): Promise<Metadata> {
-  const user: User = await getUserByWalletAddress(address);
+  const user = await getUserByWalletAddress(address);
   return {
     title: `${user?.username || "Your profile"} - Hazee`,
   };
 }
 
 const page = async ({ params: { address } }: Params) => {
-  const user: User = await getUserByWalletAddress(address);
+  const user = await getUserByWalletAddress(address);
   return (
     <>
       <CreatorDetails urlWalletAddress={address} userDetails={user} />

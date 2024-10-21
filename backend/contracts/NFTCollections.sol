@@ -315,6 +315,35 @@ contract NFTCollections is Ownable, ReentrancyGuard {
         return userOfferCollections[user];
     }
 
+    function getCollections(
+        uint256 _offset,
+        uint256 _limit
+    ) external view returns (CollectionInfo[] memory) {
+        // If there are no collections, return empty array
+        if (collectionCounter == 0) {
+            return new CollectionInfo[](0);
+        }
+
+        // Adjust offset if it exceeds collection count
+        _offset = _offset >= collectionCounter
+            ? collectionCounter - 1
+            : _offset;
+
+        // Calculate the actual number of items to return
+        uint256 remainingItems = collectionCounter - _offset;
+        uint256 length = _limit > remainingItems ? remainingItems : _limit;
+
+        // Create array with exact size needed
+        CollectionInfo[] memory result = new CollectionInfo[](length);
+
+        // Fill the array
+        for (uint256 i = 0; i < length; i++) {
+            result[i] = collections[_offset + i + 1];
+        }
+
+        return result;
+    }
+
     function getCollectionInfo(
         uint256 _collectionId
     ) external view returns (CollectionInfo memory) {

@@ -1,16 +1,5 @@
-type sampleNft = {
-  id: number;
-  name: string;
-  src: string;
-  price: string;
-  bid?: string;
-  ends?: string;
-  owner: string;
-  collection: string;
-};
-
 type Collection = {
-  collectionId: number;
+  collectionId?: number;
   name: string;
   imageUrl: string;
   coverPhoto: string;
@@ -41,14 +30,23 @@ type TruncateTextProps = {
   className?: string;
 };
 
-interface Creator {
-  creatorId: number;
-  userAddress: string;
-  createdNFTs: number[];
-  ownedNFTs: number[];
-  createdCollections: number[];
-  itemsSold: number;
-  walletBalance: number;
+interface NFTMetadata {
+  name: string;
+  description: string;
+  image: string;
+  attributes?: Array<{
+    trait_type: string;
+    value: string | number;
+  }>;
+}
+
+interface TokenInfo {
+  tokenId: number;
+  price: string;
+  collectionId: number;
+  status: number; // 0: NONE, 1: SALE, 2: AUCTION, 3: BOTH
+  owner: string;
+  metadata: NFTMetadata | null;
 }
 
 interface NFTListing {
@@ -94,4 +92,8 @@ interface CollectionInfo {
   royaltyPercentage: number;
   floorPrice: string;
   isActive: boolean;
+  // Additional metadata from MongoDB
+  name?: string;
+  imageUrl?: string;
+  coverPhoto?: string;
 }
