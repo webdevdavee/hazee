@@ -17,7 +17,6 @@ const TopCreators = () => {
     const fetchCreators = async () => {
       try {
         const fetchedCreators = await getUsers(offset, limit);
-        console.log(fetchedCreators.users);
         setCreators(fetchedCreators.users || []);
         setTotalSlides(Math.ceil(fetchedCreators.totalPages || limit / limit));
       } catch (error) {
@@ -69,7 +68,11 @@ const TopCreators = () => {
       <AnimatePresence mode="wait">
         <motion.div
           key={currentSlide}
-          className="flex items-center justify-between gap-3 mt-6"
+          className={`${
+            visibleCreators.length > 0
+              ? "grid grid-cols-4"
+              : "flex items-center justify-between"
+          }  gap-3 mt-6`}
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -50 }}

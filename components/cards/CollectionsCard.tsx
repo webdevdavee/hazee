@@ -2,18 +2,17 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { useNFTCollections } from "@/context/NFTCollectionProvider";
 import { useNFTMarketplace } from "@/context/NFTMarketplaceProvider";
 import { getSingleCollection } from "@/database/actions/collection.action";
 
 type Props = {
-  collectionId: number;
+  collection: CollectionInfo;
 };
 
-const CollectionsCard: React.FC<Props> = ({ collectionId }) => {
-  const { getCollectionListings } = useNFTMarketplace();
-  const { getCollectionDetails, isContractReady } = useNFTCollections();
-  const [collection, setCollection] = React.useState<CollectionInfo | null>();
+const CollectionsCard: React.FC<Props> = ({ collection }) => {
+  const { getCollectionListings, isContractReady } = useNFTMarketplace();
+  const [extentedCollection, setExtentedCollection] =
+    React.useState<CollectionInfo | null>();
   const [listedTokens, setListedTokens] = React.useState<NFTListing[]>([]);
 
   React.useEffect(() => {
@@ -21,10 +20,11 @@ const CollectionsCard: React.FC<Props> = ({ collectionId }) => {
 
     const fetchCollectionDetails = async () => {
       try {
-        const collection = await getCollectionDetails(collectionId);
-        const extraMetadata = await getSingleCollection(collectionId);
+        const extraMetadata = await getSingleCollection(
+          collection.collectionId
+        );
         if (collection && extraMetadata) {
-          setCollection({
+          setExtentedCollection({
             ...collection,
             name: extraMetadata.name,
             imageUrl: extraMetadata.imageUrl,
@@ -38,7 +38,7 @@ const CollectionsCard: React.FC<Props> = ({ collectionId }) => {
 
     const fetchListedTokenDetails = async () => {
       try {
-        const tokens = await getCollectionListings(collectionId);
+        const tokens = await getCollectionListings(collection.collectionId);
         if (!tokens) return;
 
         // Filter out any null values before updating state
@@ -50,11 +50,11 @@ const CollectionsCard: React.FC<Props> = ({ collectionId }) => {
 
     // Clear previous data before fetching new one if collectionId changes
     setListedTokens([]);
-    setCollection(null);
+    setExtentedCollection(null);
 
     fetchCollectionDetails();
     fetchListedTokenDetails();
-  }, [isContractReady, collectionId]);
+  }, [isContractReady, collection.collectionId]);
 
   return (
     <motion.div

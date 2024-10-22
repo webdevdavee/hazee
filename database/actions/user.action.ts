@@ -17,25 +17,37 @@ export const updateUserData = async (
   try {
     await connectToDatabase();
 
-    const userData: any = {
-      email: user.email,
-      username: user.username,
-    };
+    const userData: any = {};
 
+    // Only include defined fields
+    if (user.email) userData.email = user.email;
+    if (user.username) userData.username = user.username;
     if (user.walletAddress) userData.walletAddress = user.walletAddress;
     if (user.photo) userData.photo = user.photo;
     if (user.coverPhoto) userData.coverPhoto = user.coverPhoto;
 
-    await User.findOneAndUpdate(
-      { walletAddress: user.walletAddress },
-      { $set: userData },
-      { upsert: true, new: true }
-    );
+    // Find an existing user with the new wallet address
+    let existingUser = await User.findOne({
+      walletAddress: user.walletAddress,
+    });
+
+    if (existingUser) {
+      // Update existing user
+      await User.findOneAndUpdate(
+        { walletAddress: user.walletAddress },
+        { $set: userData },
+        { new: true }
+      );
+    } else {
+      // Create new user
+      await User.create(userData);
+    }
 
     revalidatePath(path || "/");
 
     return { success: "Profile updated!" };
   } catch (error: any) {
+    console.error("Error updating user data:", error);
     return { error: "Error updating profile." };
   }
 };

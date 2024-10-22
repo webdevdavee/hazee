@@ -23,7 +23,7 @@ const EditProfileForm = () => {
   const { walletAddress } = useWallet();
   const { showToast } = useToast();
 
-  const [user, setUser] = React.useState<User>();
+  const [user, setUser] = React.useState<User | null>();
 
   const [profilePhoto, setProfilePhoto] = React.useState<File[]>();
   const [profilePhotoError, setProfilePhotoError] = React.useState<string>();

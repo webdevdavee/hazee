@@ -74,10 +74,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         const getBalance = await provider.getBalance(userAddress);
         setBalance(ethers.formatEther(getBalance));
 
-        showToast("Wallet connected successfully", "success");
-
         // Save user's wallet address in MongoDB database
         await updateUserData({ walletAddress: userAddress });
+
+        showToast("Wallet connected successfully", "success");
       } else {
         showToast(
           "Please install MetaMask or another Ethereum wallet",

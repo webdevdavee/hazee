@@ -11,6 +11,8 @@ export const ourFileRouter = {
   imageUploader: f({
     image: { maxFileSize: "4MB" },
     "image/gif": { maxFileSize: "4MB" },
+    "image/webp": { maxFileSize: "4MB" },
+    "image/svg+xml": { maxFileSize: "4MB" },
   })
     // Set permissions and file types for this FileRoute
     .middleware(async ({ req }) => {

@@ -1,30 +1,57 @@
 import useDropdown from "@/hooks/useDropdown";
 import Dropdown from "../ui/Dropdown";
-import { categories } from "@/constants";
 import React, { useRef } from "react";
-import PriceRangeDialog from "../ui/PriceRangeDialog";
 import useClickOutside from "@/hooks/useClickOutside";
-import { collections } from "@/constants";
 import CollectionMiniCard from "../cards/CollectionMiniCard";
+import { NFTStatus, useNFTMarketplace } from "@/context/NFTMarketplaceProvider";
+import { useNFTCollections } from "@/context/NFTCollectionProvider";
 
 const FilterNFT = () => {
+  const { setFilters, isContractReady: marketplaceContractReady } =
+    useNFTMarketplace();
+  const { getCollections, isContractReady } = useNFTCollections();
+  const [collections, setCollections] = React.useState<CollectionInfo[]>([]);
+
+  React.useEffect(() => {
+    if (!isContractReady && !marketplaceContractReady) return;
+
+    const fetchCollectionDetails = async () => {
+      try {
+        const fetchedCollections = await getCollections(0, 10);
+        setCollections(fetchedCollections?.collections || []);
+      } catch (error) {
+        console.error("Error fetching collection details:", error);
+      }
+    };
+
+    fetchCollectionDetails();
+  }, [isContractReady, marketplaceContractReady]);
+
   const saleFormatDropdown = useDropdown(
     [
-      { id: 1, label: "All", isButton: true },
-      { id: 2, label: "Buy now", isButton: true },
-      { id: 3, label: "Auction", isButton: true },
+      {
+        id: 1,
+        label: "All",
+        isButton: true,
+        onclick: setFilters({ saleType: NFTStatus.BOTH }),
+      },
+      {
+        id: 2,
+        label: "Buy now",
+        isButton: true,
+        onclick: setFilters({ saleType: NFTStatus.SALE }),
+      },
+      {
+        id: 3,
+        label: "Auction",
+        isButton: true,
+        onclick: setFilters({ saleType: NFTStatus.AUCTION }),
+      },
     ],
     "Choose format"
   );
-  const priceRangeRef = useRef<HTMLDivElement>(null);
-  const collectionRef = useRef<HTMLDivElement>(null);
 
-  const categoryDropdown = useDropdown(
-    categories.map((category) => {
-      return { ...category, isButton: true };
-    }),
-    "Choose category"
-  );
+  const collectionRef = useRef<HTMLDivElement>(null);
 
   const [isCollectionDialogOpen, setIsCollectionDialogOpen] =
     React.useState(false);
@@ -32,29 +59,20 @@ const FilterNFT = () => {
     setIsCollectionDialogOpen((prev) => !prev);
   };
 
-  const [isPriceDialogOpen, setIsPriceDialogOpen] = React.useState(false);
-  const togglePriceDialog = () => {
-    setIsPriceDialogOpen((prev) => !prev);
-  };
-
-  useClickOutside(priceRangeRef, () => {
-    setIsPriceDialogOpen(false);
-  });
-
   useClickOutside(collectionRef, () => {
     setIsCollectionDialogOpen(false);
   });
 
   return (
-    <section className="mt-6 w-full bg-secondary rounded-full">
-      <div className="flex items-center justify-between">
+    <section className="mt-6 w-fit bg-secondary rounded-md">
+      <div className="flex items-center gap-4">
         <div
           onMouseOver={saleFormatDropdown.toggle}
           onMouseOut={saleFormatDropdown.toggle}
         >
           <button
             type="button"
-            className="flex flex-col py-4 px-10 group hover:transition hover:bg-secondaryhover hover:rounded-full "
+            className="flex flex-col py-4 px-10 group hover:transition hover:bg-secondaryhover hover:rounded-l-md"
           >
             <p>Sale format</p>
             <p className="text-gray-400 text-sm group-hover:text-white group-hover:transition">
@@ -68,27 +86,10 @@ const FilterNFT = () => {
           />
         </div>
         <span className="w-[0.05rem] h-[40px] border border-zinc-600" />
-        <div ref={priceRangeRef}>
-          <button
-            type="button"
-            className="flex flex-col py-4 px-10 group hover:transition hover:bg-secondaryhover hover:rounded-full"
-            onClick={togglePriceDialog}
-          >
-            <p>Price</p>
-            <p className="text-gray-400 text-sm group-hover:text-white group-hover:transition">
-              Select price range
-            </p>
-          </button>
-          <PriceRangeDialog
-            isOpen={isPriceDialogOpen}
-            setIsOpen={setIsPriceDialogOpen}
-          />
-        </div>
-        <span className="w-[0.05rem] h-[40px] border border-zinc-600" />
         <div ref={collectionRef}>
           <button
             type="button"
-            className="flex flex-col py-4 px-10 group hover:transition hover:bg-secondaryhover hover:rounded-full"
+            className="flex flex-col py-4 px-10 group hover:transition hover:bg-secondaryhover hover:rounded-r-md"
             onClick={toggleCollectionDialog}
           >
             <p>Collection</p>
@@ -110,26 +111,6 @@ const FilterNFT = () => {
               ))}
             </div>
           </div>
-        </div>
-        <span className="w-[0.05rem] h-[40px] border border-zinc-600" />
-        <div
-          onMouseOver={categoryDropdown.toggle}
-          onMouseOut={categoryDropdown.toggle}
-        >
-          <button
-            type="button"
-            className="flex flex-col py-4 px-10 group hover:transition hover:bg-secondaryhover hover:rounded-full "
-          >
-            <p>Category</p>
-            <p className="text-gray-400 text-sm group-hover:text-white group-hover:transition">
-              {categoryDropdown.selectedItem}
-            </p>
-          </button>
-          <Dropdown
-            items={categoryDropdown.items}
-            isOpen={categoryDropdown.isOpen}
-            selectItem={categoryDropdown.selectItem}
-          />
         </div>
       </div>
     </section>

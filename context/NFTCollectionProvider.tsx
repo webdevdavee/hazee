@@ -60,8 +60,8 @@ interface NFTCollectionsContextType {
     tokenIds: number[],
     offerer: string
   ) => Promise<{ collectionId: number; success: boolean }>;
-  getUserCreatedCollections: (user: string) => Promise<number[] | null>;
-  getUserCollectionOffers: (user: string) => Promise<number[] | null>;
+  getUserCreatedCollections: (user: string) => Promise<CollectionInfo[] | null>;
+  getUserCollectionOffers: (user: string) => Promise<CollectionOffer[] | null>;
 }
 
 const NFTCollectionsContext = createContext<
@@ -438,7 +438,7 @@ export const NFTCollectionsProvider: React.FC<NFTCollectionsProviderProps> = ({
 
   const getUserCreatedCollections = async (
     user: string
-  ): Promise<number[] | null> => {
+  ): Promise<CollectionInfo[] | null> => {
     if (!contract || !isContractReady) {
       showToast(
         "Contract not initialized. Please ensure your wallet is connected.",
@@ -448,8 +448,30 @@ export const NFTCollectionsProvider: React.FC<NFTCollectionsProviderProps> = ({
     }
 
     try {
-      const collections = await contract.getUserCreatedCollections(user);
-      return collections.map((id: bigint) => Number(id));
+      // Get all collection IDs created by the user
+      const collectionIds = await contract.getUserCreatedCollections(user);
+
+      if (collectionIds.length === 0) {
+        return [];
+      }
+
+      const collections = await Promise.all(
+        collectionIds.map(async (id: bigint) => {
+          const collection = await contract.getCollectionInfo(Number(id));
+          return {
+            collectionId: Number(collection.collectionId),
+            creator: collection.creator,
+            nftContract: collection.nftContract,
+            maxSupply: Number(collection.maxSupply),
+            mintedSupply: Number(collection.mintedSupply),
+            royaltyPercentage: Number(collection.royaltyPercentage),
+            floorPrice: ethers.formatEther(collection.floorPrice),
+            isActive: collection.isActive,
+          };
+        })
+      );
+
+      return collections;
     } catch (error) {
       console.error("Error fetching user created collections:", error);
       showToast("Failed to fetch user created collections", "error");
@@ -459,7 +481,7 @@ export const NFTCollectionsProvider: React.FC<NFTCollectionsProviderProps> = ({
 
   const getUserCollectionOffers = async (
     user: string
-  ): Promise<number[] | null> => {
+  ): Promise<CollectionOffer[] | null> => {
     if (!contract || !isContractReady) {
       showToast(
         "Contract not initialized. Please ensure your wallet is connected.",
@@ -469,8 +491,33 @@ export const NFTCollectionsProvider: React.FC<NFTCollectionsProviderProps> = ({
     }
 
     try {
-      const offers = await contract.getUserCollectionOffers(user);
-      return offers.map((id: bigint) => Number(id));
+      // Get all collection IDs where the user has placed offers
+      const offerCollectionIds = await contract.getUserCollectionOffers(user);
+
+      if (offerCollectionIds.length === 0) {
+        return [];
+      }
+
+      const offers = await Promise.all(
+        offerCollectionIds.map(async (id: bigint) => {
+          // Get the collection offer for this specific collection and user
+          const collectionId = Number(id);
+          const offer = await contract.collectionOffers(collectionId, user);
+
+          return {
+            offerer: offer.offerer,
+            amount: ethers.formatEther(offer.amount),
+            nftCount: Number(offer.nftCount),
+            timestamp: Number(offer.timestamp),
+            expirationTime: Number(offer.expirationTime),
+            isActive: offer.isActive,
+            collectionId,
+          };
+        })
+      );
+
+      // Filter out inactive offers
+      return offers.filter((offer) => offer.isActive);
     } catch (error) {
       console.error("Error fetching user collection offers:", error);
       showToast("Failed to fetch user collection offers", "error");

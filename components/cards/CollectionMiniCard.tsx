@@ -3,18 +3,18 @@ import Link from "next/link";
 import React from "react";
 
 type Props = {
-  collection: Collection;
+  collection: CollectionInfo;
 };
 
 const CollectionMiniCard: React.FC<Props> = ({ collection }) => {
   return (
     <Link
-      href={`/collection/${collection.id}`}
+      href={`/collection/${collection.collectionId}`}
       className="flex items-center gap-3 justify-between p-2 rounded-sm hover:bg-secondary"
     >
       <div>
         <Image
-          src={collection.src[0]}
+          src={collection.imageUrl as string}
           width={70}
           height={90}
           quality={100}
@@ -26,10 +26,11 @@ const CollectionMiniCard: React.FC<Props> = ({ collection }) => {
       <div className="flex flex-col">
         <p className="font-medium text-sm">{collection.name}</p>
         <p className="font-medium text-sm">
-          Floor: <span className="text-[gray]">{collection.floor}</span>
+          Floor: <span className="text-[gray]">{collection.floorPrice}</span>
         </p>
         <p className="font-medium text-sm">
-          Volume: <span className="text-[gray]">{collection.volume}</span>
+          Minted Supply:{" "}
+          <span className="text-[gray]">{collection.mintedSupply}</span>
         </p>
       </div>
     </Link>

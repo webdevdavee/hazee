@@ -17,11 +17,31 @@ import {
 import { useToast } from "./ToastProvider";
 import { useWallet } from "./WalletProvider";
 
+export enum SortDirection {
+  ASCENDING = "asc",
+  DESCENDING = "desc",
+}
+
+export enum NFTStatus {
+  NONE = 0,
+  SALE = 1,
+  AUCTION = 2,
+  BOTH = 3,
+}
+
+interface FilterOptions {
+  priceSort?: SortDirection;
+  collectionId?: number;
+  saleType?: NFTStatus;
+}
+
 interface NFTMarketplaceContextType {
   contract: ethers.Contract | null;
   listings: NFTListing[];
+  filteredListings: NFTListing[];
   isLoading: boolean;
   isContractReady: boolean;
+  filters: FilterOptions;
   getActiveListings: (offset: number, limit: number) => Promise<void>;
   getListingDetails: (listingId: number) => Promise<NFTListing | null>;
   getCreatorListings: (creatorAddress: string) => Promise<NFTListing[]>;
@@ -36,6 +56,8 @@ interface NFTMarketplaceContextType {
   updateListingPrice: (listingId: number, newPrice: string) => Promise<void>;
   buyNFT: (listingId: number, price: string) => Promise<void>;
   isNFTListed: (nftContract: string, tokenId: number) => Promise<boolean>;
+  setFilters: (filters: FilterOptions) => void;
+  clearFilters: () => void;
 }
 
 const NFTMarketplaceContext = createContext<
@@ -64,6 +86,8 @@ export const NFTMarketplaceProvider: React.FC<NFTMarketplaceProviderProps> = ({
   const [listings, setListings] = useState<NFTListing[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isContractReady, setIsContractReady] = useState(false);
+  const [filters, setFilters] = useState<FilterOptions>({});
+  const [filteredListings, setFilteredListings] = useState<NFTListing[]>([]);
   const { showToast } = useToast();
   const { walletAddress, isWalletConnected } = useWallet();
 
@@ -115,6 +139,48 @@ export const NFTMarketplaceProvider: React.FC<NFTMarketplaceProviderProps> = ({
 
     initContract();
   }, [walletAddress, isWalletConnected]);
+
+  useEffect(() => {
+    let result = [...listings];
+
+    // Apply collection filter
+    if (filters.collectionId !== undefined) {
+      result = result.filter(
+        (listing) => listing.collectionId === filters.collectionId
+      );
+    }
+
+    // Apply sale type filter
+    if (filters.saleType !== undefined) {
+      result = result.filter(
+        (listing) => listing.saleType === filters.saleType
+      );
+    }
+
+    // Apply price sorting
+    if (filters.priceSort) {
+      result.sort((a, b) => {
+        const priceA = parseFloat(a.price);
+        const priceB = parseFloat(b.price);
+        return filters.priceSort === SortDirection.ASCENDING
+          ? priceA - priceB
+          : priceB - priceA;
+      });
+    }
+
+    setFilteredListings(result);
+  }, [listings, filters]);
+
+  const updateFilters = (newFilters: FilterOptions) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      ...newFilters,
+    }));
+  };
+
+  const clearFilters = () => {
+    setFilters({});
+  };
 
   const getNFTMetadata = async (tokenId: number) => {
     if (!nftContract || !isContractReady) {
@@ -193,7 +259,16 @@ export const NFTMarketplaceProvider: React.FC<NFTMarketplaceProviderProps> = ({
 
       const listingPromises = activeListingIds.map(
         async (listingId: number) => {
-          return await getListingDetails(listingId);
+          const listing = await getListingDetails(listingId);
+          if (listing) {
+            // Get NFT status from the NFT contract
+            const status = await nftContract?.getTokenStatus(listing.tokenId);
+            return {
+              ...listing,
+              saleType: status,
+            };
+          }
+          return null;
         }
       );
 
@@ -401,8 +476,10 @@ export const NFTMarketplaceProvider: React.FC<NFTMarketplaceProviderProps> = ({
   const value = {
     contract,
     listings,
+    filteredListings,
     isLoading,
     isContractReady,
+    filters,
     getActiveListings,
     getListingDetails,
     getCreatorListings,
@@ -413,6 +490,8 @@ export const NFTMarketplaceProvider: React.FC<NFTMarketplaceProviderProps> = ({
     updateListingPrice,
     buyNFT,
     isNFTListed,
+    setFilters: updateFilters,
+    clearFilters,
   };
 
   return (

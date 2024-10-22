@@ -20,6 +20,7 @@ type DropdownItem = {
   link?: string;
   icon?: React.ReactNode;
   isButton?: boolean;
+  onclick?: void;
 };
 
 type Trait = { id: number; type: string; value: string };
@@ -83,6 +84,16 @@ interface Bid {
   timestamp: number;
 }
 
+interface CollectionOffer {
+  offerer: string;
+  amount: string; // in ETH
+  nftCount: number;
+  timestamp: number;
+  expirationTime: number;
+  isActive: boolean;
+  collectionId: number;
+}
+
 interface CollectionInfo {
   collectionId: number;
   creator: string;
@@ -90,7 +101,7 @@ interface CollectionInfo {
   maxSupply: number;
   mintedSupply: number;
   royaltyPercentage: number;
-  floorPrice: string;
+  floorPrice: string; // in ETH
   isActive: boolean;
   // Additional metadata from MongoDB
   name?: string;

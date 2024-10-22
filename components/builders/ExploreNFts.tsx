@@ -5,17 +5,44 @@ import { IoIosArrowDown } from "react-icons/io";
 import Dropdown from "../ui/Dropdown";
 import React from "react";
 import FilterNFT from "./FilterNFT";
-import { sampleNfts } from "@/constants";
 import NftCard from "../cards/NftCard";
+import { useWallet } from "@/context/WalletProvider";
+import { useNFTMarketplace } from "@/context/NFTMarketplaceProvider";
+import { SortDirection } from "@/context/NFTMarketplaceProvider";
 
 const ExploreNFts = () => {
+  const { walletAddress } = useWallet();
+  const { getActiveListings, setFilters, filteredListings, isContractReady } =
+    useNFTMarketplace();
+
+  const [offset, setOffset] = React.useState(0);
+  const [limit] = React.useState(4);
+
+  React.useEffect(() => {
+    if (isContractReady && walletAddress) {
+      const fetchTokens = async () => {
+        await getActiveListings(offset, limit);
+      };
+      fetchTokens();
+    }
+  }, [walletAddress, isContractReady, limit, offset]);
+
   const filterDropdown = useDropdown(
     [
-      { id: 1, label: "Recently added", isButton: true },
-      { id: 2, label: "Price: low to high", isButton: true },
-      { id: 3, label: "Price: high to low", isButton: true },
+      {
+        id: 2,
+        label: "Price: low to high",
+        isButton: true,
+        onclick: setFilters({ priceSort: SortDirection.ASCENDING }),
+      },
+      {
+        id: 3,
+        label: "Price: high to low",
+        isButton: true,
+        onclick: setFilters({ priceSort: SortDirection.DESCENDING }),
+      },
     ],
-    "Recently added"
+    "Price: low to high"
   );
 
   return (
@@ -41,10 +68,20 @@ const ExploreNFts = () => {
         </div>
       </div>
       <FilterNFT />
-      <div className="w-full grid grid-cols-4 justify-center gap-6 mt-6">
-        {sampleNfts.map((nft) => (
-          <NftCard key={nft.id} nft={nft} type="buy-now" />
-        ))}
+      <div
+        className={`${
+          filteredListings.length > 0
+            ? "grid grid-cols-4 justify-center gap-6"
+            : "flex items-center justify-center"
+        } w-full mt-6`}
+      >
+        {filteredListings && filteredListings.length > 0 ? (
+          filteredListings.map((token) => (
+            <NftCard key={token.listingId} token={token} type="list" />
+          ))
+        ) : (
+          <h3 className="my-16 text-center w-full">No data to show yet</h3>
+        )}
       </div>
     </section>
   );

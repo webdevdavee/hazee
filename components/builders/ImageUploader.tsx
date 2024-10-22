@@ -10,10 +10,15 @@ type Props = {
   fileError: string | undefined;
   setFileError: React.Dispatch<React.SetStateAction<string | undefined>>;
   setFile: React.Dispatch<React.SetStateAction<File[] | undefined>>;
-  user: User | undefined;
+  user: User | null | undefined;
 };
 
-type FileType = "image/jpeg" | "image/png" | "image/gif";
+type FileType =
+  | "image/jpeg"
+  | "image/png"
+  | "image/gif"
+  | "image/webp"
+  | "image/svg+xml";
 
 const ImageUploader: React.FC<Props> = ({
   fileError,
@@ -31,6 +36,8 @@ const ImageUploader: React.FC<Props> = ({
     "image/jpeg",
     "image/png",
     "image/gif",
+    "image/webp",
+    "image/svg+xml",
   ];
 
   useEffect(() => {
@@ -93,7 +100,7 @@ const ImageUploader: React.FC<Props> = ({
       <div className="flex flex-col justify-center">
         <p className="font-medium">Profile Photo</p>
         <p className="text-gray-300 text-sm">
-          Supported file types: JPEG, PNG, GIF
+          Supported file types: JPEG, PNG, SVG, WEBP, GIF
         </p>
         <p className="text-gray-300 text-sm">Maximum file size: 4MB</p>
       </div>

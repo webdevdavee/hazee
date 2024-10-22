@@ -25,7 +25,7 @@ const CreatorsCard: React.FC<Props> = ({ creator }) => {
       whileHover={{ y: -10 }}
       initial={{ y: 0 }}
       transition={{ duration: 0.3 }}
-      className="w-fit rounded-2xl overflow-hidden"
+      className="w-full rounded-2xl overflow-hidden"
     >
       <Link href={`/creator/${creator.walletAddress}`} className="block">
         <section className="bg-secondary p-4 relative">

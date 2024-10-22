@@ -74,7 +74,11 @@ const Collections = () => {
       <AnimatePresence mode="wait">
         <motion.div
           key={startIndex}
-          className="flex items-center justify-between gap-3 mt-6"
+          className={`${
+            visibleCollections.length > 0
+              ? "grid grid-cols-4"
+              : "flex items-center justify-between"
+          }  gap-3 mt-6`}
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -50 }}
@@ -84,7 +88,7 @@ const Collections = () => {
             visibleCollections.map((collection) => (
               <CollectionsCard
                 key={collection.collectionId}
-                collectionId={collection.collectionId}
+                collection={collection}
               />
             ))
           ) : (
