@@ -1,8 +1,12 @@
+import React from "react";
 import CollectionsTableBody from "./CollectionsTableBody";
 import CollectionsTableHead from "./CollectionsTableHead";
-import { collections } from "@/constants";
 
-const CollectionsTable = () => {
+type Props = {
+  collections: CollectionInfo[];
+};
+
+const CollectionsTable: React.FC<Props> = ({ collections }) => {
   return (
     <section className="w-full overflow-x-auto mt-8">
       <table className="w-full">

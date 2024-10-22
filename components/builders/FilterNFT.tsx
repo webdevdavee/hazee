@@ -27,34 +27,38 @@ const FilterNFT = () => {
     fetchCollectionDetails();
   }, [isContractReady, marketplaceContractReady]);
 
+  const handleSaleTypeChange = (saleType: NFTStatus) => {
+    setFilters({ saleType });
+  };
+
   const saleFormatDropdown = useDropdown(
     [
       {
         id: 1,
         label: "All",
         isButton: true,
-        onclick: setFilters({ saleType: NFTStatus.BOTH }),
+        onclick: () => handleSaleTypeChange(NFTStatus.BOTH),
       },
       {
         id: 2,
         label: "Buy now",
         isButton: true,
-        onclick: setFilters({ saleType: NFTStatus.SALE }),
+        onclick: () => handleSaleTypeChange(NFTStatus.SALE),
       },
       {
         id: 3,
         label: "Auction",
         isButton: true,
-        onclick: setFilters({ saleType: NFTStatus.AUCTION }),
+        onclick: () => handleSaleTypeChange(NFTStatus.AUCTION),
       },
     ],
     "Choose format"
   );
 
   const collectionRef = useRef<HTMLDivElement>(null);
-
   const [isCollectionDialogOpen, setIsCollectionDialogOpen] =
     React.useState(false);
+
   const toggleCollectionDialog = () => {
     setIsCollectionDialogOpen((prev) => !prev);
   };
@@ -97,20 +101,22 @@ const FilterNFT = () => {
               Choose collection
             </p>
           </button>
-          <div className="absolute">
-            <div
-              className={`relative flex flex-col gap-4 h-60 overflow-y-auto custom-scrollbar p-1 rounded-md bg-base border border-secondary shadow-md z-[45] ${
-                isCollectionDialogOpen ? "block" : "hidden"
-              } mt-2`}
-            >
-              {collections.map((collection) => (
-                <CollectionMiniCard
-                  key={collection.name}
-                  collection={collection}
-                />
-              ))}
+          {collections && collections.length > 0 && (
+            <div className="absolute">
+              <div
+                className={`relative flex flex-col gap-4 h-60 overflow-y-auto custom-scrollbar p-1 rounded-md bg-base border border-secondary shadow-md z-[45] ${
+                  isCollectionDialogOpen ? "block" : "hidden"
+                } mt-2`}
+              >
+                {collections.map((collection) => (
+                  <CollectionMiniCard
+                    key={collection.name}
+                    collection={collection}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>

@@ -20,7 +20,7 @@ type DropdownItem = {
   link?: string;
   icon?: React.ReactNode;
   isButton?: boolean;
-  onclick?: void;
+  onclick?: () => void;
 };
 
 type Trait = { id: number; type: string; value: string };

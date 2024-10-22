@@ -10,7 +10,7 @@ import { useWallet } from "@/context/WalletProvider";
 import { useNFTMarketplace } from "@/context/NFTMarketplaceProvider";
 import { SortDirection } from "@/context/NFTMarketplaceProvider";
 
-const ExploreNFts = () => {
+const ExploreNFTs = () => {
   const { walletAddress } = useWallet();
   const { getActiveListings, setFilters, filteredListings, isContractReady } =
     useNFTMarketplace();
@@ -27,19 +27,23 @@ const ExploreNFts = () => {
     }
   }, [walletAddress, isContractReady, limit, offset]);
 
+  const handlePriceSort = (direction: SortDirection) => {
+    setFilters({ priceSort: direction });
+  };
+
   const filterDropdown = useDropdown(
     [
       {
         id: 2,
         label: "Price: low to high",
         isButton: true,
-        onclick: setFilters({ priceSort: SortDirection.ASCENDING }),
+        onclick: () => handlePriceSort(SortDirection.ASCENDING),
       },
       {
         id: 3,
         label: "Price: high to low",
         isButton: true,
-        onclick: setFilters({ priceSort: SortDirection.DESCENDING }),
+        onclick: () => handlePriceSort(SortDirection.DESCENDING),
       },
     ],
     "Price: low to high"
@@ -87,4 +91,4 @@ const ExploreNFts = () => {
   );
 };
 
-export default ExploreNFts;
+export default ExploreNFTs;

@@ -110,16 +110,15 @@ export const NFTMarketplaceProvider: React.FC<NFTMarketplaceProviderProps> = ({
             signer
           );
 
-          setContract(marketplaceContract);
-
           const nftContractInstance = new ethers.Contract(
             NFTContractAddress,
             nftContractABI,
             signer
           );
 
+          // Batch state updates
+          setContract(marketplaceContract);
           setNftContract(nftContractInstance);
-
           setIsContractReady(true);
         } else {
           console.log("Ethereum object not found");
@@ -141,34 +140,38 @@ export const NFTMarketplaceProvider: React.FC<NFTMarketplaceProviderProps> = ({
   }, [walletAddress, isWalletConnected]);
 
   useEffect(() => {
-    let result = [...listings];
+    const applyFilters = () => {
+      let result = [...listings];
 
-    // Apply collection filter
-    if (filters.collectionId !== undefined) {
-      result = result.filter(
-        (listing) => listing.collectionId === filters.collectionId
-      );
-    }
+      // Apply collection filter
+      if (filters.collectionId !== undefined) {
+        result = result.filter(
+          (listing) => listing.collectionId === filters.collectionId
+        );
+      }
 
-    // Apply sale type filter
-    if (filters.saleType !== undefined) {
-      result = result.filter(
-        (listing) => listing.saleType === filters.saleType
-      );
-    }
+      // Apply sale type filter
+      if (filters.saleType !== undefined) {
+        result = result.filter(
+          (listing) => listing.saleType === filters.saleType
+        );
+      }
 
-    // Apply price sorting
-    if (filters.priceSort) {
-      result.sort((a, b) => {
-        const priceA = parseFloat(a.price);
-        const priceB = parseFloat(b.price);
-        return filters.priceSort === SortDirection.ASCENDING
-          ? priceA - priceB
-          : priceB - priceA;
-      });
-    }
+      // Apply price sorting
+      if (filters.priceSort) {
+        result.sort((a, b) => {
+          const priceA = parseFloat(a.price);
+          const priceB = parseFloat(b.price);
+          return filters.priceSort === SortDirection.ASCENDING
+            ? priceA - priceB
+            : priceB - priceA;
+        });
+      }
 
-    setFilteredListings(result);
+      setFilteredListings(result);
+    };
+
+    applyFilters();
   }, [listings, filters]);
 
   const updateFilters = (newFilters: FilterOptions) => {

@@ -10,13 +10,10 @@ const CollectionsTableHead = () => {
           FLOOR PRICE
         </th>
         <th className="text-left text-slate-400 p-3 text-xs font-medium">
-          VOLUME
+          MAX SUPPLY
         </th>
         <th className="text-left text-slate-400 p-3 text-xs font-medium">
-          ITEMS
-        </th>
-        <th className="text-left text-slate-400 p-3 text-xs font-medium">
-          OWNERS
+          TOKENS
         </th>
       </tr>
     </thead>
