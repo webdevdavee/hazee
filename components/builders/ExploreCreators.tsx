@@ -7,15 +7,17 @@ import { getUsers } from "@/database/actions/user.action";
 
 const ExploreCreators = () => {
   const [creators, setCreators] = React.useState<User[]>([]);
+  const [filteredCreators, setFilteredCreators] = React.useState<User[]>([]);
   const [offset, setOffset] = React.useState(0);
   const limit = 4;
-  const [filteredCreators, setFilteredCreators] = React.useState<User[]>([]);
 
   React.useEffect(() => {
     const fetchCreators = async () => {
       try {
         const fetchedCreators = await getUsers(offset, limit);
-        setCreators(fetchedCreators.users || []);
+        const users = fetchedCreators.users || [];
+        setCreators(users);
+        setFilteredCreators(users); // Initialize filtered creators
       } catch (error) {
         console.error("Error fetching creators details:", error);
       }
@@ -23,14 +25,6 @@ const ExploreCreators = () => {
 
     fetchCreators();
   }, [limit, offset]);
-
-  const loadNextCreators = () => {
-    setOffset((prev) => prev + limit);
-  };
-
-  const loadPreviousCreators = () => {
-    setOffset((prev) => Math.max(0, prev - limit));
-  };
 
   const handleSearch = (results: User[]) => {
     setFilteredCreators(results);
@@ -47,9 +41,9 @@ const ExploreCreators = () => {
           searchKeys={["username"]}
         />
       </div>
-      {filteredCreators && filteredCreators.length > 0 ? (
+      {filteredCreators.length > 0 ? (
         <div className="w-full grid grid-cols-4 justify-center gap-6 mt-6">
-          {creators.map((creator) => (
+          {filteredCreators.map((creator) => (
             <CreatorsCard key={creator._id} creator={creator} />
           ))}
         </div>

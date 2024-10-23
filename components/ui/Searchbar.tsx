@@ -6,7 +6,7 @@ type SearchableItem = {
   [key: string]: any;
 };
 
-type Props<T extends SearchableItem> = {
+type SearchbarProps<T extends SearchableItem> = {
   placeholder: string;
   data: T[];
   onSearch?: (results: T[]) => void;
@@ -20,11 +20,11 @@ const Searchbar = <T extends SearchableItem>({
   onSearch = () => {},
   searchKeys = ["name"],
   minChars = 2,
-}: Props<T>) => {
+}: SearchbarProps<T>) => {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    const search = () => {
+    const timer = setTimeout(() => {
       const trimmedSearch = searchTerm.toLowerCase().trim();
 
       if (trimmedSearch.length < minChars) {
@@ -35,17 +35,14 @@ const Searchbar = <T extends SearchableItem>({
       const filtered = data.filter((item) =>
         searchKeys.some((key) => {
           const value = item[key];
-          return (
-            value && value.toString().toLowerCase().includes(trimmedSearch)
-          );
+          return value?.toString().toLowerCase().includes(trimmedSearch);
         })
       );
 
       onSearch(filtered);
-    };
+    }, 300);
 
-    const debounceTimer = setTimeout(search, 300);
-    return () => clearTimeout(debounceTimer);
+    return () => clearTimeout(timer);
   }, [searchTerm, data, searchKeys, onSearch, minChars]);
 
   return (
