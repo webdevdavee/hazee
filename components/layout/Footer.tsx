@@ -9,7 +9,7 @@ const Footer = () => {
     <footer className="border-t border-t-secondary p-6">
       <p className="text-sm text-center text-slate-300">
         &copy; {currentYear} Hazee. All rights reserved. Design inspiration
-        credits:{" "}
+        credit:{" "}
         <Link
           href="https://dribbble.com/outcrowd"
           target="blank"

@@ -108,3 +108,8 @@ interface CollectionInfo {
   imageUrl?: string;
   coverPhoto?: string;
 }
+
+type SearchResults = {
+  creators: User[];
+  collections: CollectionInfo[];
+};

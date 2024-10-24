@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Searchbar from "../ui/Searchbar";
 import Button from "../ui/Button";
 import React from "react";
 import Dropdown from "../ui/Dropdown";
@@ -10,6 +9,7 @@ import { useWallet } from "@/context/WalletProvider";
 import { useOverlayStore } from "@/libs/zustand/overlayStore";
 import Modal from "./Modal";
 import ConnectWallet from "./ConnectWallet";
+import NavbarSearch from "../builders/NavbarSearch";
 
 const Navbar = () => {
   const exploreDropdown = useDropdown([
@@ -69,7 +69,7 @@ const Navbar = () => {
               <Link href="/" className="text-white text-2xl">
                 Hazee.
               </Link>
-              <Searchbar placeholder="search..." />
+              <NavbarSearch />
             </div>
             <ul className="flex gap-5 items-center">
               <div

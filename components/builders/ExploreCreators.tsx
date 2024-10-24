@@ -17,7 +17,7 @@ const ExploreCreators = () => {
         const fetchedCreators = await getUsers(offset, limit);
         const users = fetchedCreators.users || [];
         setCreators(users);
-        setFilteredCreators(users); // Initialize filtered creators
+        setFilteredCreators(users);
       } catch (error) {
         console.error("Error fetching creators details:", error);
       }
