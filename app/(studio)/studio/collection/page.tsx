@@ -1,4 +1,11 @@
+import { Metadata } from "next";
 import CreateCollectionForm from "../../_components/CreateCollectionForm";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: `Create Your Collection - Hazee`,
+  };
+}
 
 const page = () => {
   return (

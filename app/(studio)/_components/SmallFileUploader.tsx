@@ -4,19 +4,20 @@ import React, { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import clsx from "clsx";
 import { FiUploadCloud } from "react-icons/fi";
+import { generateClientDropzoneAccept } from "uploadthing/client";
 
 type Props = {
   fileError: string | undefined;
   setFileError: React.Dispatch<React.SetStateAction<string | undefined>>;
-  setFile: React.Dispatch<React.SetStateAction<File | undefined>>;
+  setFile: React.Dispatch<React.SetStateAction<File[] | undefined>>;
 };
 
 type FileType =
   | "image/jpeg"
   | "image/png"
-  | "image/svg+xml"
-  | "video/mp4"
-  | "image/gif";
+  | "image/gif"
+  | "image/webp"
+  | "image/svg+xml";
 
 const SmallFileUploader: React.FC<Props> = ({
   fileError,
@@ -24,38 +25,37 @@ const SmallFileUploader: React.FC<Props> = ({
   setFile,
 }) => {
   const [isDragActive, setIsDragActive] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
 
-  const maxFileSize = 50 * 1024 * 1024; // 50 MB
+  const maxFileSize = 4 * 1024 * 1024; // 4 MB
 
   const supportedFileTypes: FileType[] = [
     "image/jpeg",
     "image/png",
-    "image/svg+xml",
-    "video/mp4",
     "image/gif",
+    "image/webp",
+    "image/svg+xml",
   ];
 
+  const onDrop = (acceptedFiles: File[]) => {
+    setIsDragActive(false);
+    if (acceptedFiles.length > 0) {
+      const file = acceptedFiles;
+      handleFileUpload(file);
+      setPreviewUrl(URL.createObjectURL(file[0]));
+    }
+  };
+
   const { getRootProps, getInputProps } = useDropzone({
-    accept: supportedFileTypes.reduce(
-      (acc, type) => ({ ...acc, [type]: [] }),
-      {}
-    ),
+    onDrop,
+    accept: generateClientDropzoneAccept(supportedFileTypes),
     maxSize: maxFileSize,
-    onDragEnter: () => setIsDragActive(true),
-    onDragLeave: () => setIsDragActive(false),
-    onDrop: (acceptedFiles) => {
-      setIsDragActive(false);
-      setUploadedFile(acceptedFiles[0]);
-      handleFileUpload(acceptedFiles[0]);
-    },
+    multiple: false,
   });
 
-  const handleFileUpload = (file: File) => {
-    // Do something with the uploaded file
-    if (file) setFileError("");
+  const handleFileUpload = (file: File[]) => {
+    setFileError(undefined);
     setFile(file);
-    console.log(file);
   };
 
   return (
@@ -76,15 +76,15 @@ const SmallFileUploader: React.FC<Props> = ({
           )}
         >
           <input {...getInputProps()} />
-          {uploadedFile && (
+          {previewUrl && (
             <div
               className="absolute inset-0 bg-cover bg-center"
               style={{
-                backgroundImage: `url(${URL.createObjectURL(uploadedFile)})`,
+                backgroundImage: `url(${previewUrl})`,
               }}
             />
           )}
-          {!uploadedFile && (
+          {!previewUrl && (
             <div className="flex items-center justify-center h-full">
               <FiUploadCloud size={40} />
             </div>
@@ -96,7 +96,7 @@ const SmallFileUploader: React.FC<Props> = ({
           <p className="text-gray-300 text-sm">
             Supported file types: JPEG, PNG, SVG, MP4, GIF
           </p>
-          <p className="text-gray-300 text-sm">Maximum file size: 50MB</p>
+          <p className="text-gray-300 text-sm">Maximum file size: 4MB</p>
         </div>
       </div>
       <p className="text-red-500">{fileError}</p>

@@ -86,7 +86,6 @@ const EditProfileForm = () => {
           const uploadedImage = await startUpload(profilePhoto);
           if (uploadedImage) {
             profilePhotoUrl = uploadedImage[0].url;
-            console.log(profilePhotoUrl);
           } else {
             return;
           }
@@ -96,7 +95,6 @@ const EditProfileForm = () => {
         if (coverPhoto && coverPhoto.length > 0) {
           const uploadedImage = await startUpload(coverPhoto);
           if (uploadedImage) coverPhotoUrl = uploadedImage[0].url;
-          console.log(coverPhotoUrl);
         }
 
         const userData = {

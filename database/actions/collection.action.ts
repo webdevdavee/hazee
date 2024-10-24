@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { connectToDatabase } from "..";
 import Collection from "../models/collection.model";
 
-export const createCollection = async (
+export const createNewCollection = async (
   collection: Collection,
   path?: string
 ) => {
@@ -14,8 +14,11 @@ export const createCollection = async (
     await Collection.create(collection);
 
     revalidatePath(path || "/");
+
+    return { success: "Collection created successfully!" };
   } catch (error: any) {
     console.error(error);
+    return { error: "Error creating collection" };
   }
 };
 

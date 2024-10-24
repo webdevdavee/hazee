@@ -1,4 +1,11 @@
+import { Metadata } from "next";
 import CreateNFTForm from "../../_components/CreateNFTForm";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: `Create Your NFT - Hazee`,
+  };
+}
 
 const page = () => {
   return (

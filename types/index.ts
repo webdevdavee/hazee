@@ -2,7 +2,7 @@ type Collection = {
   collectionId?: number;
   name: string;
   imageUrl: string;
-  coverPhoto: string;
+  coverPhoto?: string;
 };
 
 type User = {
@@ -23,7 +23,11 @@ type DropdownItem = {
   onclick?: () => void;
 };
 
-type Trait = { id: number; type: string; value: string };
+interface Trait {
+  id: number;
+  trait_type: string;
+  value: string;
+}
 
 type TruncateTextProps = {
   text: string;
@@ -107,6 +111,7 @@ interface CollectionInfo {
   name?: string;
   imageUrl?: string;
   coverPhoto?: string;
+  description?: string;
 }
 
 type SearchResults = {

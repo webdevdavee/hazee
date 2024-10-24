@@ -8,6 +8,8 @@ type Props = {
   required?: boolean;
   inputMode?: string;
   style?: string;
+  step?: string;
+  min?: string;
 };
 
 const TextInput: React.FC<Props> = ({
@@ -20,6 +22,8 @@ const TextInput: React.FC<Props> = ({
   required,
   inputMode,
   style,
+  step,
+  min,
 }) => {
   return (
     <section className="w-full flex flex-col gap-3">
@@ -36,6 +40,8 @@ const TextInput: React.FC<Props> = ({
             id={htmlFor}
             placeholder={placeholder}
             inputMode={inputMode}
+            step={step}
+            min={min}
           />
         </div>
         {error}

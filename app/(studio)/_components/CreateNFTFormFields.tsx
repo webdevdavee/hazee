@@ -9,19 +9,22 @@ import Link from "next/link";
 import { FieldErrors, UseFormRegister } from "react-hook-form";
 import { useOverlayStore } from "@/libs/zustand/overlayStore";
 import React from "react";
-import { TraitSchema } from "@/libs/zod";
+import { TraitSchema, TCreateNFTSchema } from "@/libs/zod";
+import { useNFTCollections } from "@/context/NFTCollectionProvider";
+import { useWallet } from "@/context/WalletProvider";
+import Dropdown from "./Dropdown";
 
 type Props = {
-  register: UseFormRegister<any>;
-  errors: FieldErrors<{
-    name: string;
-    supply: string;
-    description?: string | undefined;
-  }>;
+  register: UseFormRegister<TCreateNFTSchema>;
+  errors: FieldErrors<TCreateNFTSchema>;
   traits: Trait[];
   setTraits: React.Dispatch<React.SetStateAction<Trait[]>>;
-  collection: string | undefined;
+  collection: CollectionInfo | undefined;
+  setCollection: React.Dispatch<
+    React.SetStateAction<CollectionInfo | undefined>
+  >;
   collectionError: string | undefined;
+  isLoading?: boolean;
 };
 
 const CreateNFTFormFields: React.FC<Props> = ({
@@ -30,13 +33,32 @@ const CreateNFTFormFields: React.FC<Props> = ({
   traits,
   setTraits,
   collection,
+  setCollection,
   collectionError,
+  isLoading = false,
 }) => {
+  const { getUserCreatedCollections, isContractReady } = useNFTCollections();
+  const { walletAddress } = useWallet();
+
   const [traitToEdit, setTraitToEdit] = React.useState<Trait>();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const showOverlay = useOverlayStore((state) => state.showOverlay);
   const hideOverlay = useOverlayStore((state) => state.hideOverlay);
   const [isEditingTrait, setIsEditingTrait] = React.useState(false);
+  const [userCollections, setUserCollections] = React.useState<
+    CollectionInfo[]
+  >([]);
+
+  React.useEffect(() => {
+    if (isContractReady && walletAddress) {
+      const fetchUserCollections = async () => {
+        const response = await getUserCreatedCollections(walletAddress);
+        if (response) setUserCollections(response);
+      };
+
+      fetchUserCollections();
+    }
+  }, [isContractReady]);
 
   const handleOpenModal = () => {
     setTraitToEdit(undefined);
@@ -46,7 +68,7 @@ const CreateNFTFormFields: React.FC<Props> = ({
   };
 
   const handleAddTrait = (data: Trait) => {
-    setTraits((prev) => [...prev, data]);
+    setTraits((prev) => [...prev, { ...data, id: Date.now() }]);
     setIsModalOpen(false);
     hideOverlay();
   };
@@ -85,10 +107,20 @@ const CreateNFTFormFields: React.FC<Props> = ({
               <FaPlus />
             </button>
             <p className="font-medium">
-              {collection || "Create a new collection"}
+              {collection?.name || "Create a new collection"}
             </p>
           </div>
         </Link>
+        {/* Collection Selection */}
+        <div className="mt-4 w-full">
+          <Dropdown
+            items={userCollections}
+            defaultText="Select a collection"
+            renderItem={(item) => item.name as string}
+            onSelect={(item) => setCollection(item)}
+            altText="You have no active collections"
+          />
+        </div>
         <p className="mt-2 text-red-500">{collectionError}</p>
       </div>
       <div className="flex flex-col gap-4 mt-4">
@@ -104,16 +136,18 @@ const CreateNFTFormFields: React.FC<Props> = ({
           }
         />
         <TextInput
-          inputRegister={register("supply")}
-          label="Supply"
-          htmlFor="supply"
+          inputRegister={register("price")}
+          label="Price (ETH)"
+          htmlFor="price"
           inputType="number"
-          placeholder="1"
-          inputMode="numeric"
+          inputMode="decimal"
+          step="0.000001"
+          min="0"
+          placeholder="0.01"
           required
           error={
-            errors.supply && (
-              <p className="text-red-500">{errors.supply.message}</p>
+            errors.price && (
+              <p className="text-red-500">{errors.price.message}</p>
             )
           }
         />
@@ -144,11 +178,11 @@ const CreateNFTFormFields: React.FC<Props> = ({
             {traits
               .map((trait, index) => (
                 <div
-                  key={`${trait}-${index}`}
+                  key={`${trait.trait_type}-${index}`}
                   className="w-full bg-secondary rounded-md p-3 flex items-center justify-between"
                 >
                   <p className="font-medium">
-                    {trait.type}: {trait.value}
+                    {trait.trait_type}: {trait.value}
                   </p>
                   <div className="flex items-center gap-3">
                     <button
@@ -196,8 +230,12 @@ const CreateNFTFormFields: React.FC<Props> = ({
             </Modal>
           )}
         </div>
-        <button type="submit" className="bg-primary mt-4 w-full p-4 rounded-lg">
-          Submit
+        <button
+          type="submit"
+          className="bg-primary mt-4 w-full p-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isLoading}
+        >
+          {isLoading ? "Creating NFT..." : "Create NFT"}
         </button>
       </div>
     </div>
