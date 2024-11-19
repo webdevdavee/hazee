@@ -40,6 +40,7 @@ const TextInput: React.FC<Props> = ({
             id={htmlFor}
             placeholder={placeholder}
             inputMode={inputMode}
+            step="any"
             min={min}
           />
         </div>
