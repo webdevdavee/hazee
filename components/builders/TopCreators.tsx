@@ -106,7 +106,7 @@ const TopCreators = ({
             key={currentPage}
             className={`${
               visibleCreators.length > 0
-                ? "grid grid-cols-4 m:grid-cols-1 xl:grid-cols-2"
+                ? "grid grid-cols-4 m:grid-cols-2 xl:grid-cols-2"
                 : "flex items-center justify-center"
             } gap-3 mt-6`}
             initial={{ opacity: 0, x: 50 }}

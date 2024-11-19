@@ -81,7 +81,7 @@ const CreatorItemsTab: React.FC<Props> = ({ userDetails, offers }) => {
       case "Collections":
         return (
           <div>
-            <div className="mt-4 grid grid-cols-4 gap-6 m:grid-cols-1 m:gap-4 xl:grid-cols-2">
+            <div className="mt-4 grid grid-cols-4 gap-6 m:grid-cols-2 m:gap-4 xl:grid-cols-2">
               {userDetails?.collections &&
               userDetails.collections.length > 0 ? (
                 userDetails?.collections?.map((collection, index) => (

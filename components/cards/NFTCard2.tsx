@@ -24,7 +24,7 @@ const NftCard2: React.FC<Props> = ({ token }) => {
             alt="nft-image"
             width={300}
             height={300}
-            className="w-full object-cover h-[200px] m:h-[240px] xl:h-[260px] xxl:h-[280px]"
+            className="w-full object-cover h-[286px] m:h-[180px] xl:h-[300px]"
             priority
             quality={100}
           />
@@ -48,7 +48,7 @@ const NftCard2: React.FC<Props> = ({ token }) => {
             </div>
             <Link
               href={`/nft/${token.tokenId}`}
-              className="bg-abstract font-medium border border-base p-1 m:p-2 rounded-full hover:bg-opacity-80 transition-colors text-xs m:text-sm"
+              className="bg-abstract font-medium border border-base p-1 m:p-2 rounded-full hover:bg-opacity-80 transition-colors text-xs m:text-sm m:hidden"
             >
               View NFT
             </Link>
@@ -65,7 +65,9 @@ const NftCard2: React.FC<Props> = ({ token }) => {
 
               <div className="flex flex-col">
                 <p className="text-xs m:text-sm text-gray-400">Current bid</p>
-                <p className="text-sm m:text-base">{token.highestBid || token.startingPrice} ETH</p>
+                <p className="text-sm m:text-base">
+                  {token.highestBid || token.startingPrice} ETH
+                </p>
               </div>
             </div>
           ) : (

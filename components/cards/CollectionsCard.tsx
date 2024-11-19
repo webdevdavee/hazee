@@ -18,7 +18,7 @@ const CollectionsCard: React.FC<Props> = ({ collection }) => {
     >
       <div>
         <section className="bg-secondary p-1 relative">
-          <div className="relative rounded-xl overflow-hidden">
+          <div className="relative rounded-xl overflow-hidden m:rounded-lg">
             <Link href={`/collection/${collection?.collectionId}`}>
               <Image
                 src={collection?.imageUrl || "/default-avatar.svg"}
@@ -27,7 +27,7 @@ const CollectionsCard: React.FC<Props> = ({ collection }) => {
                 quality={100}
                 priority
                 alt="collection"
-                className="w-full object-cover h-[286px] rounded-md"
+                className="w-full object-cover h-[286px] m:h-[180px] rounded-md"
               />
             </Link>
 
@@ -47,14 +47,14 @@ const CollectionsCard: React.FC<Props> = ({ collection }) => {
                     {collection?.name || "Unmamed"}
                   </p>
                 </div>
-                <div className="flex items-center justify-between">
-                  <p className="text-gray-400 font-medium">
+                <div className="flex items-center justify-between m:flex-col m:items-start">
+                  <p className="text-gray-400 font-medium m:text-sm">
                     Floor:{" "}
                     <span className="text-white">
                       {formatNumber(collection?.floorPrice as string)} ETH
                     </span>
                   </p>
-                  <p className="text-gray-400 font-medium">
+                  <p className="text-gray-400 font-medium m:text-sm">
                     Max supply:{" "}
                     <span className="text-white">{collection?.maxSupply}</span>
                   </p>

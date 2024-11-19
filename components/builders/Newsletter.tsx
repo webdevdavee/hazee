@@ -16,7 +16,7 @@ const Newsletter = () => {
 
   return (
     <section className="w-full overflow-hidden">
-      <div className="bg-accent p-16 rounded-lg flex items-center justify-between m:flex-col m:p-8 xl:flex-col xl:p-8 xl:items-start">
+      <div className="bg-accent p-16 rounded-lg flex items-center justify-between m:flex-col m:p-8 m:items-start xl:flex-col xl:p-8 xl:items-start">
         <h1 className="text-secondary leading-tight font-semibold m:text-xl">
           Stay informed <br />
           Receive the latest updates
