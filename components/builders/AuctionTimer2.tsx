@@ -18,16 +18,16 @@ const AuctionTimer2: React.FC<AuctionTimer2Props> = ({ endTime }) => {
     <div className="flex flex-col justify-center">
       <div className="flex items-center gap-2">
         <div>
-          <p>{formatNumber(timeLeft.days)}D</p>
+          <p className="m:text-sm">{formatNumber(timeLeft.days)}D</p>
         </div>
         <div>
-          <p>{formatNumber(timeLeft.hours)}H</p>
+          <p className="m:text-sm">{formatNumber(timeLeft.hours)}H</p>
         </div>
         <div>
-          <p>{formatNumber(timeLeft.minutes)}M</p>
+          <p className="m:text-sm">{formatNumber(timeLeft.minutes)}M</p>
         </div>
         <div>
-          <p>{formatNumber(timeLeft.seconds)}S</p>
+          <p className="m:text-sm">{formatNumber(timeLeft.seconds)}S</p>
         </div>
       </div>
     </div>

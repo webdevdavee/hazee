@@ -37,7 +37,7 @@ const NftCard: React.FC<Props> = ({ status, token, nftStatus }) => {
             alt="nft-image"
             width={300}
             height={300}
-            className="w-full object-cover h-[286px] m:h-[180px] xl:h-[300px]"
+            className="w-full object-cover h-[286px] m:h-[180px]"
             priority
             quality={100}
           />
@@ -70,7 +70,7 @@ const NftCard: React.FC<Props> = ({ status, token, nftStatus }) => {
               </Link>
               <Link
                 href={`/nft/${token.tokenId}`}
-                className="capitalize font-medium text-lg sm:text-md m:text-sm xl:text-lg"
+                className="capitalize font-medium text-lg sm:text-xs m:text-sm"
               >
                 {token.metadata?.name || `NFT #${token.tokenId}`}
               </Link>
@@ -84,7 +84,7 @@ const NftCard: React.FC<Props> = ({ status, token, nftStatus }) => {
           </div>
 
           {isAuction && nftStatus?.auctionDetails ? (
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between m:flex-col m:items-start m:gap-3">
               <div className="flex flex-col justify-start">
                 <p className="text-sm text-gray-400">
                   {nftStatus.auctionDetails.ended ? "Ended" : "Ending in"}
@@ -94,7 +94,11 @@ const NftCard: React.FC<Props> = ({ status, token, nftStatus }) => {
 
               <div className="flex flex-col">
                 <p className="text-sm text-gray-400">Current bid</p>
-                <p>{nftStatus.auctionDetails.highestBid || nftStatus.auctionDetails.startingPrice} ETH</p>
+                <p className="m:text-sm">
+                  {nftStatus.auctionDetails.highestBid ||
+                    nftStatus.auctionDetails.startingPrice}{" "}
+                  ETH
+                </p>
               </div>
             </div>
           ) : (
