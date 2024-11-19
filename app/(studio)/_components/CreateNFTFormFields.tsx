@@ -192,7 +192,7 @@ const CreateNFTFormFields: React.FC<Props> = ({
           htmlFor="price"
           inputType="number"
           inputMode="decimal"
-          step="0.000001"
+          step="any"
           min="0"
           placeholder="0.01"
           required

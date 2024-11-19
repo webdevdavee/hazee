@@ -134,7 +134,7 @@ const MakeOffer: React.FC<Props> = ({ nft, collection, auctionDetails }) => {
             htmlFor="bid"
             inputType="number"
             inputMode="decimal"
-            step="0.01"
+            step="any"
             min="0"
             placeholder="0.01"
             required

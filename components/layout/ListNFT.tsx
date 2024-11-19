@@ -182,7 +182,7 @@ const ListNFT: React.FC<Props> = ({ nft, collection }) => {
                 htmlFor="listingPrice"
                 inputType="number"
                 inputMode="decimal"
-                step="0.01"
+                step="any"
                 min="0"
                 placeholder="0.01"
                 required
@@ -205,7 +205,7 @@ const ListNFT: React.FC<Props> = ({ nft, collection }) => {
                   htmlFor="startingPrice"
                   inputType="number"
                   inputMode="decimal"
-                  step="0.01"
+                  step="any"
                   min="0"
                   placeholder="0.01"
                   required
@@ -223,7 +223,7 @@ const ListNFT: React.FC<Props> = ({ nft, collection }) => {
                   htmlFor="reservePrice"
                   inputType="number"
                   inputMode="decimal"
-                  step="0.01"
+                  step="any"
                   min="0"
                   placeholder="0.01"
                   required
