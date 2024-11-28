@@ -6,12 +6,15 @@ import { motion } from "framer-motion";
 import { truncateAddress } from "@/libs/utils";
 import IPFSImage from "../ui/IPFSImage";
 import AuctionTimer2 from "../builders/AuctionTimer2";
+import { useAuctionTimer } from "@/hooks/useAuctionTimer";
 
 interface Props {
   token: EnrichedNFTListing;
 }
 
 const NFTCard2: React.FC<Props> = ({ token }) => {
+  const { isEnded } = useAuctionTimer(token.endTime);
+
   return (
     <motion.div
       className="group relative overflow-hidden rounded-2xl bg-secondary p-1 transition-all duration-300 hover:bg-secondaryhover"
@@ -76,9 +79,11 @@ const NFTCard2: React.FC<Props> = ({ token }) => {
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-gray-400">Ending in</p>
+                <p className="text-xs text-gray-400">
+                  {isEnded ? "Ended on" : "Ending on"}
+                </p>
                 <p className="text-sm font-medium text-white m:text-xs">
-                  {new Date(token.endTime!).toLocaleDateString()}
+                  {new Date(token.endTime! * 1000).toLocaleDateString("en-GB")}
                 </p>
               </div>
             </div>

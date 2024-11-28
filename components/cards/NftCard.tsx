@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { truncateAddress } from "@/libs/utils";
 import IPFSImage from "../ui/IPFSImage";
 import AuctionTimer2 from "../builders/AuctionTimer2";
+import { useAuctionTimer } from "@/hooks/useAuctionTimer";
 
 interface NFTStatus {
   isOnAuction: boolean;
@@ -22,6 +23,7 @@ interface Props {
 }
 
 const NftCard: React.FC<Props> = ({ status, token, nftStatus }) => {
+  const { isEnded } = useAuctionTimer(nftStatus?.auctionDetails?.endTime);
   const pathname = usePathname();
 
   const isAuction = status === 2 || status === 3;
@@ -108,12 +110,12 @@ const NftCard: React.FC<Props> = ({ status, token, nftStatus }) => {
               </div>
               <div className="text-right">
                 <p className="text-xs text-gray-400">
-                  {nftStatus.auctionDetails.ended ? "Ended on" : "Ending on"}
+                  {isEnded ? "Ended on" : "Ending on"}
                 </p>
                 <p className="text-sm font-medium text-white m:text-xs">
                   {new Date(
-                    nftStatus.auctionDetails.endTime
-                  ).toLocaleDateString()}
+                    nftStatus.auctionDetails.endTime * 1000
+                  ).toLocaleDateString("en-GB")}
                 </p>
               </div>
             </div>
