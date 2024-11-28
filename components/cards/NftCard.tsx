@@ -1,8 +1,11 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
-import IPFSImage from "../ui/IPFSImage";
-import { truncateAddress } from "@/libs/utils";
+import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
+import { truncateAddress } from "@/libs/utils";
+import IPFSImage from "../ui/IPFSImage";
 import AuctionTimer2 from "../builders/AuctionTimer2";
 
 interface NFTStatus {
@@ -25,91 +28,112 @@ const NftCard: React.FC<Props> = ({ status, token, nftStatus }) => {
   const isSale = status === 1 || status === 3;
 
   return (
-    <section className="relative group">
-      {/* Rainbow border */}
-      <div className="absolute inset-1 bg-gradient-to-r from-pink-600 to-purple-600 via-blue-600 rounded-2xl opacity-0 group-hover:opacity-100 blur transition duration-1000 group-hover:duration-200 animate-gradient-xy" />
-
-      {/* Card content */}
-      <div className="relative rounded-3xl overflow-hidden m:rounded-2xl">
-        <Link href={`/nft/${token.tokenId}`} className="relative">
+    <motion.div
+      className="group relative overflow-hidden rounded-2xl bg-secondary transition-all duration-300 hover:bg-secondaryhover"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="relative overflow-hidden rounded-xl bg-base">
+        <Link
+          href={`/nft/${token.tokenId}`}
+          className="block relative aspect-square"
+        >
           <IPFSImage
             ipfsUrl={token.metadata?.image as string}
-            alt="nft-image"
-            width={300}
-            height={300}
-            className="w-full object-cover h-[286px] m:h-[180px]"
+            alt={token.metadata?.name || `NFT #${token.tokenId}`}
+            width={1000}
+            height={1000}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             priority
             quality={100}
           />
-          <div
-            className="absolute top-5 right-5 m:top-3 m:right-3"
-            style={{
-              display: pathname.startsWith("/creator/") ? "block" : "none",
-            }}
-          >
-            {nftStatus?.isListed ? (
-              <p className="bg-green-600 font-medium py-1 px-4 rounded-sm m:text-xs">
-                Listed
-              </p>
-            ) : (
-              <p className="bg-abstract font-medium py-1 px-4 rounded-sm m:text-xs">
-                Not listed
-              </p>
-            )}
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-base via-transparent to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-80" />
         </Link>
 
-        <div className="flex flex-col gap-3 bg-secondary p-4 sm:p-3 m:p-2 xl:p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
+        {pathname.startsWith("/creator/") && (
+          <div className="absolute top-4 right-4">
+            {nftStatus?.isListed ? (
+              <span className="bg-green-600 text-white font-medium py-1 px-3 rounded-full text-sm">
+                Listed
+              </span>
+            ) : (
+              <span className="bg-abstract text-white font-medium py-1 px-3 rounded-full text-sm">
+                Not listed
+              </span>
+            )}
+          </div>
+        )}
+
+        <div className="absolute bottom-0 left-0 w-full p-4 text-white m:p-2">
+          <div className="flex items-end justify-between">
+            <div className="space-y-1 m:space-y-0">
               <Link
                 href={`/creator/${token.owner}`}
-                className="text-sm text-gray-400 transition hover:transition hover:underline hover:underline-offset-2 m:text-xs"
+                className="text-sm text-accent hover:text-white transition m:text-xs"
               >
                 @{truncateAddress(token.owner)}
               </Link>
-              <Link
-                href={`/nft/${token.tokenId}`}
-                className="capitalize font-medium text-lg sm:text-xs m:text-sm"
-              >
-                {token.metadata?.name || `NFT #${token.tokenId}`}
-              </Link>
+              <h3 className="text-xl font-bold leading-tight">
+                <Link
+                  href={`/nft/${token.tokenId}`}
+                  className="hover:underline"
+                >
+                  {token.metadata?.name || `NFT #${token.tokenId}`}
+                </Link>
+              </h3>
             </div>
             <Link
               href={`/nft/${token.tokenId}`}
-              className="bg-abstract font-medium border border-base p-2 rounded-full hover:bg-opacity-80 transition-colors m:hidden"
+              className="rounded-full bg-primary px-4 py-2 text-sm font-medium transition-colors hover:bg-opacity-80 m:hidden"
             >
               View NFT
             </Link>
           </div>
+        </div>
+      </div>
 
-          {isAuction && nftStatus?.auctionDetails ? (
-            <div className="flex items-center justify-between m:flex-col m:items-start m:gap-3">
-              <div className="flex flex-col justify-start">
-                <p className="text-sm text-gray-400">
-                  {nftStatus.auctionDetails.ended ? "Ended" : "Ending in"}
-                </p>
-                <AuctionTimer2 endTime={nftStatus.auctionDetails.endTime} />
-              </div>
-
-              <div className="flex flex-col">
-                <p className="text-sm text-gray-400">Current bid</p>
-                <p className="m:text-sm">
+      <div className="p-4 space-y-4 bg-secondary m:p-4">
+        {isAuction && nftStatus?.auctionDetails ? (
+          <>
+            <AuctionTimer2 endTime={nftStatus.auctionDetails.endTime} />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-400">Current bid</p>
+                <p className="text-lg font-bold text-accent m:text-sm">
                   {nftStatus.auctionDetails.highestBid ||
                     nftStatus.auctionDetails.startingPrice}{" "}
                   ETH
                 </p>
               </div>
+              <div className="text-right">
+                <p className="text-xs text-gray-400">
+                  {nftStatus.auctionDetails.ended ? "Ended on" : "Ending on"}
+                </p>
+                <p className="text-sm font-medium text-white m:text-xs">
+                  {new Date(
+                    nftStatus.auctionDetails.endTime
+                  ).toLocaleDateString()}
+                </p>
+              </div>
             </div>
-          ) : (
-            <div className="flex flex-col">
-              <p className="text-sm text-gray-400">Price</p>
-              <p className="m:text-sm">{token.price} ETH</p>
+          </>
+        ) : (
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-400">Price</p>
+              <p className="text-lg font-bold text-accent">{token.price} ETH</p>
             </div>
-          )}
-        </div>
+            {isSale && (
+              <div className="text-right">
+                <p className="text-xs text-gray-400">Sale type</p>
+                <p className="text-sm font-medium text-white">Fixed price</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    </section>
+    </motion.div>
   );
 };
 

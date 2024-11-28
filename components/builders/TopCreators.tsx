@@ -44,7 +44,7 @@ const TopCreators = ({
       users: initialCreators,
       totalPages: initialTotalPages,
     }),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 60 * 1000, // 5 minutes
   });
 
   const totalPages = creatorsData?.totalPages ?? initialTotalPages;

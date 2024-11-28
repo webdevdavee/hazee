@@ -52,7 +52,7 @@ const Collections: React.FC<Props> = ({
         totalCollectionsCount: totalCollectionsCount,
       },
     }),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
   });
 
   const totalPages = Math.ceil((totalCollectionsCount ?? 0) / LIMIT) - 1;

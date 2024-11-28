@@ -52,9 +52,9 @@ const IPFSImage: React.FC<IPFSImageProps> = ({
   }
 
   return (
-    <div className="relative">
-      {!isImageLoaded && imageUrl && (
-        <div className="w-full h-full bg-gray-100 rounded-lg" />
+    <div className="relative w-full h-full">
+      {!isImageLoaded && (
+        <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-lg" />
       )}
       {imageUrl && (
         <Image
@@ -63,7 +63,7 @@ const IPFSImage: React.FC<IPFSImageProps> = ({
           width={width}
           height={height}
           className={`${className} ${
-            !isImageLoaded ? "opacity-0" : "opacity-100"
+            isImageLoaded ? "opacity-100" : "opacity-0"
           } transition-opacity duration-300`}
           priority={priority}
           quality={quality}
