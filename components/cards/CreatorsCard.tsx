@@ -1,9 +1,19 @@
-import { getUserByWalletAddress } from "@/server-scripts/database/actions/user.action";
-import { truncateAddress } from "@/libs/utils";
+import React from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import { FaUserCircle, FaWallet } from "react-icons/fa";
+import { getUserByWalletAddress } from "@/server-scripts/database/actions/user.action";
+import { truncateAddress } from "@/libs/utils";
+
+type User = {
+  _id: string;
+  email: string;
+  walletAddress: string;
+  username: string;
+  photo: string;
+  coverPhoto: string;
+};
 
 type Props = {
   creator: User;
@@ -22,43 +32,70 @@ const CreatorsCard: React.FC<Props> = ({ creator }) => {
 
   return (
     <motion.div
-      whileHover={{ y: -10 }}
-      initial={{ y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="w-full rounded-2xl overflow-hidden"
+      className="group"
+      whileHover={{
+        y: -10,
+        boxShadow:
+          "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+      }}
+      transition={{
+        type: "tween",
+        duration: 0.3,
+      }}
     >
       <Link href={`/creator/${creator.walletAddress}`} className="block">
-        <section className="bg-secondary p-4 relative">
-          <div className="relative rounded-xl overflow-hidden">
-            <div className="w-full flex items-center justify-center">
+        <div className="bg-secondary rounded-2xl overflow-hidden border border-base/10">
+          {/* Background Subtle */}
+          <div className="h-20 bg-base/5 relative">
+            {/* Profile Image */}
+            <div
+              className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 
+                            border-4 border-secondary rounded-full
+                            shadow-md"
+            >
               <Image
                 src={creatorDetails?.photo || "/images/default-avatar.svg"}
-                width={200}
-                height={200}
+                width={110}
+                height={110}
                 quality={100}
                 priority
-                alt="creator"
-                className="rounded-full"
+                alt="Creator Profile"
+                className="rounded-full object-cover"
               />
             </div>
-            <div className="flex flex-col gap-3 bg-secondary p-3">
-              <div className="flex flex-col items-center justify-center">
-                <p className="font-medium text-lg m:text-sm">
+          </div>
+
+          {/* Creator Details */}
+          <div className="pt-16 pb-6 px-6 text-center">
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-2 text-primary">
+                <FaWallet color="white" />
+                <p className="font-medium text-sm text-white">
                   {truncateAddress(creator.walletAddress)}
                 </p>
-                <p className="text-gray-400 text-sm m:text-xs">
+              </div>
+
+              <div className="flex items-center gap-2 mt-1 text-secondary">
+                <FaUserCircle color="white" />
+                <p className="text-sm text-white">
                   @{creatorDetails?.username || "Unnamed"}
                 </p>
               </div>
-              <button
-                type="button"
-                className="bg-primary rounded-full p-2 text-center m:text-sm"
-              >
-                View profile
-              </button>
             </div>
+
+            {/* View Profile Button */}
+            <motion.button
+              whileHover={{
+                backgroundColor: "#334FEF",
+                color: "white",
+              }}
+              whileTap={{ scale: 0.95 }}
+              className="mt-4 w-full px-4 py-2 rounded-full transition duration-300 ease-in-out bg-primary text-white m:text-sm"
+            >
+              View Profile
+            </motion.button>
           </div>
-        </section>
+        </div>
       </Link>
     </motion.div>
   );
