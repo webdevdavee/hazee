@@ -11,6 +11,8 @@ import { useWallet } from "@/context/WalletProvider";
 
 // Render particles outside the component to prevent redefinition
 const renderAdvancedParticles = () => {
+  if (!window) return;
+
   return [...Array(60)].map((_, i) => {
     const delay = Math.random() * 3;
     const duration = Math.random() * 5 + 3;
@@ -55,7 +57,6 @@ const renderAdvancedParticles = () => {
     );
   });
 };
-
 const Hero = () => {
   const { connectWallet } = useWallet();
 
