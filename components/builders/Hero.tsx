@@ -9,60 +9,17 @@ import Modal from "../layout/Modal";
 import { useOverlayStore } from "@/libs/zustand/overlayStore";
 import { useWallet } from "@/context/WalletProvider";
 
-// Render particles outside the component to prevent redefinition
-const renderAdvancedParticles = () => {
-  if (!window) return;
-
-  return [...Array(60)].map((_, i) => {
-    const delay = Math.random() * 3;
-    const duration = Math.random() * 5 + 3;
-    const size = Math.random() * 20 + 5;
-    const opacity = Math.random() * 0.6 + 0.2;
-
-    return (
-      <motion.div
-        key={i}
-        initial={{
-          x: Math.random() * window.innerWidth,
-          y: Math.random() * window.innerHeight,
-          scale: 0,
-          opacity: 0,
-        }}
-        animate={{
-          x: [
-            Math.random() * window.innerWidth,
-            Math.random() * window.innerWidth,
-            Math.random() * window.innerWidth,
-          ],
-          y: [
-            Math.random() * window.innerHeight,
-            Math.random() * window.innerHeight,
-            Math.random() * window.innerHeight,
-          ],
-          scale: [0, 1, 0],
-          opacity: [0, opacity, 0],
-        }}
-        transition={{
-          duration: duration,
-          delay: delay,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        className="absolute rounded-full bg-gradient-to-r from-primary/50 to-accent/50"
-        style={{
-          width: `${size}px`,
-          height: `${size}px`,
-        }}
-      />
-    );
-  });
-};
 const Hero = () => {
   const { connectWallet } = useWallet();
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [isClient, setIsClient] = React.useState(false); // Tracks if running on the client
   const showOverlay = useOverlayStore((state) => state.showOverlay);
   const hideOverlay = useOverlayStore((state) => state.hideOverlay);
+
+  React.useEffect(() => {
+    setIsClient(true); // Set to true when on the client side
+  }, []);
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -75,7 +32,54 @@ const Hero = () => {
     connectWallet();
   };
 
-  // Move the CTA buttons outside the render to prevent redefinition
+  const renderAdvancedParticles = () => {
+    if (!isClient) return null;
+
+    return [...Array(60)].map((_, i) => {
+      const delay = Math.random() * 3;
+      const duration = Math.random() * 5 + 3;
+      const size = Math.random() * 20 + 5;
+      const opacity = Math.random() * 0.6 + 0.2;
+
+      return (
+        <motion.div
+          key={i}
+          initial={{
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            scale: 0,
+            opacity: 0,
+          }}
+          animate={{
+            x: [
+              Math.random() * window.innerWidth,
+              Math.random() * window.innerWidth,
+              Math.random() * window.innerWidth,
+            ],
+            y: [
+              Math.random() * window.innerHeight,
+              Math.random() * window.innerHeight,
+              Math.random() * window.innerHeight,
+            ],
+            scale: [0, 1, 0],
+            opacity: [0, opacity, 0],
+          }}
+          transition={{
+            duration: duration,
+            delay: delay,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute rounded-full bg-gradient-to-r from-primary/50 to-accent/50"
+          style={{
+            width: `${size}px`,
+            height: `${size}px`,
+          }}
+        />
+      );
+    });
+  };
+
   const ctaButtons = [
     {
       href: "/explore/collections",
