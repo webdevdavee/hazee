@@ -42,17 +42,17 @@ const CreatorsCard: React.FC<Props> = ({ creator }) => {
               />
             </div>
             <div className="flex flex-col gap-3 bg-secondary p-3">
-              <div className="flex flex-col">
-                <p className="font-medium text-lg">
+              <div className="flex flex-col items-center justify-center">
+                <p className="font-medium text-lg m:text-sm">
                   {truncateAddress(creator.walletAddress)}
                 </p>
-                <p className="text-gray-400 text-sm">
+                <p className="text-gray-400 text-sm m:text-xs">
                   @{creatorDetails?.username || "Unnamed"}
                 </p>
               </div>
               <button
                 type="button"
-                className="bg-primary rounded-full p-2 text-center"
+                className="bg-primary rounded-full p-2 text-center m:text-sm"
               >
                 View profile
               </button>

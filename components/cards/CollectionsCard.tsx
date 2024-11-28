@@ -61,9 +61,12 @@ const CollectionCard: React.FC<Props> = ({ collection }) => {
               </Tooltip>
             </div>
             {collection.isActive && (
-              <span className="bg-green-500 text-white text-xs font-medium px-2 py-1 rounded">
+              <span className="bg-green-500 text-white text-xs font-medium px-2 py-1 rounded m:hidden">
                 Active
               </span>
+            )}
+            {collection.isActive && (
+              <span className="bg-green-500 text-white text-xs font-medium px-2 py-1 rounded hidden m:block m:rounded-full m:p-1" />
             )}
           </div>
 
