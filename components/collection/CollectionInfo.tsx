@@ -57,8 +57,8 @@ const CollectionInfo: React.FC<Props> = ({ collection, creator }) => {
             <p>{collection.floorPrice} ETH</p>
           </div>
           <div className="flex items-center justify-between">
-            <p>Items</p>
-            <p>{collection.mintedSupply} tokens</p>
+            <p>Minted tokens</p>
+            <p>{collection.mintedSupply}</p>
           </div>
         </div>
         <div className="flex flex-col gap-4 pt-4">

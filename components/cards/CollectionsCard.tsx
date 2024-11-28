@@ -1,7 +1,6 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import { FaEthereum } from "react-icons/fa";
 import { BsFillCollectionFill } from "react-icons/bs";
 import { formatNumber, truncateAddress } from "@/libs/utils";
@@ -15,12 +14,7 @@ type Props = {
 const CollectionCard: React.FC<Props> = ({ collection }) => {
   return (
     <GradientBorder>
-      <motion.div
-        whileHover={{ y: -10 }}
-        initial={{ y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="w-full bg-secondary rounded-2xl overflow-hidden"
-      >
+      <div className="w-full bg-secondary rounded-2xl overflow-hidden">
         <div className="relative">
           <Link href={`/collection/${collection?.collectionId}`}>
             <div className="relative h-48 m:h-36">
@@ -85,7 +79,7 @@ const CollectionCard: React.FC<Props> = ({ collection }) => {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </GradientBorder>
   );
 };

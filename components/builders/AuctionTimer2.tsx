@@ -15,34 +15,31 @@ const AuctionTimer2: React.FC<AuctionTimer2Props> = ({ endTime }) => {
 
   if (isEnded) {
     return (
-      <div className="absolute top-4 left-4 z-10 bg-abstract/80 text-white py-1 px-3 rounded-full text-xs font-medium">
-        Auction Ended
+      <div className="text-center py-2 px-4 bg-abstract bg-opacity-10 rounded-lg m:text-xs">
+        <p className="text-abstract font-bold">Auction Ended</p>
       </div>
     );
   }
 
   return (
-    <div className="absolute top-4 left-4 z-10 bg-base/60 backdrop-blur-sm rounded-xl p-2 shadow-lg">
-      <div className="flex space-x-1.5">
-        {Object.entries(timeLeft).map(([unit, value]) => (
+    <div className="flex justify-center space-x-2">
+      {Object.entries(timeLeft).map(([unit, value]) => (
+        <div key={unit} className="text-center">
           <motion.div
-            key={unit}
-            className="flex flex-col items-center"
+            className="w-14 h-14 bg-base rounded-lg flex items-center justify-center"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="w-10 h-10 bg-primary/20 rounded-md flex items-center justify-center">
-              <span className="text-xl font-bold text-white">
-                {formatNumber(value)}
-              </span>
-            </div>
-            <p className="text-[10px] text-white/70 mt-0.5 uppercase">
-              {unit.charAt(0)}
-            </p>
+            <span className="text-2xl font-bold text-primary">
+              {formatNumber(value)}
+            </span>
           </motion.div>
-        ))}
-      </div>
+          <p className="text-xs text-gray-400 mt-1">
+            {unit.charAt(0).toUpperCase()}
+          </p>
+        </div>
+      ))}
     </div>
   );
 };
