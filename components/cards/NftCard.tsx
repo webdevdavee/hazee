@@ -67,7 +67,7 @@ const NftCard: React.FC<Props> = ({ status, token, nftStatus }) => {
           </div>
         )}
 
-        <div className="absolute bottom-0 left-0 w-full p-4 text-white m:p-2">
+        <div className="absolute top-0 left-0 w-full p-4 text-white m:p-2">
           <div className="flex items-end justify-between">
             <div className="space-y-1 m:space-y-0">
               <Link
@@ -85,20 +85,16 @@ const NftCard: React.FC<Props> = ({ status, token, nftStatus }) => {
                 </Link>
               </h3>
             </div>
-            <Link
-              href={`/nft/${token.tokenId}`}
-              className="rounded-full bg-primary px-4 py-2 text-sm font-medium transition-colors hover:bg-opacity-80 m:hidden"
-            >
-              View NFT
-            </Link>
           </div>
         </div>
+        {isAuction && nftStatus?.auctionDetails && (
+          <AuctionTimer2 endTime={nftStatus.auctionDetails.endTime} />
+        )}
       </div>
 
       <div className="p-4 space-y-4 bg-secondary m:p-2">
         {isAuction && nftStatus?.auctionDetails ? (
           <>
-            <AuctionTimer2 endTime={nftStatus.auctionDetails.endTime} />
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-gray-400">Current bid</p>

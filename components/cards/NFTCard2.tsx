@@ -39,7 +39,7 @@ const NFTCard2: React.FC<Props> = ({ token }) => {
           <div className="absolute inset-0 bg-gradient-to-t from-base via-transparent to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-80" />
         </Link>
 
-        <div className="absolute bottom-0 left-0 w-full p-4 text-white m:p-2">
+        <div className="absolute top-0 left-0 w-full p-4 text-white m:p-2">
           <div className="flex items-end justify-between">
             <div className="space-y-1 m:space-y-0">
               <Link
@@ -48,7 +48,7 @@ const NFTCard2: React.FC<Props> = ({ token }) => {
               >
                 @{truncateAddress(token.seller)}
               </Link>
-              <h3 className="text-xl font-bold leading-tight">
+              <h3 className="text-xl font-bold leading-tight m:text-sm">
                 <Link
                   href={`/nft/${token.tokenId}`}
                   className="hover:underline"
@@ -57,20 +57,17 @@ const NFTCard2: React.FC<Props> = ({ token }) => {
                 </Link>
               </h3>
             </div>
-            <Link
-              href={`/nft/${token.tokenId}`}
-              className="rounded-full bg-primary px-4 py-2 text-sm font-medium transition-colors hover:bg-opacity-80 m:hidden"
-            >
-              View NFT
-            </Link>
           </div>
         </div>
+        {token.listingType === 2 ||
+          (token.listingType === 3 && (
+            <AuctionTimer2 endTime={token.endTime!} />
+          ))}
       </div>
 
       <div className="p-4 space-y-4 bg-secondary m:p-2">
         {token.listingType === 2 || token.listingType === 3 ? (
           <>
-            <AuctionTimer2 endTime={token.endTime!} />
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-gray-400">Current bid</p>

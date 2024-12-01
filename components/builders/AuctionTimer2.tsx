@@ -22,24 +22,25 @@ const AuctionTimer2: React.FC<AuctionTimer2Props> = ({ endTime }) => {
   }
 
   return (
-    <div className="flex justify-center space-x-2">
-      {Object.entries(timeLeft).map(([unit, value]) => (
-        <div key={unit} className="text-center">
-          <motion.div
-            className="w-14 h-14 bg-base rounded-lg flex items-center justify-center m:w-8 m:h-8"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <span className="text-2xl font-bold text-primary m:text-[1rem]">
-              {formatNumber(value)}
-            </span>
-          </motion.div>
-          <p className="text-xs text-gray-400 mt-1">
-            {unit.charAt(0).toUpperCase()}
-          </p>
-        </div>
-      ))}
+    <div className="w-fit absolute bottom-0 right-0 left-0 p-3 mb-1 mx-auto">
+      <div className="backdrop-blur-md bg-white/30 rounded-xl px-4 py-2 flex justify-center gap-4 shadow-lg m:gap-2 m:px-2">
+        {Object.entries(timeLeft).map(([unit, value]) => (
+          <div key={unit} className="text-center flex flex-col items-center">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <span className="font-bold flex items-center gap-1">
+                <span className="text-xl m:text-xs">{formatNumber(value)}</span>
+                <span className="text-sm text-gray-200 opacity-70 m:text-xs">
+                  {unit.charAt(0).toUpperCase()}
+                </span>
+              </span>
+            </motion.div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
