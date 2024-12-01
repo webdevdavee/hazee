@@ -11,7 +11,7 @@ type Props = {
 
 const FeaturedNFTs: React.FC<Props> = ({ listingData }) => {
   return (
-    <section className="w-full m:mt-8">
+    <section className="w-full">
       <div>
         <h1 className="m:text-2xl">Featured NFTs</h1>
         {listingData?.data && listingData?.data.length > 0 ? (

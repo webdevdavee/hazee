@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FaUserCircle, FaWallet } from "react-icons/fa";
 import { getUserByWalletAddress } from "@/server-scripts/database/actions/user.action";
 import { truncateAddress } from "@/libs/utils";
+import { FaCrown } from "react-icons/fa";
 
 type User = {
   _id: string;
@@ -30,9 +31,11 @@ const CreatorsCard: React.FC<Props> = ({ creator }) => {
     fetchUserDetails();
   }, [creator.walletAddress]);
 
+  if (!creatorDetails) return;
+
   return (
     <motion.div
-      className="group"
+      className="group overflow-hidden"
       whileHover={{
         y: -10,
         boxShadow:
@@ -44,56 +47,28 @@ const CreatorsCard: React.FC<Props> = ({ creator }) => {
       }}
     >
       <Link href={`/creator/${creator.walletAddress}`} className="block">
-        <div className="bg-secondary rounded-2xl overflow-hidden border border-base/10">
-          {/* Background Subtle */}
-          <div className="h-20 bg-base/5 relative">
-            {/* Profile Image */}
-            <div
-              className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 
-                            border-4 border-secondary rounded-full
-                            shadow-md"
-            >
-              <Image
-                src={creatorDetails?.photo || "/images/default-avatar.svg"}
-                width={110}
-                height={110}
-                quality={100}
-                priority
-                alt="Creator Profile"
-                className="rounded-full object-cover"
-              />
-            </div>
-          </div>
-
-          {/* Creator Details */}
-          <div className="pt-16 pb-6 px-6 text-center">
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-2 text-primary">
-                <FaWallet color="white" />
-                <p className="font-medium text-sm text-white">
-                  {truncateAddress(creator.walletAddress)}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 mt-1 text-secondary">
-                <FaUserCircle color="white" />
-                <p className="text-sm text-white">
-                  @{creatorDetails?.username || "Unnamed"}
-                </p>
+        <div className="max-w-2xl">
+          <div className="flex items-center bg-secondary rounded-xl p-4 shadow-lg hover:bg-zinc-700 transition-colors duration-300 m:bg-transparent m:rounded-none m:p-0 m:hover:bg-transparent m:border-b m:border-b-secondary m:pb-2">
+            <div className="relative mr-6">
+              <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-zinc-700">
+                <Image
+                  src={creatorDetails?.photo || "/images/default-avatar.svg"}
+                  alt={creatorDetails.username}
+                  width={80}
+                  height={80}
+                  className="object-cover w-full h-full"
+                />
               </div>
             </div>
 
-            {/* View Profile Button */}
-            <motion.button
-              whileHover={{
-                backgroundColor: "#334FEF",
-                color: "white",
-              }}
-              whileTap={{ scale: 0.95 }}
-              className="mt-4 w-full px-4 py-2 rounded-full transition duration-300 ease-in-out bg-primary text-white m:text-sm"
-            >
-              View Profile
-            </motion.button>
+            <div className="flex-grow flex flex-col">
+              <span className="text-xl font-semibold text-zinc-100">
+                {creatorDetails?.username}
+              </span>
+              <span className="text-zinc-400 text-sm">
+                {truncateAddress(creatorDetails?.walletAddress)}
+              </span>
+            </div>
           </div>
         </div>
       </Link>

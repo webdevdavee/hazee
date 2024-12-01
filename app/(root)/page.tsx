@@ -50,13 +50,17 @@ const page = async () => {
       />
       <Hero />
       <Marquee />
-      <FeaturedNFTs listingData={listingData} />
-      <Collections
-        initialCollections={collections}
-        totalCollectionsCount={totalCollectionsCount}
-      />
-      <TopCreators initialCreators={users} totalPages={totalPages} />
-      <Newsletter />
+      <div className="flex flex-col gap-16">
+        <FeaturedNFTs listingData={listingData} />
+        <Collections
+          initialCollections={collections}
+          totalCollectionsCount={totalCollectionsCount}
+        />
+        <TopCreators creators={users} />
+      </div>
+      <div className="mt-12">
+        <Newsletter />
+      </div>
     </section>
   );
 };
