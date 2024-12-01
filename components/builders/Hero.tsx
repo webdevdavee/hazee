@@ -11,7 +11,7 @@ import Modal from "../layout/Modal";
 import ConnectWallet from "../layout/ConnectWallet";
 
 const Hero = () => {
-  const { connectWallet } = useWallet();
+  const { connectWallet, walletAddress } = useWallet();
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const showOverlay = useOverlayStore((state) => state.showOverlay);
@@ -29,7 +29,7 @@ const Hero = () => {
   };
 
   return (
-    <div className="bg-background_light text-white overflow-hidden relative">
+    <div className="bg-base text-white overflow-hidden relative">
       {isModalOpen && (
         <Modal title="Connect to Hazee" setIsModalOpen={setIsModalOpen}>
           <ConnectWallet connectWallet={handleConnectWallet} />
@@ -77,6 +77,7 @@ const Hero = () => {
             <button
               type="button"
               className="group flex items-center gap-3 px-8 py-3 border border-zinc-700 hover:bg-zinc-700 rounded-full text-white transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl m:justify-center"
+              style={{ display: walletAddress ? "none" : "flex" }}
               onClick={handleOpenModal}
             >
               <FaWallet className="text-zinc-300 transition-colors duration-300 group-hover:text-zinc-100" />

@@ -36,7 +36,7 @@ const NFTCard2: React.FC<Props> = ({ token }) => {
             priority
             quality={100}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-base via-transparent to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-base/60 via-transparent to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-80" />
         </Link>
 
         <div className="absolute top-0 left-0 w-full p-4 text-white m:p-2">
@@ -89,7 +89,9 @@ const NFTCard2: React.FC<Props> = ({ token }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-400">Price</p>
-              <p className="text-lg font-bold text-accent">{token.price} ETH</p>
+              <p className="text-lg font-bold text-accent m:text-sm">
+                {token.price} ETH
+              </p>
             </div>
           </div>
         )}

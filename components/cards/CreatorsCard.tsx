@@ -48,7 +48,7 @@ const CreatorsCard: React.FC<Props> = ({ creator }) => {
     >
       <Link href={`/creator/${creator.walletAddress}`} className="block">
         <div className="max-w-2xl">
-          <div className="flex items-center bg-secondary rounded-xl p-4 shadow-lg hover:bg-zinc-700 transition-colors duration-300 m:bg-transparent m:rounded-none m:p-0 m:hover:bg-transparent m:border-b m:border-b-secondary m:pb-2">
+          <div className="flex items-center bg-secondary rounded-xl p-4 shadow-lg hover:bg-zinc-700 transition-colors duration-300">
             <div className="relative mr-6">
               <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-zinc-700">
                 <Image

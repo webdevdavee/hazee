@@ -50,17 +50,20 @@ const NftCard: React.FC<Props> = ({ status, token, nftStatus }) => {
             priority
             quality={100}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-base via-transparent to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-base/60 via-transparent to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-80" />
         </Link>
 
         {pathname.startsWith("/creator/") && (
           <div className="absolute top-4 right-4">
             {nftStatus?.isListed ? (
-              <span className="bg-green-600 text-white font-medium py-1 px-3 rounded-full text-sm">
-                Listed
-              </span>
+              <>
+                <span className="bg-green-600 text-white font-medium py-1 px-3 rounded-full text-sm m:hidden">
+                  Listed
+                </span>
+                <span className="bg-green-600 text-white font-medium py-1 px-3 rounded-full text-sm hidden m:block m:rounded-full m:p-1" />
+              </>
             ) : (
-              <span className="bg-abstract text-white font-medium py-1 px-3 rounded-full text-sm">
+              <span className="bg-abstract text-white font-medium py-1 px-3 rounded-full text-sm hidden m:block m:rounded-full m:p-1">
                 Not listed
               </span>
             )}
@@ -68,23 +71,18 @@ const NftCard: React.FC<Props> = ({ status, token, nftStatus }) => {
         )}
 
         <div className="absolute top-0 left-0 w-full p-4 text-white m:p-2">
-          <div className="flex items-end justify-between">
-            <div className="space-y-1 m:space-y-0">
-              <Link
-                href={`/creator/${token.owner}`}
-                className="text-sm text-accent hover:text-white transition m:text-xs"
-              >
-                @{truncateAddress(token.owner)}
+          <div className="flex flex-col">
+            <Link
+              href={`/creator/${token.owner}`}
+              className="text-sm text-accent font-medium hover:text-white transition m:text-xs"
+            >
+              @{truncateAddress(token.owner)}
+            </Link>
+            <h3 className="text-xl font-bold leading-tight m:text-sm">
+              <Link href={`/nft/${token.tokenId}`} className="hover:underline">
+                {token.metadata?.name || `NFT #${token.tokenId}`}
               </Link>
-              <h3 className="text-xl font-bold leading-tight">
-                <Link
-                  href={`/nft/${token.tokenId}`}
-                  className="hover:underline"
-                >
-                  {token.metadata?.name || `NFT #${token.tokenId}`}
-                </Link>
-              </h3>
-            </div>
+            </h3>
           </div>
         </div>
         {isAuction && nftStatus?.auctionDetails && (
@@ -117,17 +115,11 @@ const NftCard: React.FC<Props> = ({ status, token, nftStatus }) => {
             </div>
           </>
         ) : (
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-gray-400">Price</p>
-              <p className="text-lg font-bold text-accent">{token.price} ETH</p>
-            </div>
-            {isSale && (
-              <div className="text-right">
-                <p className="text-xs text-gray-400">Sale type</p>
-                <p className="text-sm font-medium text-white">Fixed price</p>
-              </div>
-            )}
+          <div>
+            <p className="text-xs text-gray-400">Price</p>
+            <p className="text-lg font-bold text-accent m:text-sm">
+              {token.price} ETH
+            </p>
           </div>
         )}
       </div>

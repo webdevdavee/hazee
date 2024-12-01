@@ -15,13 +15,16 @@ const TopCreators = ({ creators }: Props) => {
       <div className="bg-base rounded-lg">
         <div className="flex items-center justify-between w-full mb-6">
           <h1 className="m:text-2xl">Top Creators</h1>
-          <Link href="/explore/creators" className="text-lg text-accent">
+          <Link
+            href="/explore/creators"
+            className="text-lg text-accent m:text-sm"
+          >
             See more
           </Link>
         </div>
         <AnimatePresence mode="wait">
           <motion.div
-            className="grid grid-cols-4 gap-3 m:grid-cols-1 m:gap-6"
+            className="grid grid-cols-4 gap-3 m:grid-cols-1 m:gap-4"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}

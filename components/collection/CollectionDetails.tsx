@@ -41,11 +41,11 @@ const CollectionDetails: React.FC<Props> = ({
         <div className="w-fit rounded-full overflow-hidden -mt-20 ml-6">
           <Image
             src={collection.imageUrl as string}
-            width={150}
-            height={150}
+            width={1000}
+            height={1000}
             quality={100}
             alt={collection?.name as string}
-            className="object-cover h-[9.5rem]"
+            className="object-cover w-[9.5rem] h-[9.5rem] m:w-[8rem] m:h-[8rem]"
           />
         </div>
       </div>

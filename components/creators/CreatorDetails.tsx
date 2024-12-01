@@ -40,7 +40,7 @@ const CreatorDetails: React.FC<Props> = ({ userDetails, offers }) => {
   return (
     <section>
       <div>
-        <div className="flex items-center justify-center rounded-xl overflow-hidden h-80  object-cover m:h-40">
+        <div className="flex items-center justify-center rounded-lg overflow-hidden h-80  object-cover m:h-40">
           {!userDetails?.user.coverPhoto ? (
             <div className="w-full h-full object-cover bg-secondary" />
           ) : (
@@ -57,11 +57,11 @@ const CreatorDetails: React.FC<Props> = ({ userDetails, offers }) => {
         <div className="w-fit rounded-full overflow-hidden -mt-20 ml-6">
           <Image
             src={userDetails?.user.photo || "/images/default-avatar.svg"}
-            width={150}
-            height={150}
+            width={1000}
+            height={1000}
             quality={100}
             alt={userDetails?.user.username || "Unnamed"}
-            className="object-cover h-[9.5rem]"
+            className="object-cover w-[9.5rem] h-[9.5rem] m:w-[8rem] m:h-[8rem]"
           />
         </div>
       </div>

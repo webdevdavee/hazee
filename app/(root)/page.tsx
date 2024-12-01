@@ -50,7 +50,7 @@ const page = async () => {
       />
       <Hero />
       <Marquee />
-      <div className="flex flex-col gap-16">
+      <div className="flex flex-col gap-16 mt-6">
         <FeaturedNFTs listingData={listingData} />
         <Collections
           initialCollections={collections}
