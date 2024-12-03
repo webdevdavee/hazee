@@ -63,9 +63,12 @@ const NftCard: React.FC<Props> = ({ status, token, nftStatus }) => {
                 <span className="bg-green-600 text-white font-medium py-1 px-3 rounded-full text-sm hidden m:block m:rounded-full m:p-1" />
               </>
             ) : (
-              <span className="bg-abstract text-white font-medium py-1 px-3 rounded-full text-sm hidden m:block m:rounded-full m:p-1">
-                Not listed
-              </span>
+              <>
+                <span className="bg-abstract text-white font-medium py-1 px-3 rounded-full text-sm m:hidden">
+                  Not listed
+                </span>
+                <span className="bg-abstract text-white font-medium py-1 px-3 rounded-full text-sm hidden m:block m:rounded-full m:p-1" />
+              </>
             )}
           </div>
         )}

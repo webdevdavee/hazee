@@ -15,8 +15,8 @@ const AuctionTimer2: React.FC<AuctionTimer2Props> = ({ endTime }) => {
 
   if (isEnded) {
     return (
-      <div className="text-center py-2 px-4 bg-abstract bg-opacity-10 rounded-lg m:text-xs">
-        <p className="text-abstract font-bold">Auction Ended</p>
+      <div className="w-64 absolute bottom-0 right-0 left-0 text-center mx-auto mb-3 p-3 bg-abstract backdrop-blur-md shadow-lg bg-opacity-40 rounded-lg m:text-xs m:w-36">
+        <p className="text-white font-bold">Auction Ended</p>
       </div>
     );
   }
