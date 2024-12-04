@@ -8,7 +8,7 @@ type Props = {
 const CollectionsTableBody: React.FC<Props> = ({ collections }) => {
   return (
     <tbody>
-      {collections.map((collection, index) => (
+      {collections.slice(0, 8).map((collection, index) => (
         <tr key={collection.collectionId}>
           <td className="text-sm p-3">{index + 1}</td>
           <td>

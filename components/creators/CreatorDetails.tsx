@@ -41,18 +41,17 @@ const CreatorDetails: React.FC<Props> = ({ userDetails, offers }) => {
     <section>
       <div>
         <div className="flex items-center justify-center rounded-lg overflow-hidden h-80  object-cover m:h-40">
-          {!userDetails?.user.coverPhoto ? (
-            <div className="w-full h-full object-cover bg-secondary" />
-          ) : (
-            <Image
-              src={userDetails?.user.coverPhoto as string}
-              width={1000}
-              height={1000}
-              quality={100}
-              alt={userDetails?.user.username || "Unnamed"}
-              className="w-full object-cover"
-            />
-          )}
+          <Image
+            src={
+              (userDetails?.user.coverPhoto as string) ||
+              "/images/default-cover.webp"
+            }
+            width={1000}
+            height={1000}
+            quality={100}
+            alt={userDetails?.user.username || "Unnamed"}
+            className="w-full object-cover"
+          />
         </div>
         <div className="w-fit rounded-full overflow-hidden -mt-20 ml-6">
           <Image
