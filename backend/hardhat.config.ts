@@ -19,7 +19,7 @@ const config: HardhatUserConfig = {
     hardhat: {
       forking: {
         url: ETHEREUM_RPC_URL,
-        blockNumber: 19000000, // You can specify a block number to fork from
+        blockNumber: 19000000,
         enabled: true,
       },
       chainId: 31337,
