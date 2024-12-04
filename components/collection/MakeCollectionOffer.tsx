@@ -108,66 +108,76 @@ const MakeCollectionOffer: React.FC<Props> = ({ collection }) => {
         </Modal>
       )}
 
-      <div className="flex flex-col gap-3 bg-secondary p-3 rounded-md mb-6">
-        <div className="flex items-center justify-between">
-          <p>Minted supply:</p>
-          <p>{collection.mintedSupply}</p>
+      <div className="m:max-h-[28rem] rounded-2xl p-6 space-y-6 transition-all duration-300 overflow-y-auto m:w-[21rem]">
+        <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <p className="text-white/70 font-medium">Minted supply:</p>
+            <div className="text-right text-white">
+              {collection.mintedSupply}
+            </div>
+            <p className="text-white/70 font-medium">Floor price:</p>
+            <p className="text-right text-white">
+              {`${collection.floorPrice} ETH × ${collection.mintedSupply} = ${
+                Number(collection.floorPrice) * collection.mintedSupply
+              } ETH`}
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <p>Floor price:</p>
-          <p>{collection.floorPrice} ETH * token count</p>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
-        <TextInput
-          inputRegister={register("nftCount")}
-          label="Number of tokens"
-          htmlFor="nftCount"
-          inputType="number"
-          placeholder="number of tokens"
-          required
-          error={
-            errors.nftCount && (
-              <p className="text-red-500">{errors.nftCount.message}</p>
-            )
-          }
-        />
-        <TextInput
-          inputRegister={register("amount")}
-          label="Offer amount (ETH)"
-          htmlFor="listingPrice"
-          inputType="number"
-          inputMode="decimal"
-          step="any"
-          min="0"
-          placeholder="0.01"
-          required
-          error={
-            errors.amount && (
-              <p className="text-red-500">{errors.amount.message}</p>
-            )
-          }
-        />
-        <div>
-          <Dropdown
-            items={auctionDurations}
-            defaultText="Select offer duration"
-            renderItem={(item) => item.label}
-            onSelect={setSelectedDuration}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <TextInput
+            inputRegister={register("nftCount")}
+            label="Number of tokens"
+            htmlFor="nftCount"
+            inputType="number"
+            placeholder="number of tokens"
+            required
+            error={
+              errors.nftCount && (
+                <p className="text-red-400 text-xs pl-2">
+                  {errors.nftCount.message}
+                </p>
+              )
+            }
           />
-          <p className="mt-3 text-yellow-600 text-sm">
-            NOTE: If you do not select a duration, your offer will be placed
-            with a 7 days duration by default
-          </p>
-        </div>
-        <Button
-          text="Place offer"
-          style="bg-abstract p-4 rounded-md"
-          type="submit"
-        />
-      </form>
+          <TextInput
+            inputRegister={register("amount")}
+            label="Offer amount (ETH)"
+            htmlFor="listingPrice"
+            inputType="number"
+            inputMode="decimal"
+            step="any"
+            min="0"
+            placeholder="0.01"
+            required
+            error={
+              errors.amount && (
+                <p className="text-red-400 text-xs pl-2">
+                  {errors.amount.message}
+                </p>
+              )
+            }
+          />
+          <div className="space-y-3">
+            <Dropdown
+              items={auctionDurations}
+              defaultText="Select offer duration"
+              renderItem={(item) => item.label}
+              onSelect={setSelectedDuration}
+              className="w-full"
+            />
+            <p className="text-yellow-400/80 text-xs italic pl-2">
+              NOTE: If you do not select a duration, your offer will be placed
+              with a 7 days duration by default
+            </p>
+          </div>
+          <Button
+            text="Place offer"
+            style="w-full bg-abstract hover:bg-abstract/80 text-white font-semibold p-4 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-abstract/50 shadow-md hover:shadow-lg"
+            type="submit"
+          />
+        </form>
+      </div>
     </>
   );
 };

@@ -59,9 +59,7 @@ const CollectionCTA: React.FC<Props> = ({ collection, collectionOffers }) => {
           title="Place collection offer"
           setIsModalOpen={setIsPlaceOfferModalOpen}
         >
-          <div className="w-[28rem] h-[28rem] bg-opacity-30 p-5 rounded-lg custom-scrollbar overflow-y-auto m:w-[21rem] xl:w-[19rem]">
-            <MakeCollectionOffer collection={collection} />
-          </div>
+          <MakeCollectionOffer collection={collection} />
         </Modal>
       )}
 

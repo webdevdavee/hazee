@@ -47,7 +47,6 @@ const ListNFT: React.FC<Props> = ({ nft, collection }) => {
     { label: "1 day", seconds: 1 * 24 * 60 * 60 },
     { label: "3 days", seconds: 3 * 24 * 60 * 60 },
     { label: "7 days", seconds: 7 * 24 * 60 * 60 },
-    { label: "1 week", seconds: 7 * 24 * 60 * 60 },
   ];
 
   const [selectedListingType, setSelectedListingType] =
@@ -141,33 +140,32 @@ const ListNFT: React.FC<Props> = ({ nft, collection }) => {
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="w-[32rem] max-h-[28rem] rounded-lg p-4 overflow-y-auto custom-scrollbar m:w-[21rem]"
+        className="w-[32rem] m:max-h-[28rem] rounded-2xl p-6 overflow-y-auto m:w-[21rem] transition-all duration-300"
       >
         <div className="grid grid-cols-1">
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-3 rounded-md">
-                <p>Name:</p>
-                <p>{nft.metadata?.name}</p>
-              </div>
-              <div className="flex items-center justify-between gap-3 rounded-md">
-                <p>Minting price:</p>
-                <p>{nft.price} ETH</p>
-              </div>
-              <div className="flex items-center justify-between gap-3 rounded-md">
-                <p>Collection:</p>
-                <p>{collection?.name}</p>
+          <div className="flex flex-col gap-8">
+            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="text-white/70 font-medium">Name:</div>
+                <div className="text-right text-white">
+                  {nft.metadata?.name}
+                </div>
+                <div className="text-white/70 font-medium">Minting price:</div>
+                <div className="text-right text-white">{nft.price} ETH</div>
+                <div className="text-white/70 font-medium">Collection:</div>
+                <div className="text-right text-white">{collection?.name}</div>
               </div>
             </div>
 
-            <div>
+            <div className="space-y-3">
               <Dropdown
                 items={listingTypes}
                 defaultText="Select a listing type"
                 renderItem={(item) => item.type}
                 onSelect={(item) => setSelectedListingType(item)}
+                className="w-full"
               />
-              <p className="mt-3 text-yellow-600 text-sm">
+              <p className="text-yellow-400/80 text-xs italic pl-2">
                 NOTE: If you do not select a listing option, your token will be
                 listed with the &quot;Sale&quot; option by default
               </p>
@@ -188,7 +186,7 @@ const ListNFT: React.FC<Props> = ({ nft, collection }) => {
                 required
                 error={
                   errors.listingPrice && (
-                    <p className="text-red-500">
+                    <p className="text-red-400 text-xs pl-2">
                       {errors.listingPrice.message}
                     </p>
                   )
@@ -198,7 +196,7 @@ const ListNFT: React.FC<Props> = ({ nft, collection }) => {
 
             {(selectedListingType?.id === ListingType.AUCTION ||
               selectedListingType?.id === ListingType.BOTH) && (
-              <div className="flex flex-col gap-4">
+              <div className="space-y-4">
                 <TextInput
                   inputRegister={register("startingPrice")}
                   label="Starting Price (ETH)"
@@ -211,7 +209,7 @@ const ListNFT: React.FC<Props> = ({ nft, collection }) => {
                   required
                   error={
                     errors.startingPrice && (
-                      <p className="text-red-500">
+                      <p className="text-red-400 text-xs pl-2">
                         {errors.startingPrice.message}
                       </p>
                     )
@@ -229,7 +227,7 @@ const ListNFT: React.FC<Props> = ({ nft, collection }) => {
                   required
                   error={
                     errors.reservePrice && (
-                      <p className="text-red-500">
+                      <p className="text-red-400 text-xs pl-2">
                         {errors.reservePrice.message}
                       </p>
                     )
@@ -241,6 +239,7 @@ const ListNFT: React.FC<Props> = ({ nft, collection }) => {
                     defaultText="Select auction duration"
                     renderItem={(item) => item.label}
                     onSelect={setSelectedDuration}
+                    className="w-full"
                   />
                 </div>
               </div>
@@ -248,7 +247,7 @@ const ListNFT: React.FC<Props> = ({ nft, collection }) => {
 
             <Button
               text="List NFT"
-              style="mt-4 bg-abstract p-4 rounded-md"
+              style="mt-4 bg-abstract hover:bg-abstract/80 text-white font-semibold p-4 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-abstract/50 shadow-md hover:shadow-lg"
               type="submit"
             />
           </div>
