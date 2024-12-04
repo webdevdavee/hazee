@@ -24,7 +24,7 @@ const TopCreators = ({ creators }: Props) => {
         </div>
         <AnimatePresence mode="wait">
           <motion.div
-            className="grid grid-cols-4 gap-3 m:grid-cols-1 m:gap-4"
+            className="grid grid-cols-4 gap-3 m:grid-cols-2 m:gap-4"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
