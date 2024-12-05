@@ -32,7 +32,11 @@ const NFTPurchaseCard: React.FC<Props> = ({
   const { walletAddress, connectWallet } = useWallet();
   const { cancelListing, buyNFT } = useNFTMarketplace();
 
-  const { usdAmount, isLoading, error } = useEthConverter(
+  const {
+    usdAmount,
+    isLoading: isConverterLoading,
+    error,
+  } = useEthConverter(
     nft.status === 2 || nft.status === 3
       ? auctionDetails?.highestBid
       : nft.status === 1
@@ -47,11 +51,11 @@ const NFTPurchaseCard: React.FC<Props> = ({
   const showOverlay = useOverlayStore((state) => state.showOverlay);
   const hideOverlay = useOverlayStore((state) => state.hideOverlay);
 
-  const [isPurchaseLoading, setIsPurchaseLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
   const [loadingMessage, setLoadingMessage] = React.useState("");
 
   const handleBuyNFT = async () => {
-    setIsPurchaseLoading(true);
+    setIsLoading(true);
     showOverlay();
 
     setLoadingMessage("Processing purchase...");
@@ -61,7 +65,7 @@ const NFTPurchaseCard: React.FC<Props> = ({
       } catch (error: any) {
         console.error(error.message);
       } finally {
-        setIsPurchaseLoading(false);
+        setIsLoading(false);
         hideOverlay();
         setLoadingMessage("");
       }
@@ -76,6 +80,24 @@ const NFTPurchaseCard: React.FC<Props> = ({
   const handleOpenListModal = () => {
     setIsListModalOpen(true);
     showOverlay();
+  };
+
+  const handleCancelListing = async () => {
+    setIsLoading(true);
+    showOverlay();
+
+    setLoadingMessage("Cancelling listing...");
+    if (listingDetails) {
+      try {
+        await cancelListing(listingStatus.listingId);
+      } catch (error: any) {
+        console.error(error.message);
+      } finally {
+        setIsLoading(false);
+        hideOverlay();
+        setLoadingMessage("");
+      }
+    }
   };
 
   const PriceDisplay = () => (
@@ -94,7 +116,7 @@ const NFTPurchaseCard: React.FC<Props> = ({
         ETH
       </p>
       <p className="text-[gray] text-lg font-medium">
-        {isLoading
+        {isConverterLoading
           ? "Converting..."
           : error
           ? "USD amount unavailable. You can proceed with the ETH amount shown."
@@ -126,7 +148,7 @@ const NFTPurchaseCard: React.FC<Props> = ({
           primary: {
             text: isOwner ? "Cancel listing" : "Buy now",
             onClick: isOwner
-              ? () => cancelListing(listingStatus.listingId)
+              ? () => handleCancelListing()
               : () => handleBuyNFT(),
             className: `${
               isOwner ? "bg-abstract" : "bg-primary"
@@ -141,9 +163,7 @@ const NFTPurchaseCard: React.FC<Props> = ({
         return {
           primary: {
             text: isOwner ? "Cancel listing" : "Place a bid",
-            onClick: isOwner
-              ? () => cancelListing(listingStatus.listingId)
-              : handleOpenModal,
+            onClick: isOwner ? () => handleCancelListing() : handleOpenModal,
             className: `${
               isOwner ? "bg-abstract" : "bg-white text-base"
             } font-medium rounded-md w-full disabled:cursor-not-allowed disabled:bg-secondary`,
@@ -158,7 +178,7 @@ const NFTPurchaseCard: React.FC<Props> = ({
           primary: {
             text: isOwner ? "Cancel listing" : "Buy now",
             onClick: isOwner
-              ? () => cancelListing(listingStatus.listingId)
+              ? () => handleCancelListing()
               : () => handleBuyNFT(),
             className: `${
               isOwner ? "bg-abstract" : "bg-primary"
@@ -214,10 +234,10 @@ const NFTPurchaseCard: React.FC<Props> = ({
         />
       )}
 
-      {isPurchaseLoading && (
+      {isLoading && (
         <Modal
-          setIsModalOpen={setIsPurchaseLoading}
-          isLoading={isPurchaseLoading}
+          setIsModalOpen={setIsLoading}
+          isLoading={isLoading}
           loadingMessage={loadingMessage}
         >
           <div className="flex items-center justify-center backdrop-blur-[2px]">
