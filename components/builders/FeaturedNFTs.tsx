@@ -10,7 +10,6 @@ type Props = {
 };
 
 const FeaturedNFTs: React.FC<Props> = ({ listingData }) => {
-  console.log({ listingData });
   return (
     <section className="w-full">
       <div>

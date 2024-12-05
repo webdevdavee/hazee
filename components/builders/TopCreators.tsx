@@ -23,27 +23,27 @@ const TopCreators = ({ creators }: Props) => {
           </Link>
         </div>
         <AnimatePresence mode="wait">
-          <motion.div
-            className={
-              creators && creators.length > 0
-                ? "grid grid-cols-4 gap-3 m:grid-cols-2 m:gap-4"
-                : "w-full"
-            }
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            transition={{ duration: 0.3 }}
-          >
-            {creators && creators.length > 0 ? (
-              creators.map((creator) => (
+          {creators && creators.length > 0 ? (
+            <motion.div
+              className={
+                creators && creators.length > 0
+                  ? "grid grid-cols-4 gap-3 m:grid-cols-2 m:gap-4"
+                  : "w-full"
+              }
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.3 }}
+            >
+              {creators.map((creator) => (
                 <CreatorsCard key={creator._id} creator={creator} />
-              ))
-            ) : (
-              <h3 className="my-16 text-center m:text-[1rem]">
-                No creators available
-              </h3>
-            )}
-          </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <h3 className="w-full my-16 text-center m:text-[1rem]">
+              No creators available
+            </h3>
+          )}
         </AnimatePresence>
       </div>
     </section>
