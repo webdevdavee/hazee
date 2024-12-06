@@ -22,6 +22,11 @@ type User = {
   username: string;
   photo: string;
   coverPhoto: string;
+  balance: string;
+  network: {
+    chainId: number;
+    name: string;
+  };
 };
 
 type DropdownItem = {

@@ -11,7 +11,7 @@ import {
   getUserByWalletAddress,
   updateUserData,
 } from "@/server-scripts/database/actions/user.action";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useWallet } from "@/context/WalletProvider";
 import Button from "../ui/Button";
 import { useToast } from "@/context/ToastProvider";
@@ -21,7 +21,6 @@ import { uploadFileToBlob } from "@/libs/utils";
 import { useOverlayStore } from "@/libs/zustand/overlayStore";
 
 const EditProfileForm = () => {
-  const pathname = usePathname();
   const router = useRouter();
   const { walletAddress } = useWallet();
   const { showToast } = useToast();
@@ -128,7 +127,10 @@ const EditProfileForm = () => {
           walletAddress,
         };
 
-        const response = await updateUserData(userData, pathname);
+        const response = await updateUserData(
+          userData,
+          `/creator/${walletAddress}`
+        );
 
         if (response.success) showToast(response.success, "success");
         if (response.error) showToast(response.error, "error");
