@@ -59,10 +59,9 @@ const NFTCard2: React.FC<Props> = ({ token }) => {
             </div>
           </div>
         </div>
-        {token.listingType === 2 ||
-          (token.listingType === 3 && (
-            <AuctionTimer2 endTime={token.endTime!} />
-          ))}
+        {(token.listingType === 2 || token.listingType === 3) && (
+          <AuctionTimer2 endTime={token.endTime!} />
+        )}
       </div>
 
       <div className="p-4 space-y-4 bg-secondarydarker m:p-2">
