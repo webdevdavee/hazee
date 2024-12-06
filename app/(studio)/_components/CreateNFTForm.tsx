@@ -23,7 +23,7 @@ const CreateNFTForm = () => {
 
   React.useEffect(() => {
     if (!walletAddress) {
-      router.replace('/');
+      router.replace("/");
     }
   }, [walletAddress]);
 
@@ -34,7 +34,6 @@ const CreateNFTForm = () => {
   } = useNFTCollections();
   const { checkOwnership, isContractReady: isNFTContractReady } = useNFT();
   const { showToast } = useToast();
-
 
   const {
     register,
@@ -150,6 +149,8 @@ const CreateNFTForm = () => {
         setFile(undefined);
         setTraits([]);
         setCollection(undefined);
+        await revalidatePathAction("/");
+        await revalidatePathAction("/explore/nfts");
         await revalidatePathAction(`/creator/${walletAddress}`);
         router.push(`/creator/${walletAddress}`);
       } catch (error) {

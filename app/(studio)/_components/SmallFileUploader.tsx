@@ -70,7 +70,7 @@ const SmallFileUploader: React.FC<Props> = ({
       >
         <div
           className={clsx(
-            "relative w-28 h-28 p-4 border-2 border-dashed rounded-xl overflow-hidden transition-colors duration-300 cursor-pointer hover:bg-secondary hover:transition m:w-full m:h-56",
+            "relative w-28 h-28 p-4 border-2 border-dashed rounded-xl overflow-hidden transition-colors duration-300 cursor-pointer hover:bg-secondary hover:transition m:w-full m:h-[25rem]",
             {
               "border-gray-300 hover:border-gray-400": !isDragActive,
               "border-blue-500": isDragActive,

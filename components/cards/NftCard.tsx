@@ -29,6 +29,8 @@ const NftCard: React.FC<Props> = ({ status, token, nftStatus }) => {
   const isAuction = status === 2 || status === 3;
   const isSale = status === 1 || status === 3;
 
+  console.log(isAuction, nftStatus?.auctionDetails);
+
   return (
     <motion.div
       className="group relative overflow-hidden rounded-2xl bg-secondary p-1 transition-all duration-300 hover:bg-secondaryhover"

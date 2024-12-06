@@ -16,6 +16,7 @@ import { useOverlayStore } from "@/libs/zustand/overlayStore";
 import { uploadFileToBlob } from "@/libs/utils";
 import { useWallet } from "@/context/WalletProvider";
 import CoverPhotoUploader from "@/components/builders/CoverPhotoUploader";
+import { revalidatePathAction } from "@/server-scripts/actions/revalidate.from.client";
 
 const CreateCollectionForm = () => {
   const { walletAddress } = useWallet();
@@ -111,6 +112,7 @@ const CreateCollectionForm = () => {
             },
             "/studio/nft"
           );
+          await revalidatePathAction("/explore/collections");
 
           if (databaseResponse?.success) {
             showToast(databaseResponse.success, "success");

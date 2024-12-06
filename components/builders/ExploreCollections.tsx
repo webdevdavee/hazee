@@ -25,8 +25,6 @@ const ExploreCollections: React.FC<Props> = ({ collections }) => {
     CollectionInfo[]
   >(collections?.collections as CollectionInfo[]);
 
-  const [isLoading, setIsLoading] = React.useState(false);
-
   const handleSearch = (results: CollectionInfo[]) => {
     // If search results are empty and there's no search term, restore initial data
     if (results.length === 0 && results === initialCollections) {
@@ -47,11 +45,7 @@ const ExploreCollections: React.FC<Props> = ({ collections }) => {
           searchKeys={["name"]}
         />
       </div>
-      {isLoading ? (
-        <div className="my-12">
-          <SecondaryLoader />
-        </div>
-      ) : collectionsData && collectionsData.length > 0 ? (
+      {collectionsData && collectionsData.length > 0 ? (
         <CollectionsTable collections={collectionsData} />
       ) : (
         <h3 className="w-full text-center mt-24 m:text-sm">

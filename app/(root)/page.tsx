@@ -30,7 +30,7 @@ const page = async () => {
     maxPrice: 0,
     sortOrder: SortOrder.NONE,
     offset: 0,
-    limit: 4,
+    limit: 8,
   });
 
   const collectionsData = await getCollections(0, 4);

@@ -18,10 +18,10 @@ const CollectionsTableBody: React.FC<Props> = ({ collections }) => {
             >
               <Image
                 src={collection.imageUrl as string}
-                width={55}
-                height={55}
+                width={1000}
+                height={1000}
                 alt="collection"
-                className="rounded-md h-[3.5rem] m:hidden"
+                className="rounded-md w-[3.5rem] h-[3.5rem] m:hidden"
               />
               <p className="text-sm p-3 m:p-0">{collection.name}</p>
             </Link>

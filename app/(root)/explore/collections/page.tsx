@@ -9,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const page = async () => {
-  const fetchedCollections = await getCollections(0, 4);
+  const fetchedCollections = await getCollections(0, 50);
   const collections = fetchedCollections?.data;
 
   return (
