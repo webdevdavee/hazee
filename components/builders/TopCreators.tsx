@@ -14,7 +14,7 @@ const TopCreators = ({ creators }: Props) => {
     <section className="w-full text-white overflow-hidden">
       <div className="bg-base rounded-lg">
         <div className="flex items-center justify-between w-full mb-6">
-          <h2 className="m:text-[1rem]">Top Creators</h2>
+          <h2 className="m:text-[1rem]">Top creators</h2>
           <Link
             href="/explore/creators"
             className="text-lg text-accent m:text-sm"
