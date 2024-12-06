@@ -14,7 +14,7 @@ const TopCreators = ({ creators }: Props) => {
     <section className="w-full text-white overflow-hidden">
       <div className="bg-base rounded-lg">
         <div className="flex items-center justify-between w-full mb-6">
-          <h1 className="m:text-2xl">Top Creators</h1>
+          <h1 className="m:text-[1rem]">Top Creators</h1>
           <Link
             href="/explore/creators"
             className="text-lg text-accent m:text-sm"
@@ -40,7 +40,7 @@ const TopCreators = ({ creators }: Props) => {
               ))}
             </motion.div>
           ) : (
-            <h3 className="w-full my-16 text-center m:text-[1rem]">
+            <h3 className="w-full my-16 text-center m:text-sm">
               No creators available
             </h3>
           )}

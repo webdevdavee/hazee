@@ -13,7 +13,7 @@ const FeaturedNFTs: React.FC<Props> = ({ listingData }) => {
   return (
     <section className="w-full">
       <div>
-        <h1 className="m:text-2xl">Latest drops</h1>
+        <h1 className="m:text-[1rem]">Latest drops</h1>
         {listingData?.data && listingData?.data.length > 0 ? (
           <div className="w-full grid grid-cols-4 gap-3 mt-6 m:grid-cols-2 xl:grid-cols-2">
             {listingData?.data.slice(0, 8).map((listing, index) => (
@@ -23,7 +23,7 @@ const FeaturedNFTs: React.FC<Props> = ({ listingData }) => {
             ))}
           </div>
         ) : (
-          <h3 className="my-16 text-center w-full m:text-[1rem]">
+          <h3 className="my-16 text-center w-full m:text-sm">
             No data to show yet
           </h3>
         )}

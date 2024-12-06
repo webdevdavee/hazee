@@ -138,7 +138,7 @@ const ExploreNFTs: React.FC<Props> = ({ listingData }) => {
             ))}
           </div>
         ) : (
-          <h3 className="my-16 text-center w-full m:text-[1rem]">
+          <h3 className="my-16 text-center w-full m:text-sm">
             No data to show yet
           </h3>
         )}

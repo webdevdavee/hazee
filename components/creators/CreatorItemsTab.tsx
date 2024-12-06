@@ -48,7 +48,7 @@ const CreatorItemsTab: React.FC<Props> = ({ userDetails, offers }) => {
                   />
                 ))
               ) : (
-                <h3 className="mt-3 m:text-[1rem] m:text-center m:mt-4 xl:text-[1rem]">
+                <h3 className="mt-3 m:text-sm m:text-center m:mt-4 xl:text-[1rem]">
                   No data to show
                 </h3>
               )}
@@ -71,7 +71,7 @@ const CreatorItemsTab: React.FC<Props> = ({ userDetails, offers }) => {
                   />
                 ))
               ) : (
-                <h3 className="mt-3 m:text-[1rem] m:text-center m:mt-4 xl:text-[1rem]">
+                <h3 className="mt-3 m:text-sm m:text-center m:mt-4 xl:text-[1rem]">
                   No data to show
                 </h3>
               )}
@@ -91,7 +91,7 @@ const CreatorItemsTab: React.FC<Props> = ({ userDetails, offers }) => {
                   />
                 ))
               ) : (
-                <h3 className="mt-3 m:text-[1rem] m:text-center m:mt-4 xl:text-[1rem]">
+                <h3 className="mt-3 m:text-sm m:text-center m:mt-4 xl:text-[1rem]">
                   No data to show
                 </h3>
               )}
@@ -111,7 +111,7 @@ const CreatorItemsTab: React.FC<Props> = ({ userDetails, offers }) => {
               {offers && offers.length > 0 ? (
                 <CollectionBids collectionOffers={offers} />
               ) : (
-                <h3 className="mt-3 m:text-[1rem] m:text-center m:mt-4">
+                <h3 className="mt-3 m:text-sm m:text-center m:mt-4">
                   No data to show
                 </h3>
               )}

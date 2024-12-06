@@ -53,7 +53,7 @@ const ExploreCreators: React.FC<Props> = ({ initialCreators }) => {
           ))}
         </div>
       ) : (
-        <h3 className="w-full text-center mt-24 m:text-[1rem]">
+        <h3 className="w-full text-center mt-24 m:text-sm">
           No data to show yet
         </h3>
       )}

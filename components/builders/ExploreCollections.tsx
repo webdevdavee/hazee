@@ -54,7 +54,7 @@ const ExploreCollections: React.FC<Props> = ({ collections }) => {
       ) : collectionsData && collectionsData.length > 0 ? (
         <CollectionsTable collections={collectionsData} />
       ) : (
-        <h3 className="w-full text-center mt-24 m:text-[1rem]">
+        <h3 className="w-full text-center mt-24 m:text-sm">
           No data to show yet
         </h3>
       )}
