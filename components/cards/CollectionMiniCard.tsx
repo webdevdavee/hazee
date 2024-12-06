@@ -6,18 +6,23 @@ type Props = {
   collection: CollectionInfo;
   isLink?: boolean;
   setSearchTerm?: React.Dispatch<React.SetStateAction<string>>;
+  setShowMobileMenu?: React.Dispatch<React.SetStateAction<boolean>> | undefined;
 };
 
 const CollectionMiniCard: React.FC<Props> = ({
   collection,
   isLink = true,
   setSearchTerm,
+  setShowMobileMenu,
 }) => {
   return isLink ? (
     <Link
       href={`/collection/${collection.collectionId}`}
       className="flex items-center gap-5 p-2 rounded-sm hover:bg-secondary"
-      onClick={() => setSearchTerm?.("")}
+      onClick={() => {
+        setSearchTerm?.("");
+        setShowMobileMenu?.(false);
+      }}
     >
       <div>
         <Image

@@ -7,7 +7,11 @@ import Link from "next/link";
 import useClickOutside from "@/hooks/useClickOutside";
 import { getCollections } from "@/server-scripts/actions/collection.contract.actions";
 
-const NavbarSearch = () => {
+type Props = {
+  setShowMobileMenu?: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+const NavbarSearch: React.FC<Props> = ({ setShowMobileMenu }) => {
   const [creators, setCreators] = React.useState<User[]>([]);
   const [collections, setCollections] = React.useState<CollectionInfo[]>([]);
   const [filteredResults, setFilteredResults] = React.useState<SearchResults>({
@@ -75,6 +79,7 @@ const NavbarSearch = () => {
                     key={collection.collectionId}
                     collection={collection}
                     setSearchTerm={setSearchTerm}
+                    setShowMobileMenu={setShowMobileMenu}
                   />
                 ))}
               </div>
@@ -93,7 +98,10 @@ const NavbarSearch = () => {
                     href={`/creator/${creator.walletAddress}`}
                     key={creator._id}
                     className="flex items-center gap-3"
-                    onClick={() => setSearchTerm("")}
+                    onClick={() => {
+                      setSearchTerm("");
+                      setShowMobileMenu?.(false);
+                    }}
                   >
                     <Image
                       src={creator.photo || "/images/default-avatar.svg"}

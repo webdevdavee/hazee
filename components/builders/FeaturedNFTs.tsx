@@ -2,11 +2,7 @@ import React from "react";
 import NftCard2 from "../cards/NFTCard2";
 
 type Props = {
-  listingData: {
-    success: boolean;
-    data?: EnrichedNFTListing[];
-    error?: string;
-  };
+  listingData: EnrichedNFTListing[] | undefined;
 };
 
 const FeaturedNFTs: React.FC<Props> = ({ listingData }) => {
@@ -14,9 +10,9 @@ const FeaturedNFTs: React.FC<Props> = ({ listingData }) => {
     <section className="w-full">
       <div>
         <h2 className="m:text-lg">Latest drops</h2>
-        {listingData?.data && listingData?.data.length > 0 ? (
+        {listingData && listingData.length > 0 ? (
           <div className="w-full grid grid-cols-4 gap-3 mt-6 m:grid-cols-2 xl:grid-cols-2">
-            {listingData?.data.slice(0, 8).map((listing, index) => (
+            {listingData.map((listing, index) => (
               <div key={`${listing.tokenId}-${index}`}>
                 <NftCard2 token={listing} />
               </div>

@@ -25,7 +25,7 @@ const MobileNav: React.FC<Props> = ({
   return (
     <nav className="w-full px-6 hidden m:block py-4 fixed top-16 h-screen bg-base shadow-md xl:block">
       <div className="flex flex-col gap-8">
-        <NavbarSearch />
+        <NavbarSearch setShowMobileMenu={setShowMobileMenu} />
 
         <div>
           <div

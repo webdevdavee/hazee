@@ -51,7 +51,7 @@ const page = async () => {
       <Hero />
       <Marquee />
       <div className="flex flex-col gap-16 mt-6">
-        <FeaturedNFTs listingData={listingData} />
+        <FeaturedNFTs listingData={listingData.data} />
         <Collections
           initialCollections={collections}
           totalCollectionsCount={totalCollectionsCount}
