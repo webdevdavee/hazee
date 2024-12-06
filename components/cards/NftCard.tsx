@@ -33,7 +33,7 @@ const NftCard: React.FC<Props> = ({ status, token, nftStatus }) => {
 
   return (
     <motion.div
-      className="group relative overflow-hidden rounded-2xl bg-secondary p-1 transition-all duration-300 hover:bg-secondaryhover"
+      className="group relative overflow-hidden rounded-2xl bg-secondarydarker p-1 transition-all duration-300 hover:bg-secondaryhover"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -95,7 +95,7 @@ const NftCard: React.FC<Props> = ({ status, token, nftStatus }) => {
         )}
       </div>
 
-      <div className="p-4 space-y-4 bg-secondary m:p-2">
+      <div className="p-4 space-y-4 bg-secondarydarker m:p-2">
         {isAuction && nftStatus?.auctionDetails ? (
           <>
             <div className="flex items-center justify-between">

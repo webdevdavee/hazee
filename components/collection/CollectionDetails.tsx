@@ -34,7 +34,7 @@ const CollectionDetails: React.FC<Props> = ({
               height={1000}
               quality={100}
               alt={collection.name || "Unnamed"}
-              className="w-full object-cover"
+              className="w-full h-full object-cover"
             />
           )}
         </div>

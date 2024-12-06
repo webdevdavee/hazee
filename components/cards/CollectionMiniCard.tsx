@@ -5,13 +5,19 @@ import React from "react";
 type Props = {
   collection: CollectionInfo;
   isLink?: boolean;
+  setSearchTerm?: React.Dispatch<React.SetStateAction<string>>;
 };
 
-const CollectionMiniCard: React.FC<Props> = ({ collection, isLink = true }) => {
+const CollectionMiniCard: React.FC<Props> = ({
+  collection,
+  isLink = true,
+  setSearchTerm,
+}) => {
   return isLink ? (
     <Link
       href={`/collection/${collection.collectionId}`}
       className="flex items-center gap-5 p-2 rounded-sm hover:bg-secondary"
+      onClick={() => setSearchTerm?.("")}
     >
       <div>
         <Image

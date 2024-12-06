@@ -74,6 +74,7 @@ const NavbarSearch = () => {
                   <CollectionMiniCard
                     key={collection.collectionId}
                     collection={collection}
+                    setSearchTerm={setSearchTerm}
                   />
                 ))}
               </div>
@@ -92,14 +93,15 @@ const NavbarSearch = () => {
                     href={`/creator/${creator.walletAddress}`}
                     key={creator._id}
                     className="flex items-center gap-3"
+                    onClick={() => setSearchTerm("")}
                   >
                     <Image
                       src={creator.photo || "/images/default-avatar.svg"}
-                      width={40}
-                      height={40}
+                      width={1000}
+                      height={1000}
                       quality={100}
                       alt="user-image"
-                      className="rounded-full"
+                      className="rounded-full w-10 h-10 object-cover"
                     />
                     <p>{creator.username}</p>
                   </Link>

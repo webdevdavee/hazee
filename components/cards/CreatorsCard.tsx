@@ -36,7 +36,7 @@ const CreatorsCard: React.FC<Props> = ({ creator }) => {
 
   return (
     <motion.div
-      className="max-w-sm w-full bg-secondary rounded-lg overflow-hidden shadow-lg"
+      className="max-w-sm w-full bg-secondarydarker rounded-lg overflow-hidden shadow-lg"
       whileHover={{ y: -5, boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }}
       transition={{ duration: 0.3 }}
     >

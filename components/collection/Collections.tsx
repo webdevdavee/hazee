@@ -73,7 +73,7 @@ const Collections: React.FC<Props> = ({
   return (
     <section className="w-full overflow-hidden">
       <div className="flex items-center justify-between gap-8">
-        <h2 className="m:text-[1rem]">Remarkable collections</h2>
+        <h2 className="m:text-lg">Remarkable collections</h2>
         <div className="flex items-center gap-3">
           <button
             type="button"

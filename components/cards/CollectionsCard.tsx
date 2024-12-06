@@ -14,7 +14,7 @@ type Props = {
 const CollectionCard: React.FC<Props> = ({ collection }) => {
   return (
     // <GradientBorder>
-    <div className="w-full bg-secondary rounded-2xl overflow-hidden">
+    <div className="w-full bg-secondarydarker rounded-2xl overflow-hidden">
       <div className="relative">
         <Link href={`/collection/${collection?.collectionId}`}>
           <div className="relative h-48 m:h-36">

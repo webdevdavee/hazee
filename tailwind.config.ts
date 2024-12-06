@@ -10,10 +10,11 @@ const config: Config = {
     extend: {
       colors: {
         primary: "#334FEF",
-        secondary: "#242424",
-        secondaryhover: "#2E2E2E",
+        secondarydarker: "#181818",
+        secondary: "#1E1E1E",
+        secondaryhover: "#2A2A2A",
         accent: "#B9A6FD",
-        base: "#181818",
+        base: "#0C0C0C",
         abstract: "#F44336",
       },
       animation: {

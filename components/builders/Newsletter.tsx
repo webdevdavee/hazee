@@ -23,7 +23,7 @@ const Newsletter = () => {
   };
 
   return (
-    <section className="w-full px-4 py-16 m:py-8">
+    <section className="w-full py-16 m:py-8">
       <div className="max-w-4xl mx-auto bg-zinc-800 rounded-2xl overflow-hidden shadow-lg">
         <div className="p-12 m:p-6 flex items-center m:flex-col justify-between">
           <div className="flex items-center space-x-6 m:flex-col m:space-x-0 m:space-y-4 m:text-center">
