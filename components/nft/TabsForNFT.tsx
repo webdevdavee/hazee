@@ -25,7 +25,9 @@ const TabsForNFT: React.FC<Props> = ({ nft }) => {
         return (
           <div>
             <h2 className="font-medium text-2xl mb-5 m:text-lg">Description</h2>
-            <p className="m:text-sm m:font-light">{nft.metadata?.description || "Nothing to display"}</p>
+            <p className="m:text-sm m:font-light">
+              {nft.metadata?.description || "Nothing to display"}
+            </p>
             <div className="mt-8">
               <h2 className="font-medium text-2xl mb-5 m:text-lg">Details</h2>
               <div className="flex flex-col gap-3">
@@ -75,7 +77,7 @@ const TabsForNFT: React.FC<Props> = ({ nft }) => {
           </div>
         ))}
       </div>
-      <div className="w-full p-8 pt-4 h-[300px] custom-scrollbar overflow-y-auto">
+      <div className="w-full p-8 pt-4 h-[300px] custom-scrollbar overflow-y-auto m:h-full">
         <AnimatePresence mode="wait">
           <motion.div
             key={tab}

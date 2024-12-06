@@ -23,7 +23,7 @@ const MobileNav: React.FC<Props> = ({
   const [isCreateOpen, setIsCreateOpen] = React.useState<boolean>();
 
   return (
-    <nav className="w-full px-6 hidden m:block py-4 fixed top-16 bg-base shadow-md xl:block">
+    <nav className="w-full px-6 hidden m:block py-4 fixed top-16 h-screen bg-base shadow-md xl:block">
       <div className="flex flex-col gap-6">
         <NavbarSearch />
 
