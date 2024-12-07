@@ -14,10 +14,12 @@ import Modal from "../layout/Modal";
 import SecondaryLoader from "../ui/SecondaryLoader";
 import { useNFTCollections } from "@/context/NFTCollectionProvider";
 import { useToast } from "@/context/ToastProvider";
+import { useWallet } from "@/context/WalletProvider";
 
 type Props = { collection: CollectionInfo };
 
 const MakeCollectionOffer: React.FC<Props> = ({ collection }) => {
+  const { balance } = useWallet();
   const { placeCollectionOffer, isContractReady } = useNFTCollections();
   const { showToast } = useToast();
 
@@ -54,8 +56,16 @@ const MakeCollectionOffer: React.FC<Props> = ({ collection }) => {
     setLoadingMessage("Placing your offer...");
 
     try {
+      if ((balance ?? 0) <= data.amount) {
+        showToast(
+          "You do not have enough ETH to complete this transaction.",
+          "error"
+        );
+        return;
+      }
+
       if (!data.nftCount || Number(data.nftCount) < 1) {
-        showToast("Token must be at least 1", "error");
+        showToast("Number of tokens must be at least 1", "error");
         return;
       }
 
@@ -117,9 +127,7 @@ const MakeCollectionOffer: React.FC<Props> = ({ collection }) => {
             </div>
             <p className="text-white/70 font-medium">Floor price:</p>
             <p className="text-right text-white">
-              {`${collection.floorPrice} ETH × ${collection.mintedSupply} = ${
-                Number(collection.floorPrice) * collection.mintedSupply
-              } ETH`}
+              {collection.floorPrice} ETH x token count
             </p>
           </div>
         </div>

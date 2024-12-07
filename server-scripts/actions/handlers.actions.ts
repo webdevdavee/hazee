@@ -179,7 +179,7 @@ export const getCreatorPageData = async (
               return {
                 ...token,
                 price: listingDetails.data.price,
-                status: listingDetails.data.listingType, // Use the listing type directly
+                status: listingDetails.data.listingType,
               } as TokenInfo;
             }
           }
