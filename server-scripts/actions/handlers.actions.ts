@@ -48,6 +48,7 @@ export const fetchFilteredListingsData = async (
   success: boolean;
   data?: EnrichedNFTListing[];
   error?: string;
+  partialErrors?: string[];
 }> => {
   try {
     const response = await fetchFilteredListings({
@@ -60,54 +61,68 @@ export const fetchFilteredListingsData = async (
       limit: params.limit,
     });
 
-    if (response.data) {
-      const listings: EnrichedNFTListing[] = await Promise.all(
-        (response.data?.formattedListing).map(async (d) => {
-          try {
-            const tokenInfo = await getFullTokenInfo(d.tokenId);
-            const isOnAuction = await checkNFTAuctionStatus(d.tokenId);
+    if (!response.data?.formattedListing?.length) {
+      return { success: true, data: [] };
+    }
 
-            // Base listing with token info
-            const enrichedListing: EnrichedNFTListing = {
-              ...d,
-              name: tokenInfo.data?.metadata?.name,
-              imageUrl: tokenInfo.data?.metadata?.image,
-            };
+    const partialErrors: string[] = [];
 
-            // Only add auction details if the token is on auction and we have valid auction data
-            if (isOnAuction.data?.isOnAuction) {
-              const auctionResponse = await getAuctionDetails(
-                isOnAuction.data.auctionId
-              );
+    // Use Promise.allSettled for more robust handling
+    const listings = await Promise.allSettled(
+      response.data.formattedListing.map(async (d) => {
+        try {
+          const [tokenInfo, isOnAuction] = await Promise.all([
+            getFullTokenInfo(d.tokenId),
+            checkNFTAuctionStatus(d.tokenId),
+          ]);
 
-              if (auctionResponse.data) {
-                return {
-                  ...enrichedListing,
-                  isAuctionActive: auctionResponse.data.active,
-                  startingPrice: auctionResponse.data.startingPrice,
-                  reservePrice: auctionResponse.data.reservePrice,
-                  startTime: auctionResponse.data.startTime,
-                  endTime: auctionResponse.data.endTime,
-                  highestBidder: auctionResponse.data.highestBidder,
-                  highestBid: auctionResponse.data.highestBid,
-                };
-              }
+          const enrichedListing: EnrichedNFTListing = {
+            ...d,
+            name: tokenInfo.data?.metadata?.name,
+            imageUrl: tokenInfo.data?.metadata?.image,
+          };
+
+          if (isOnAuction.data?.isOnAuction) {
+            const auctionResponse = await getAuctionDetails(
+              isOnAuction.data.auctionId
+            );
+
+            if (auctionResponse.data) {
+              return {
+                ...enrichedListing,
+                isAuctionActive: auctionResponse.data.active,
+                startingPrice: auctionResponse.data.startingPrice,
+                reservePrice: auctionResponse.data.reservePrice,
+                startTime: auctionResponse.data.startTime,
+                endTime: auctionResponse.data.endTime,
+                highestBidder: auctionResponse.data.highestBidder,
+                highestBid: auctionResponse.data.highestBid,
+              };
             }
-
-            // Return listing without auction details if there's no auction
-            return enrichedListing;
-          } catch (error) {
-            // If there's an error processing a single listing, return the basic listing data
-            console.error(`Error processing listing ${d.tokenId}:`, error);
-            return d;
           }
-        })
+
+          return enrichedListing;
+        } catch (error: any) {
+          partialErrors.push(
+            `Error processing listing ${d.tokenId}: ${error.message}`
+          );
+          return d;
+        }
+      })
+    );
+
+    // Filter out rejected promises and extract their values
+    const successfulListings = listings
+      .filter((result) => result.status === "fulfilled")
+      .map(
+        (result) => (result as PromiseFulfilledResult<EnrichedNFTListing>).value
       );
 
-      return { success: true, data: listings };
-    }
-    // If response.data is undefined, return an empty success result
-    return { success: true, data: [] };
+    return {
+      success: true,
+      data: successfulListings,
+      partialErrors: partialErrors.length ? partialErrors : undefined,
+    };
   } catch (error: any) {
     console.error("Error fetching listings:", error.message);
     return { success: false, error: error.message };
