@@ -8,6 +8,7 @@ import FilterNFT from "./FilterNFT";
 import SecondaryLoader from "../ui/SecondaryLoader";
 import NftCard2 from "../cards/NFTCard2";
 import { fetchFilteredListingsData } from "@/server-scripts/actions/handlers.actions";
+import NFTCard from "../cards/NftCard";
 
 enum ListingType {
   NONE,
@@ -134,7 +135,7 @@ const ExploreNFTs: React.FC<Props> = ({ listingData }) => {
         ) : tokenData.listings && tokenData.listings.length > 0 ? (
           <div className="grid grid-cols-4 justify-center gap-6 my-12 m:grid-cols-2 m:gap-4 xl:grid-cols-2 xl:gap-4">
             {tokenData.listings.map((token) => (
-              <NftCard2 key={token.listingId} token={token} />
+              <NFTCard key={token.listingId} token={token} />
             ))}
           </div>
         ) : (

@@ -17,7 +17,7 @@ const dm_sans = DM_Sans({
 
 export const metadata: Metadata = {
   title: "Hazee - NFT Marketplace for creators and brands",
-  description: "Find, buy and sell NFT or digital arts on Hazee.",
+  description: "Find, buy and sell NFT or digital art on Hazee.",
 };
 
 export default function RootLayout({

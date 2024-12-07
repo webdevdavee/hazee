@@ -2,8 +2,8 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "../ui/Button";
 import CollectionItemsFilters from "./CollectionItemsFilters";
-import NftCard2 from "../cards/NFTCard2";
 import SecondaryLoader from "../ui/SecondaryLoader";
+import NFTCard from "../cards/NftCard";
 
 type Props = {
   collectionListings: EnrichedNFTListing[] | undefined;
@@ -64,7 +64,7 @@ const CollectionItemsTabs: React.FC<Props> = ({
               ) : listings && listings.length > 0 ? (
                 <div className="my-12 grid grid-cols-4 gap-6 m:grid-cols-2 xl:grid-cols-2">
                   {listings.map((token) => (
-                    <NftCard2 key={token.listingId} token={token} />
+                    <NFTCard key={token.listingId} token={token} />
                   ))}
                 </div>
               ) : (

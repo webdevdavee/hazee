@@ -1,5 +1,5 @@
 import React from "react";
-import NftCard2 from "../cards/NFTCard2";
+import NFTCard from "../cards/NftCard";
 
 type Props = {
   listingData: EnrichedNFTListing[] | undefined;
@@ -14,7 +14,7 @@ const FeaturedNFTs: React.FC<Props> = ({ listingData }) => {
           <div className="w-full grid grid-cols-4 gap-3 mt-6 m:grid-cols-2 xl:grid-cols-2">
             {listingData.map((listing, index) => (
               <div key={`${listing.tokenId}-${index}`}>
-                <NftCard2 token={listing} />
+                <NFTCard token={listing} />
               </div>
             ))}
           </div>
