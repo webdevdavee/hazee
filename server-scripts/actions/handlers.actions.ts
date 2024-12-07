@@ -67,25 +67,29 @@ export const fetchFilteredListingsData = async (
 
     const partialErrors: string[] = [];
 
-    // Use Promise.allSettled for more robust handling
+    // Increase timeout or remove timeout for more reliable fetching
     const listings = await Promise.allSettled(
       response.data.formattedListing.map(async (d) => {
         try {
-          const [tokenInfo, isOnAuction] = await Promise.all([
-            getFullTokenInfo(d.tokenId),
-            checkNFTAuctionStatus(d.tokenId),
-          ]);
+          // Add more robust error handling and logging
+          const tokenInfo = await getFullTokenInfo(d.tokenId);
+          const isOnAuction = await checkNFTAuctionStatus(d.tokenId);
 
           const enrichedListing: EnrichedNFTListing = {
             ...d,
-            name: tokenInfo.data?.metadata?.name,
+            name: tokenInfo.data?.metadata?.name || `NFT #${d.tokenId}`,
             imageUrl: tokenInfo.data?.metadata?.image,
           };
+
+          // Ensure detailed logging for debugging
+          console.log("Auction Status:", isOnAuction);
 
           if (isOnAuction.data?.isOnAuction) {
             const auctionResponse = await getAuctionDetails(
               isOnAuction.data.auctionId
             );
+
+            console.log("Auction Details:", auctionResponse);
 
             if (auctionResponse.data) {
               return {
@@ -103,6 +107,7 @@ export const fetchFilteredListingsData = async (
 
           return enrichedListing;
         } catch (error: any) {
+          console.error(`Error processing listing ${d.tokenId}:`, error);
           partialErrors.push(
             `Error processing listing ${d.tokenId}: ${error.message}`
           );
@@ -111,7 +116,6 @@ export const fetchFilteredListingsData = async (
       })
     );
 
-    // Filter out rejected promises and extract their values
     const successfulListings = listings
       .filter((result) => result.status === "fulfilled")
       .map(
@@ -124,7 +128,7 @@ export const fetchFilteredListingsData = async (
       partialErrors: partialErrors.length ? partialErrors : undefined,
     };
   } catch (error: any) {
-    console.error("Error fetching listings:", error.message);
+    console.error("Error fetching listings:", error);
     return { success: false, error: error.message };
   }
 };

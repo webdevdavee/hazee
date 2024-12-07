@@ -57,7 +57,7 @@ const NFTCard: React.FC<NFTCardProps> = ({ token, status, nftStatus }) => {
       ? token.listingType
       : isTokenInfo(token)
       ? token.status
-      : undefined);
+      : 1);
   const isAuction = listingType === 2 || listingType === 3;
 
   // Get auction details
@@ -65,13 +65,18 @@ const NFTCard: React.FC<NFTCardProps> = ({ token, status, nftStatus }) => {
     nftStatus?.auctionDetails ??
     (isEnrichedNFTListing(token) && isAuction
       ? {
-          endTime: token.endTime!,
-          startingPrice: token.startingPrice,
-          highestBid: token.highestBid,
+          endTime: token.endTime! || 0,
+          startingPrice: token.startingPrice || "0",
+          highestBid: token.highestBid || "0",
         }
       : undefined);
 
   const { isEnded } = useAuctionTimer(auctionDetails?.endTime);
+
+  console.log("NFT Card Token:", token);
+  console.log("Listing Type:", listingType);
+  console.log("Is Auction:", isAuction);
+  console.log("Auction Details:", auctionDetails);
 
   return (
     <motion.div

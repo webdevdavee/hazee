@@ -40,10 +40,13 @@ const CollectionCard: React.FC<Props> = ({ collection }) => {
 
       <div className="p-4 pt-12">
         <div className="flex justify-between items-start mb-2">
-          <div>
-            <h3 className="font-bold text-lg mb-1">
+          <div className="flex flex-col">
+            <Link
+              href={`/collection/${collection?.collectionId}`}
+              className="font-bold text-lg mb-1 hover:underline hover:underline-offset-2"
+            >
               {collection?.name || "Unnamed"}
-            </h3>
+            </Link>
             <Tooltip content={collection.creator}>
               <Link
                 href={`/creator/${collection.creator}`}

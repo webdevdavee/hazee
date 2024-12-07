@@ -128,7 +128,7 @@ const FilterNFT: React.FC<Props> = ({ handleFilters }) => {
           {collections && collections.length > 0 && (
             <div className="absolute">
               <div
-                className={`relative flex flex-col gap-4 h-60 overflow-y-auto custom-scrollbar p-1 rounded-md bg-base border border-secondary shadow-md z-[45] ${
+                className={`relative flex flex-col gap-4 h-60 overflow-y-auto custom-scrollbar p-1 rounded-md bg-base border border-secondary shadow-md z-10 ${
                   isCollectionDialogOpen ? "block" : "hidden"
                 } mt-2`}
               >
