@@ -108,7 +108,7 @@ const MakeCollectionOffer: React.FC<Props> = ({ collection }) => {
         </Modal>
       )}
 
-      <div className="m:max-h-[28rem] rounded-2xl p-6 space-y-6 transition-all duration-300 overflow-y-auto m:w-[21rem]">
+      <div className="m:max-h-[28rem] rounded-2xl p-6 space-y-6 transition-all duration-300 overflow-y-auto m:w-[21rem] m:p-4">
         <div className="bg-white/5 rounded-xl p-4 border border-white/10">
           <div className="grid grid-cols-2 gap-3 text-sm">
             <p className="text-white/70 font-medium">Minted supply:</p>

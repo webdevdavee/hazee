@@ -140,7 +140,7 @@ const ListNFT: React.FC<Props> = ({ nft, collection }) => {
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="w-[32rem] m:max-h-[28rem] rounded-2xl p-6 overflow-y-auto m:w-[21rem] transition-all duration-300"
+        className="w-[32rem] m:max-h-[28rem] rounded-2xl p-6 overflow-y-auto m:w-[21rem] transition-all duration-300 m:p-4"
       >
         <div className="grid grid-cols-1">
           <div className="flex flex-col gap-8">
