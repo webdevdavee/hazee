@@ -134,8 +134,8 @@ const ExploreNFTs: React.FC<Props> = ({ listingData }) => {
           </div>
         ) : tokenData.listings && tokenData.listings.length > 0 ? (
           <div className="grid grid-cols-4 justify-center gap-6 my-12 m:grid-cols-2 m:gap-4 xl:grid-cols-2 xl:gap-4">
-            {tokenData.listings.map((token) => (
-              <NFTCard key={token.listingId} token={token} />
+            {tokenData.listings.map((token, index) => (
+              <NFTCard key={`${token.listingId} - ${index}`} token={token} />
             ))}
           </div>
         ) : (
