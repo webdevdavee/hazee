@@ -27,6 +27,7 @@
     "react-dropzone": "^14.2.9",
     "react-hook-form": "^7.52.2",
     "react-icons": "^5.2.1",
+    "viem": "^2.21.54",
     "zod": "^3.23.8",
     "zustand": "^4.5.4"
   },

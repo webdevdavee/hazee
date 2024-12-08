@@ -6,9 +6,10 @@ import Dropdown from "../ui/Dropdown";
 import React from "react";
 import FilterNFT from "./FilterNFT";
 import SecondaryLoader from "../ui/SecondaryLoader";
-import NftCard2 from "../cards/NFTCard2";
 import { fetchFilteredListingsData } from "@/server-scripts/actions/handlers.actions";
 import NFTCard from "../cards/NftCard";
+import { createPublicClient, http, Block } from "viem";
+import { sepolia } from "viem/chains";
 
 enum ListingType {
   NONE,
@@ -40,6 +41,23 @@ type Props = {
 };
 
 const ExploreNFTs: React.FC<Props> = ({ listingData }) => {
+  React.useEffect(() => {
+    const test = async () => {
+      const client = createPublicClient({
+        chain: sepolia,
+        transport: http(
+          "https://eth-sepolia.g.alchemy.com/v2/vWrJTnFjaB38-OeSAH7bMYAzM0-BcafG"
+        ),
+      });
+
+      const block: Block = await client.getBlock({
+        blockNumber: BigInt(123456),
+      });
+
+      console.log(block);
+    };
+  }, []);
+
   const [tokenData, setTokenData] = React.useState<NFTState>({
     listings: listingData,
     isLoading: false,
