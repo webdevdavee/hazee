@@ -22,7 +22,7 @@ enum SortOrder {
   PRICE_LOW_TO_HIGH,
 }
 
-const page = async () => {
+const Page = async () => {
   const listingData = await fetchFilteredListingsData({
     listingType: ListingType.NONE,
     collectionId: 0,
@@ -32,6 +32,8 @@ const page = async () => {
     offset: 0,
     limit: 8,
   });
+
+  console.log(listingData);
 
   const collectionsData = await getCollections(0, 4);
 
@@ -65,4 +67,4 @@ const page = async () => {
   );
 };
 
-export default page;
+export default Page;

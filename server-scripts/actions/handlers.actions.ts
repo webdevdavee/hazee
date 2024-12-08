@@ -81,15 +81,10 @@ export const fetchFilteredListingsData = async (
             imageUrl: tokenInfo.data?.metadata?.image,
           };
 
-          // Ensure detailed logging for debugging
-          console.log("Auction Status:", isOnAuction);
-
           if (isOnAuction.data?.isOnAuction) {
             const auctionResponse = await getAuctionDetails(
               isOnAuction.data.auctionId
             );
-
-            console.log("Auction Details:", auctionResponse);
 
             if (auctionResponse.data) {
               return {
