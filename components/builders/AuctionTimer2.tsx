@@ -15,14 +15,14 @@ const AuctionTimer2: React.FC<AuctionTimer2Props> = ({ endTime }) => {
 
   if (isEnded) {
     return (
-      <div className="w-64 absolute bottom-0 right-0 left-0 text-center mx-auto mb-3 p-3 bg-abstract backdrop-blur-md shadow-lg bg-opacity-40 rounded-lg m:text-xs m:w-36">
+      <div className="min-w-64 absolute bottom-0 right-0 left-0 text-center mx-auto mb-3 p-3 bg-abstract backdrop-blur-md shadow-lg bg-opacity-40 rounded-lg m:text-xs m:w-36">
         <p className="text-white font-bold">Auction Ended</p>
       </div>
     );
   }
 
   return (
-    <div className="w-fit absolute bottom-0 right-0 left-0 p-3 mb-1 mx-auto">
+    <div className="min-w-fit absolute bottom-0 right-0 left-0 p-3 mb-1 mx-auto">
       <div className="backdrop-blur-md bg-white/30 rounded-xl px-4 py-2 flex justify-center gap-4 shadow-lg m:gap-2 m:px-2">
         {Object.entries(timeLeft).map(([unit, value]) => (
           <div key={unit} className="text-center flex flex-col items-center">

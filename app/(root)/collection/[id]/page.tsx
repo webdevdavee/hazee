@@ -60,7 +60,7 @@ const Page = async (props: { params: Params }) => {
     maxPrice: 0,
     sortOrder: SortOrder.NONE,
     offset: 0,
-    limit: 10,
+    limit: 40,
   });
 
   const collectionOffers = await getCollectionOffers(Number(id));
