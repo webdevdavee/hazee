@@ -73,11 +73,6 @@ const NFTCard: React.FC<NFTCardProps> = ({ token, status, nftStatus }) => {
 
   const { isEnded } = useAuctionTimer(auctionDetails?.endTime);
 
-  console.log("NFT Card Token:", token);
-  console.log("Listing Type:", listingType);
-  console.log("Is Auction:", isAuction);
-  console.log("Auction Details:", auctionDetails);
-
   return (
     <motion.div
       className="group relative overflow-hidden rounded-2xl bg-secondary p-1 transition-all duration-300 hover:bg-secondaryhover"

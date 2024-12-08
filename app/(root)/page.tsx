@@ -33,7 +33,7 @@ const Page = async () => {
     limit: 8,
   });
 
-  console.log(listingData);
+  console.log({ listingData });
 
   const collectionsData = await getCollections(0, 4);
 
