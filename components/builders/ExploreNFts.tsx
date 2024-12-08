@@ -56,6 +56,7 @@ const ExploreNFTs: React.FC<Props> = ({ listingData }) => {
 
       console.log(block);
     };
+    test();
   }, []);
 
   const [tokenData, setTokenData] = React.useState<NFTState>({
