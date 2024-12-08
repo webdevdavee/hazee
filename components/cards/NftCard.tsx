@@ -143,7 +143,7 @@ const NFTCard: React.FC<NFTCardProps> = ({ token, status, nftStatus }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-400">Current bid</p>
-              <p className="text-lg font-bold text-accent m:text-sm">
+              <p className="text-lg font-bold text-accent m:text-xs">
                 {auctionDetails.highestBid ||
                   auctionDetails.startingPrice ||
                   "0"}{" "}

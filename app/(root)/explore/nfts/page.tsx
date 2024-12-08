@@ -29,7 +29,7 @@ const page = async () => {
     maxPrice: 0,
     sortOrder: SortOrder.NONE,
     offset: 0,
-    limit: 10,
+    limit: 40,
   });
 
   return (

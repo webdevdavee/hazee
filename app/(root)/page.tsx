@@ -33,8 +33,6 @@ const Page = async () => {
     limit: 8,
   });
 
-  console.log("LISTING-DATA", listingData.data);
-
   const collectionsData = await getCollections(0, 4);
 
   // Extract only the necessary data for the client component
