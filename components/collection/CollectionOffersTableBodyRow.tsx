@@ -87,37 +87,48 @@ const CollectionOffersTableBodyRow: React.FC<Props> = ({ offer }) => {
           </div>
         </Modal>
       )}
-      <td className="text-sm p-3">{offer.amount} ETH</td>
+      <td className="text-sm p-3">
+        <p className="w-max">{offer.amount} ETH</p>
+      </td>
       <td>
-        {isLoading
-          ? "Converting..."
-          : error
-          ? "USD amount unavailable"
-          : `$${usdAmount}`}
+        <p className="w-max">
+          {" "}
+          {isLoading
+            ? "Converting..."
+            : error
+            ? "USD amount unavailable"
+            : `$${usdAmount}`}
+        </p>
       </td>
       <td className="text-sm p-3">
         <Link
           href={`/collection/${collection?.collectionId}`}
-          className="text-accent underline underline-offset-auto"
+          className="w-max text-accent underline underline-offset-auto"
         >
           {collection?.name || "Unnamed"}
         </Link>
       </td>
-      <td className="text-sm p-3">{offer.nftCount}</td>
+      <td className="text-sm p-3">
+        <p className="w-max">{offer.nftCount}</p>
+      </td>
       <td className="text-sm p-3 capitalize">
-        {offer.status === OfferStatus.ACTIVE
-          ? "Active"
-          : offer.status === OfferStatus.EXPIRED
-          ? "Expired"
-          : "Withdrawn"}
+        <p className="w-max">
+          {offer.status === OfferStatus.ACTIVE
+            ? "Active"
+            : offer.status === OfferStatus.EXPIRED
+            ? "Expired"
+            : "Withdrawn"}
+        </p>
       </td>
       <td className="text-sm p-3">
-        {formatTimestampWithTimeAMPM(offer.expirationTime)}
+        <p className="w-max">
+          {formatTimestampWithTimeAMPM(offer.expirationTime)}
+        </p>
       </td>
       <td>
         <Link
           href={`/creator/${offer.offerer}`}
-          className="text-accent underline underline-offset-auto"
+          className="w-max text-accent underline underline-offset-auto"
         >
           {offer.offerer === walletAddress
             ? "Me"
@@ -129,7 +140,7 @@ const CollectionOffersTableBodyRow: React.FC<Props> = ({ offer }) => {
           type="button"
           className={`${
             offer.offerer === walletAddress ? "bg-red-500" : "bg-primary"
-          } text-sm p-2 rounded-md`}
+          } w-max text-sm p-2 rounded-md`}
           onClick={
             offer.offerer === walletAddress
               ? handleOfferWithdraw

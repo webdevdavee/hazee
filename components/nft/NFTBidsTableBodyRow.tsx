@@ -10,21 +10,25 @@ const NFTBidsTableBodyRow: React.FC<Props> = ({ bid }) => {
 
   return (
     <tr>
-      <td className="text-sm p-3">{bid.amount} ETH</td>
+      <td className="text-sm p-3">
+        <p className="w-max">{bid.amount} ETH</p>
+      </td>
       <td>
-        {isLoading
-          ? "Converting..."
-          : error
-          ? "USD amount unavailable"
-          : `$${usdAmount}`}
+        <p className="w-max">
+          {isLoading
+            ? "Converting..."
+            : error
+            ? "USD amount unavailable"
+            : `$${usdAmount}`}
+        </p>
       </td>
       <td className="text-sm p-3">
-        {formatTimestampWithTimeAMPM(bid.timestamp)}
+        <p className="w-max">{formatTimestampWithTimeAMPM(bid.timestamp)}</p>
       </td>
       <td>
         <Link
           href={`/creator/${bid.bidder}`}
-          className="text-sm p-3 pl-0 text-accent underline underline-offset-auto"
+          className="w-max text-sm p-3 pl-0 text-accent underline underline-offset-auto"
         >
           {truncateAddress(bid.bidder)}
         </Link>
