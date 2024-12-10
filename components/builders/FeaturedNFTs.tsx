@@ -11,7 +11,7 @@ const FeaturedNFTs: React.FC<Props> = ({ listingData }) => {
       <div>
         <h2 className="m:text-lg">Latest drops</h2>
         {listingData && listingData.length > 0 ? (
-          <div className="w-full grid grid-cols-4 gap-3 mt-6 m:grid-cols-2 xl:grid-cols-2">
+          <div className="w-full grid grid-cols-4 gap-3 mt-6 m:grid-cols-2 xl:grid-cols-3">
             {listingData.map((listing, index) => (
               <NFTCard key={`${listing.tokenId}-${index}`} token={listing} />
             ))}

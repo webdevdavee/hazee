@@ -27,7 +27,7 @@ const TopCreators = ({ creators }: Props) => {
             <motion.div
               className={
                 creators && creators.length > 0
-                  ? "grid grid-cols-4 gap-3 m:grid-cols-2 m:gap-4"
+                  ? "grid grid-cols-4 gap-3 m:grid-cols-2 m:gap-4 xl:grid-cols-3"
                   : "w-full"
               }
               initial={{ opacity: 0, x: 50 }}

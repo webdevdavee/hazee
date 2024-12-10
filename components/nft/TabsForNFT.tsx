@@ -77,7 +77,7 @@ const TabsForNFT: React.FC<Props> = ({ nft }) => {
           </div>
         ))}
       </div>
-      <div className="w-full p-8 pt-4 h-[300px] custom-scrollbar overflow-y-auto m:h-full">
+      <div className="w-full p-8 pt-4 h-[300px] custom-scrollbar overflow-y-auto m:h-full xl:h-full">
         <AnimatePresence mode="wait">
           <motion.div
             key={tab}
