@@ -62,7 +62,7 @@ const CollectionItemsTabs: React.FC<Props> = ({
                   <SecondaryLoader />
                 </div>
               ) : listings && listings.length > 0 ? (
-                <div className="my-12 grid grid-cols-4 gap-6 m:grid-cols-2 xl:grid-cols-2">
+                <div className="my-12 grid grid-cols-4 gap-6 m:grid-cols-2 xl:grid-cols-3">
                   {listings.map((token, index) => (
                     <NFTCard
                       key={`${token.listingId} - ${index}`}

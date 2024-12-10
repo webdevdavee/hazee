@@ -47,7 +47,7 @@ const ExploreCreators: React.FC<Props> = ({ initialCreators }) => {
           <SecondaryLoader />
         </div>
       ) : creatorsData.length > 0 ? (
-        <div className="w-full grid grid-cols-4 justify-center gap-6 mt-6 m:grid-cols-2 m:gap-4 xl:grid-cols-2 xl:gap-4">
+        <div className="w-full grid grid-cols-4 justify-center gap-6 mt-6 m:grid-cols-2 m:gap-4 xl:grid-cols-3 xl:gap-4">
           {creatorsData.slice(0, 8).map((creator) => (
             <CreatorsCard key={creator._id} creator={creator} />
           ))}
